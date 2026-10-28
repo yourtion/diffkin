@@ -1,8 +1,8 @@
 # 大仓库、仓库导航与本地设置验收
 
-日期：2026-10-28。版本：0.3.0-alpha.2。核心修复、本地工程回归及 macOS ARM 打包核验已完成；远端 CI 在实际完成后补录。原生交互仍待验收。
+日期：2026-10-28。版本：0.3.0-alpha.2。核心修复、本地工程回归、macOS ARM 打包核验及远端三平台 CI 已完成，四目标发布草稿及实际下载产物已核对。原生交互仍待验收。
 
-上一版本 M3/M4 的三平台 CI、四目标产物和 SHA-256 校验见 [0.3.0-alpha.0 记录](m3-m4.md)，不代表本轮版本已通过。
+上一版本 M3/M4 的三平台 CI、四目标产物和 SHA-256 校验保留在 [0.3.0-alpha.0 记录](m3-m4.md)；本版本的独立证据见下文。
 
 ## 问题复现
 
@@ -20,7 +20,7 @@ macOS 上 50,001 个真实文件、1 处改动的默认捕获实测约 2.97 秒�
 
 回归覆盖超 50,000 索引、旧输出超过 80 MiB 的长路径清单、巨大提交树仅一处修改、真实默认工作区，以及特殊 flags、CRLF、弱化 stat 配置、全局/缺失/修改/历史 attributes。
 
-已对 CodeAtlas、lynx-html-renderer、vue-json-ui-editor 三个既有固定提交重新捕获：58 个文件的冻结正文、元数据及分析结果与旧捕获逐项一致，81 个源码对象哈希复核通过，三个原仓 index 均未改变。见[差分记录](results/core-real-repositories-alpha1.json)。这些是提交模式的真实语料回归，不是用户所报巨型仓的现场验证。
+已对 CodeAtlas、lynx-html-renderer、vue-json-ui-editor 三个既有固定提交重新捕获：58 个文件的冻结正文、元数据及分析结果与旧捕获逐项一致，81 个源码对象哈希复核通过，三个原仓 index 均未改变。见[差分记录](results/core-real-repositories-alpha2.json)。这些是提交模式的真实语料回归，不是用户所报巨型仓的现场验证。
 
 ## 仓库导航
 
@@ -52,23 +52,36 @@ macOS 上 50,001 个真实文件、1 处改动的默认捕获实测约 2.97 秒�
 
 修前相同 18 线程进程测试 30 轮中 2 次精确复现 EWOULDBLOCK，隔离控制 100 次通过；修后同条件 30/30 通过，并新增正常 drop/panic 保留 dup 引用的真实 OS 回归。详见[锁竞争证据](results/validation-lock-race-alpha1.json)。
 
-## 0.3.0-alpha.1 本地分发验收
+## 0.3.0-alpha.2 本地分发验收
 
-| 产物/材料     | 当前结果                                    |
-| ------------- | ------------------------------------------- |
-| macOS ARM DMG | 4,443,630 字节，4.24 MiB                    |
-| CLI 归档      | 1,301,679 字节，1.24 MiB                    |
-| 应用逻辑大小  | 20,953,795 字节，19.98 MiB                  |
-| 许可          | 461 项依赖，0 缺失                          |
-| 输入身份      | 104 项生产输入在最终构建后逐项 SHA-256 匹配 |
+| 产物/材料     | 当前结果                                                                                        |
+| ------------- | ----------------------------------------------------------------------------------------------- |
+| macOS ARM DMG | 4,443,699 字节，4.24 MiB                                                                        |
+| CLI 归档      | 1,301,681 字节，1.24 MiB                                                                        |
+| 应用逻辑大小  | 20,953,811 字节，19.98 MiB                                                                      |
+| 许可          | 461 项依赖，0 缺失                                                                              |
+| 输入身份      | 104 项生产输入在最终构建后逐项 SHA-256 匹配，并与 git archive v0.3.0-alpha.2 标签源码逐字节匹配 |
 
-镜像校验与只读挂载通过，独立 `.app` 每个文件与镜像内容核对，程序与最终 compiled binary 一致。CLI 归档文件集合、权限、版本、结构 JSON，以及快速/完整核验的冻结结果与原仓不变均已实测。详见[本版本打包记录](results/macos-0.3.0-alpha.1-packaging.json)。
+镜像校验与只读挂载通过，独立 `.app` 每个文件与镜像内容核对，程序与最终 compiled binary 一致。CLI 归档文件集合、权限、版本、结构 JSON，以及快速/完整核验的冻结结果与原仓不变均已实测。详见[本版本打包记录](results/macos-0.3.0-alpha.2-packaging.json)。
 
 仍为 linker ad-hoc 签名，未配置 Developer ID 与公证；本次打包核验没有启动原生 GUI。
 
-0.3.0-alpha.1 首次推送漏提交了生成的 TypeScript 协议文件，未发布远端安装包；本地报告仍保留为该工作树构建的证据。协议补齐后使用新版本 0.3.0-alpha.2 继续发版，其最终安装包与 CI 单独记录。
+0.3.0-alpha.1 首次推送漏提交了生成的 TypeScript 协议文件，旧工作流已取消，未发布远端安装包；[旧本地报告](results/macos-0.3.0-alpha.1-packaging.json)仍保留为该工作树构建的证据。协议已补齐，使用新版本 0.3.0-alpha.2 继续发版。
+
+## 0.3.0-alpha.2 远端发布验收
+
+最终标签 `v0.3.0-alpha.2` 固定在提交 `65d1e5a64baecdcfaf26f3fa24f1ef894970a608`，与本轮检查和发版工作流一致：
+
+- [主分支 CI](https://github.com/yourtion/diffkin/actions/runs/40695363691) 三平台全部成功：Linux、macOS、Windows。
+- [Release 工作流](https://github.com/yourtion/diffkin/actions/runs/40695364832) 的前置检查、四目标构建及草稿汇总全部成功：macOS ARM、macOS Intel、Linux x86_64、Windows x86_64。
+- [实际 Release 草稿](https://github.com/yourtion/diffkin/releases/tag/untagged-6c7033370ee43f1d9896) 已确认 `draft=true`、`prerelease=true`，仍未公开发布。
+
+九个分发产物及 `SHA256SUMS` 已全部实际下载。文件集合、大小、SHA-256 与校验文件及 GitHub 资产 digest 逐项匹配。四个 CLI 归档均确认只有正确架构的程序、MIT `LICENSE` 与第三方 notices；许可文本与本轮 461 项依赖材料逐字节一致。下载的 macOS ARM CLI 已实际执行 `--version`，返回 `diffkin 0.3.0-alpha.2`。
+
+Windows 成功 job 日志明确包含 50,001 索引条目、长路径大索引，以及 50,001 个真实文件默认工作区捕获三个回归的 `ok` 结果。这里记录的是完整 fixture 通过，未把其包含构造与清理的总耗时当作捕获性能基准。
+
+完整资产名称、大小、SHA-256、架构核对及工作流证据见[本轮远端发布记录](results/release-0.3.0-alpha.2.json)。远端安装包只做下载与校验，没有启动安装器；原生窗口、Tauri IPC、安装升级、签名和公证仍按各自验收状态记录。
 
 ## 当前待收尾
 
-- 当前版本远端 CI 与四目标发布草稿。
 - 用户此前暂缓的原生 WebView、Tauri IPC 与安装/升级验收。

@@ -1,0 +1,171 @@
+{
+  "verifiedAt": "2026-10-28T13:36:00.877937+00:00",
+  "releaseUrl": "https://github.com/yourtion/diffkin/releases/tag/untagged-6c7033370ee43f1d9896",
+  "tag": "v0.3.0-alpha.2",
+  "commit": "65d1e5a64baecdcfaf26f3fa24f1ef894970a608",
+  "draft": true,
+  "prerelease": true,
+  "assetCount": 9,
+  "checksumAssetCount": 1,
+  "checksumsMatchAllAssets": true,
+  "githubDigestsMatchAllAssets": true,
+  "assets": [
+    {
+      "name": "Diffkin-0.3.0-alpha.2-aarch64-apple-darwin.dmg",
+      "bytes": 4443058,
+      "sha256": "374e1f01ec0b56e0fab23fb1dd2105e1cd8d49d7578f7276ba1a09834b5f9a02"
+    },
+    {
+      "name": "Diffkin-0.3.0-alpha.2-x86_64-apple-darwin.dmg",
+      "bytes": 4632168,
+      "sha256": "295b1492a36b72bd814c2d0a63ad53219c6befe3b55f99bd3ef33fa2b7b81f22"
+    },
+    {
+      "name": "Diffkin-0.3.0-alpha.2-x86_64-pc-windows-msvc.exe",
+      "bytes": 3358337,
+      "sha256": "547e5733f170594944ab01fb44b081647e3944cd013d78bc641abf419b243474"
+    },
+    {
+      "name": "Diffkin-0.3.0-alpha.2-x86_64-unknown-linux-gnu.AppImage",
+      "bytes": 82975224,
+      "sha256": "3c7467467d82857b21f278ccaa2e0e1a7c56ba2d3629f7ee70eb237d5bda22e8"
+    },
+    {
+      "name": "Diffkin-0.3.0-alpha.2-x86_64-unknown-linux-gnu.deb",
+      "bytes": 4554492,
+      "sha256": "a86c9aad13c5cea9dd6a53511663ccab0435daa0675cb413de74831e2c35a95d"
+    },
+    {
+      "name": "SHA256SUMS",
+      "bytes": 1064,
+      "sha256": "78448cdfec0bd793ebb844c8b158397f9b586434eef92767fc63f1048678816e"
+    },
+    {
+      "name": "diffkin-cli-0.3.0-alpha.2-aarch64-apple-darwin.tar.gz",
+      "bytes": 1301256,
+      "sha256": "0f5d79d9a8414a864fba90af75db8448dde38cdad8489339792f90064f280337"
+    },
+    {
+      "name": "diffkin-cli-0.3.0-alpha.2-x86_64-apple-darwin.tar.gz",
+      "bytes": 1324508,
+      "sha256": "46b22fb53a3e894785e9727364b50a0dc0b427362c6b770c0f5c37e07b38e2f8"
+    },
+    {
+      "name": "diffkin-cli-0.3.0-alpha.2-x86_64-pc-windows-msvc.tar.gz",
+      "bytes": 1242124,
+      "sha256": "0e54285357cdfb04fc06bfa81ad4a8efde91c31399b1fa870daee5cd8df2f462"
+    },
+    {
+      "name": "diffkin-cli-0.3.0-alpha.2-x86_64-unknown-linux-gnu.tar.gz",
+      "bytes": 1337984,
+      "sha256": "c742f179054818e7a1e146dee1453617cc540afdfb6cf33d6965ce3a75743720"
+    }
+  ],
+  "cliArchives": [
+    {
+      "name": "diffkin-cli-0.3.0-alpha.2-aarch64-apple-darwin.tar.gz",
+      "exactContents": true,
+      "targetHeader": true,
+      "license": true,
+      "noticesBytes": 3556647,
+      "executableSha256": "9aa05a1c985004414a162884f2dbec3512b6f756c81d8f948710f98804aa5d49"
+    },
+    {
+      "name": "diffkin-cli-0.3.0-alpha.2-x86_64-apple-darwin.tar.gz",
+      "exactContents": true,
+      "targetHeader": true,
+      "license": true,
+      "noticesBytes": 3556647,
+      "executableSha256": "5a209602716d4c122e40b20d74737b01f39da37e04ffee616a4a459147f182cf"
+    },
+    {
+      "name": "diffkin-cli-0.3.0-alpha.2-x86_64-unknown-linux-gnu.tar.gz",
+      "exactContents": true,
+      "targetHeader": true,
+      "license": true,
+      "noticesBytes": 3556647,
+      "executableSha256": "dd37f118d231b5fe2e29e7b0c7834c411b8dd7757a70f4a9debbedd095abe1bd"
+    },
+    {
+      "name": "diffkin-cli-0.3.0-alpha.2-x86_64-pc-windows-msvc.tar.gz",
+      "exactContents": true,
+      "targetHeader": true,
+      "license": true,
+      "noticesBytes": 3556647,
+      "executableSha256": "b6263ca7486d6b29d4155f4ab28d4b02e808dd01b2ad3806f9be19b2f3a1b070"
+    }
+  ],
+  "macArmRemoteVersion": "diffkin 0.3.0-alpha.2",
+  "dependencyCount": 461,
+  "allCliNoticesMatchVerifiedLocalInventory": true,
+  "mainCi": {
+    "url": "https://github.com/yourtion/diffkin/actions/runs/40695363691",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "Checks (ubuntu-22.04)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Checks (macos-latest)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Checks (windows-latest)",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "releaseWorkflow": {
+    "url": "https://github.com/yourtion/diffkin/actions/runs/40695364832",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "version",
+        "conclusion": "success"
+      },
+      {
+        "name": "checks / Checks (windows-latest)",
+        "conclusion": "success"
+      },
+      {
+        "name": "checks / Checks (macos-latest)",
+        "conclusion": "success"
+      },
+      {
+        "name": "checks / Checks (ubuntu-22.04)",
+        "conclusion": "success"
+      },
+      {
+        "name": "build (macos-latest, aarch64-apple-darwin, dmg)",
+        "conclusion": "success"
+      },
+      {
+        "name": "build (ubuntu-22.04, x86_64-unknown-linux-gnu, deb,appimage)",
+        "conclusion": "success"
+      },
+      {
+        "name": "build (macos-latest, x86_64-apple-darwin, dmg)",
+        "conclusion": "success"
+      },
+      {
+        "name": "build (windows-latest, x86_64-pc-windows-msvc, nsis)",
+        "conclusion": "success"
+      },
+      {
+        "name": "draft",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "nativeInstallers": "Downloaded and checksum-verified; no remote installer was launched. This report does not certify native UI, installation, signing or notarization.",
+  "windowsLargeRepositoryRegressions": {
+    "passed": true,
+    "tests": [
+      "more_than_fifty_thousand_index_entries_with_one_change",
+      "huge_git_listing_with_one_change",
+      "default_worktree_with_fifty_thousand_real_files_and_one_change"
+    ],
+    "scope": "Complete fixture execution passed; this is not a capture-time or peak-memory benchmark."
+  }
+}
