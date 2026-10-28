@@ -8,4 +8,29 @@ export type DiffLine = { kind: LineKind, oldLine: number | null, newLine: number
  */
 text: string, };
 export type Comparison = { schemaVersion: number, lines: Array<DiffLine>, added: number, removed: number, };
-export type CompareError = { "code": "input-too-large", message: string, } | { "code": "internal", message: string, };
+export type CompareError = { "code": "input-too-large", message: string, } | { "code": "cancelled", message: string, } | { "code": "internal", message: string, };
+export type CompareMode = "commits" | "staged" | "unstaged" | "worktree";
+export type ComparisonSpec = { repository: string, mode: CompareMode, base: string | null, head: string | null, includeUntracked: boolean, };
+export type FileStatus = "added" | "deleted" | "modified" | "renamed" | "type-changed" | "conflict";
+export type FileSummary = { id: string,
+/**
+ * Display-only path. Identity and filesystem operations use the original bytes.
+ */
+path: string, oldPath: string | null, status: FileStatus, oldMode: string | null, newMode: string | null, beforeId: string | null, afterId: string | null, notices: Array<string>, };
+export type ComparisonManifest = { id: string, repository: string, mode: CompareMode, baseLabel: string, headLabel: string, files: Array<FileSummary>, totalFiles: number, warnings: Array<string>, };
+export type FrozenFile = { summary: FileSummary,
+/**
+ * None means absent or unavailable. Consult status and notices to distinguish them.
+ */
+before: string | null, after: string | null, beforeTruncated: boolean, afterTruncated: boolean, };
+export type RepositoryError = { "code": "cancelled", message: string, } | { "code": "budget-exceeded", message: string, } | { "code": "git-unavailable", message: string, } | { "code": "invalid-repository", message: string, } | { "code": "invalid-revision", message: string, } | { "code": "stale", message: string, } | { "code": "io-failure", message: string, } | { "code": "unsupported", message: string, };
+export type SourceRange = { byteStart: number, byteEnd: number, utf16Start: number, utf16End: number, startLine: number, endLine: number, };
+export type ChangeEvent = { id: string, title: string, facets: Array<string>, before: SourceRange | null, after: SourceRange | null, evidence: Array<string>,
+/**
+ * Indices into AnalysisResult.raw.lines, exclusively non-equal lines.
+ */
+rawEditIds: Array<number>, children: Array<string>, };
+export type Presentation = "visible" | "folded-format" | "text-fallback";
+export type CoverageEntry = { rawEditId: number, presentation: Presentation, eventIds: Array<string>, };
+export type AnalysisResult = { schemaVersion: number, language: string, ruleVersion: string, raw: Comparison, events: Array<ChangeEvent>, coverage: Array<CoverageEntry>, fallbacks: Array<string>, };
+export type FileAnalysis = { file: FrozenFile, analysis: AnalysisResult | null, notice: string | null, };

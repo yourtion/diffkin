@@ -27,6 +27,38 @@ function filesBelow(directory) {
   );
 }
 
+export function packageCli(
+  source,
+  archive,
+  materials = {
+    license: join(root, "LICENSE"),
+    notices: join(root, "target/third-party-notices/THIRD-PARTY-NOTICES.txt"),
+  },
+) {
+  const executable = basename(source);
+  const stage = mkdtempSync(join(tmpdir(), "diffkin-package-"));
+  try {
+    copyFileSync(source, join(stage, executable));
+    copyFileSync(materials.license, join(stage, "LICENSE"));
+    copyFileSync(materials.notices, join(stage, "THIRD-PARTY-NOTICES.txt"));
+    // Git for Windows tar interprets an absolute archive path such as D:\\... as a
+    // remote host. Keep all tar arguments relative; Node handles drive paths.
+    const run = spawnSync(
+      "tar",
+      ["-czf", "package.tar.gz", executable, "LICENSE", "THIRD-PARTY-NOTICES.txt"],
+      {
+        cwd: stage,
+        stdio: "inherit",
+      },
+    );
+    if (run.error) throw run.error;
+    if (run.status !== 0) throw new Error("CLI packaging failed");
+    copyFileSync(join(stage, "package.tar.gz"), archive);
+  } finally {
+    rmSync(stage, { recursive: true, force: true });
+  }
+}
+
 export function expectedAssets(version) {
   return Object.entries(targets)
     .flatMap(([target, extensions]) => [
@@ -51,16 +83,7 @@ function collect(target, output) {
     copyFileSync(candidates[0], join(output, `Diffkin-${version}-${target}.${extension}`));
   }
   const executable = target.includes("windows") ? "diffkin.exe" : "diffkin";
-  const stage = mkdtempSync(join(tmpdir(), "diffkin-package-"));
-  try {
-    copyFileSync(join(release, executable), join(stage, executable));
-    const archive = join(output, `diffkin-cli-${version}-${target}.tar.gz`);
-    const run = spawnSync("tar", ["-czf", archive, "-C", stage, executable], { stdio: "inherit" });
-    if (run.error) throw run.error;
-    if (run.status !== 0) throw new Error("CLI packaging failed");
-  } finally {
-    rmSync(stage, { recursive: true, force: true });
-  }
+  packageCli(join(release, executable), join(output, `diffkin-cli-${version}-${target}.tar.gz`));
 }
 
 export function checksums(directory, version) {

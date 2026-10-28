@@ -1,0 +1,1367 @@
+[
+  {
+    "id": "format-basic-condition",
+    "path": "case.ts",
+    "before": "function f(a: number) { return a > 2; }",
+    "after": "function f(a: number) {\n  return a > 2;\n}\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "format-const-spacing",
+    "path": "case.ts",
+    "before": "const n=1;",
+    "after": "const n = 1;\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "format-array-layout",
+    "path": "case.ts",
+    "before": "const xs=[1,2,3];",
+    "after": "const xs = [\n  1, 2, 3\n];",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "format-object-layout",
+    "path": "case.ts",
+    "before": "const x={a:1,b:2};",
+    "after": "const x = {\n a: 1,\n b: 2\n};",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "format-typescript-interface",
+    "path": "case.ts",
+    "before": "interface User{name:string;age:number;}",
+    "after": "interface User {\n name: string;\n age: number;\n}",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "format-generic-function",
+    "path": "case.ts",
+    "before": "function id<T>(x:T):T{return x;}",
+    "after": "function id<T>(x: T): T {\n return x;\n}",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "format-import",
+    "path": "case.ts",
+    "before": "import {a,b} from \"lib\";",
+    "after": "import { a, b } from \"lib\";\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "format-export",
+    "path": "case.ts",
+    "before": "export const value=4;",
+    "after": "export const value = 4;\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "format-arrow",
+    "path": "case.ts",
+    "before": "const f=(a:number)=>a+1;",
+    "after": "const f = (a: number) => a + 1;",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "format-ternary",
+    "path": "case.ts",
+    "before": "const x=a?b:c;",
+    "after": "const x = a ? b : c;",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "format-for",
+    "path": "case.ts",
+    "before": "for(let i=0;i<3;i++){run(i);}",
+    "after": "for (let i = 0; i < 3; i++) {\n run(i);\n}",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "format-while",
+    "path": "case.ts",
+    "before": "while(ready){step();}",
+    "after": "while (ready) {\n step();\n}",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "format-try-catch",
+    "path": "case.ts",
+    "before": "try{run();}catch(e){log(e);}",
+    "after": "try {\n run();\n} catch (e) {\n log(e);\n}",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "format-class",
+    "path": "case.ts",
+    "before": "class A{run(){return 1;}}",
+    "after": "class A {\n run() { return 1; }\n}",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "format-union-type",
+    "path": "case.ts",
+    "before": "type Result=string|number;",
+    "after": "type Result = string | number;",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "format-tuple-type",
+    "path": "case.ts",
+    "before": "type Pair=[string,number];",
+    "after": "type Pair = [string, number];",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "format-optional-chain",
+    "path": "case.ts",
+    "before": "const x=a?.b?.(1);",
+    "after": "const x = a?.b?.(1);",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "format-nullish",
+    "path": "case.ts",
+    "before": "const x=a??b;",
+    "after": "const x = a ?? b;",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "format-CRLF",
+    "path": "case.ts",
+    "before": "const n=1;\r\n",
+    "after": "const n = 1;\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "format-unicode",
+    "path": "case.ts",
+    "before": "const 中文=\"😀\";",
+    "after": "const 中文 = \"😀\";\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "format-javascript-extension",
+    "path": "case.js",
+    "before": "function f(x){return x+1;}",
+    "after": "function f(x) {\n return x + 1;\n}",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "format-mjs",
+    "path": "case.mjs",
+    "before": "export function f(){return 1;}",
+    "after": "export function f() {\n return 1;\n}",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "format-cts",
+    "path": "case.cts",
+    "before": "const x:number=2;",
+    "after": "const x: number = 2;",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-condition-ge",
+    "path": "case.ts",
+    "before": "function f(a:number){return a>2;}",
+    "after": "function f(a: number) {\n return a >= 2;\n}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": [">="],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-equality",
+    "path": "case.ts",
+    "before": "const ok = a == b;",
+    "after": "const ok = a === b;",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["==="],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-negation",
+    "path": "case.ts",
+    "before": "const ok = enabled;",
+    "after": "const ok = !enabled;",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["!enabled"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-return-newline",
+    "path": "case.js",
+    "before": "function f(){return value;}",
+    "after": "function f(){return\n value;}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["return"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-optional-chain-parentheses",
+    "path": "case.ts",
+    "before": "const a = obj?.a.b;",
+    "after": "const a = (obj?.a).b;",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["(obj?.a)"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-semicolon",
+    "path": "case.ts",
+    "before": "const a=1;",
+    "after": "const a=1",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["const a=1"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-string-space",
+    "path": "case.ts",
+    "before": "const text = \"a b\";",
+    "after": "const text = \"ab\";",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["\"ab\""],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-string-escape",
+    "path": "case.ts",
+    "before": "const text = \"\\n\";",
+    "after": "const text = \"n\";",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["\"n\""],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-template-space",
+    "path": "case.ts",
+    "before": "const text = `a b`;",
+    "after": "const text = `ab`;",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["`ab`"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-template-expression",
+    "path": "case.ts",
+    "before": "const text = `value=${a}`;",
+    "after": "const text = `value=${b}`;",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["${b}"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-template-newline",
+    "path": "case.ts",
+    "before": "const text = `a\nb`;",
+    "after": "const text = `ab`;",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["`ab`"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-regex-space",
+    "path": "case.ts",
+    "before": "const re = /a b/;",
+    "after": "const re = /ab/;",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["/ab/"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-regex-flag",
+    "path": "case.ts",
+    "before": "const re = /a/i;",
+    "after": "const re = /a/g;",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["/a/g"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-jsx-space",
+    "path": "case.tsx",
+    "before": "const view = <p>a b</p>;",
+    "after": "const view = <p>ab</p>;",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["ab"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-jsx-newline",
+    "path": "case.tsx",
+    "before": "const view = <p>hello\nworld</p>;",
+    "after": "const view = <p>hello world</p>;",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["hello world"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-comment-directive",
+    "path": "case.ts",
+    "before": "// @ts-ignore\nconst x:number=\"x\";",
+    "after": "// @ts-expect-error\nconst x:number=\"x\";",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["@ts-expect-error"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-comment-newline",
+    "path": "case.ts",
+    "before": "// @ts-ignore\nconst x:number=\"x\";",
+    "after": "// @ts-ignore\n\nconst x:number=\"x\";",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["\n"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-comment-lint",
+    "path": "case.ts",
+    "before": "/* eslint-disable */\nrun();",
+    "after": "/* eslint-enable */\nrun();",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["eslint-enable"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-comment-sourceurl",
+    "path": "case.ts",
+    "before": "//# sourceURL=a.js\nrun();",
+    "after": "//# sourceURL=b.js\nrun();",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["b.js"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-numeric-base",
+    "path": "case.ts",
+    "before": "const n = 10;",
+    "after": "const n = 0x10;",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["0x10"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-numeric-sign",
+    "path": "case.ts",
+    "before": "const n = 1;",
+    "after": "const n = -1;",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["-1"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-call-target",
+    "path": "case.ts",
+    "before": "function f(){return safe();}",
+    "after": "function f(){return unsafe();}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["unsafe"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-type-assertion",
+    "path": "case.ts",
+    "before": "const x = value as string;",
+    "after": "const x = value as number;",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["number"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-import-source",
+    "path": "case.ts",
+    "before": "import {f} from \"a\";",
+    "after": "import {f} from \"b\";",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["\"b\""],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-export-name",
+    "path": "case.ts",
+    "before": "export const a=1;",
+    "after": "export const b=1;",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["b=1"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-BOM",
+    "path": "case.ts",
+    "before": "﻿const a=1;",
+    "after": "const a=1;",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["const a=1"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-increment-newline",
+    "path": "case.js",
+    "before": "a\n++b;",
+    "after": "a++\nb;",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["a++"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-object-shorthand",
+    "path": "case.js",
+    "before": "function f(total){return {total};}",
+    "after": "function f(amount){return {amount};}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["{amount}"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "danger-python-indent",
+    "path": "case.py",
+    "before": "if ready:\n  run()\nfinish()\n",
+    "after": "if ready:\n  run()\n  finish()\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["finish"],
+      "fallback": true
+    }
+  },
+  {
+    "id": "danger-rust-macro",
+    "path": "case.rs",
+    "before": "m!(a b);",
+    "after": "m!(ab);",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["ab"],
+      "fallback": true
+    }
+  },
+  {
+    "id": "move-two-functions",
+    "path": "case.ts",
+    "before": "function a(){return 1;}\nfunction b(){return 2;}\n",
+    "after": "function b(){return 2;}\nfunction a(){return 1;}\n",
+    "expected": {
+      "format": false,
+      "move": true,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "move-three-functions",
+    "path": "case.ts",
+    "before": "function a(){return 1;}\nfunction b(){return 2;}\nfunction c(){return 3;}\n",
+    "after": "function c(){return 3;}\nfunction a(){return 1;}\nfunction b(){return 2;}\n",
+    "expected": {
+      "format": false,
+      "move": true,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "move-with-condition",
+    "path": "case.js",
+    "before": "function check(x){return x>2;}\nfunction b(){return 2;}\n",
+    "after": "function b(){return 2;}\nfunction check(x){return x>=2;}\n",
+    "expected": {
+      "format": false,
+      "move": true,
+      "rename": false,
+      "visible": [">="],
+      "fallback": false
+    }
+  },
+  {
+    "id": "move-with-format",
+    "path": "case.ts",
+    "before": "function a(){return 1;}\nfunction b(){return 2;}\n",
+    "after": "function b(){return 2;}\nfunction a() {\n return 1;\n}\n",
+    "expected": {
+      "format": true,
+      "move": true,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "move-with-rename",
+    "path": "case.js",
+    "before": "function a(value){return value+1;}\nfunction b(){return 2;}\n",
+    "after": "function b(){return 2;}\nfunction a(amount){return amount+1;}\n",
+    "expected": {
+      "format": false,
+      "move": true,
+      "rename": true,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "move-rename-edit",
+    "path": "case.js",
+    "before": "function a(value){return value+1;}\nfunction b(){return 2;}\n",
+    "after": "function b(){return 2;}\nfunction a(amount){return amount+2;}\n",
+    "expected": {
+      "format": false,
+      "move": true,
+      "rename": true,
+      "visible": ["amount+2"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "no-move-leading-lines",
+    "path": "case.ts",
+    "before": "function a(){return 1;}\nfunction b(){return 2;}\n",
+    "after": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nfunction a(){return 1;}\nfunction b(){return 2;}\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "no-move-new-function",
+    "path": "case.ts",
+    "before": "function a(){return 1;}\nfunction b(){return 2;}\n",
+    "after": "function c(){return 3;}\nfunction a(){return 1;}\nfunction b(){return 2;}\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "no-move-deleted-function",
+    "path": "case.ts",
+    "before": "function a(){return 1;}\nfunction b(){return 2;}\nfunction c(){return 3;}\n",
+    "after": "function b(){return 2;}\nfunction c(){return 3;}\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "no-move-copy-duplicate",
+    "path": "case.ts",
+    "before": "function a(){return 1;}\nfunction b(){return 2;}\n",
+    "after": "function a(){return 1;}\nfunction b(){return 2;}\nfunction a(){return 1;}\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "no-move-duplicate-names",
+    "path": "case.ts",
+    "before": "function a(){return 1;}\nfunction a(){return 1;}\nfunction b(){return 2;}\n",
+    "after": "function b(){return 2;}\nfunction a(){return 1;}\nfunction a(){return 1;}\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "no-move-renamed-declaration",
+    "path": "case.ts",
+    "before": "function a(){return 1;}\nfunction b(){return 2;}\n",
+    "after": "function renamed(){return 1;}\nfunction b(){return 2;}\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "rename-js-parameter",
+    "path": "case.js",
+    "before": "function f(value){return value+1;}",
+    "after": "function f(amount){return amount+1;}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": true,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "rename-ts-parameter",
+    "path": "case.ts",
+    "before": "function f(value:number){return value+1;}",
+    "after": "function f(amount:number){return amount+1;}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": true,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "rename-body-const",
+    "path": "case.ts",
+    "before": "function f(){const total=2;return total*3;}",
+    "after": "function f(){const amount=2;return amount*3;}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": true,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "rename-body-let",
+    "path": "case.ts",
+    "before": "function f(){let total=2;total+=3;return total;}",
+    "after": "function f(){let amount=2;amount+=3;return amount;}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": true,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "rename-multiple-params",
+    "path": "case.js",
+    "before": "function f(a,b){return a-b;}",
+    "after": "function f(left,right){return left-right;}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": true,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "rename-property-access",
+    "path": "case.js",
+    "before": "function f(value){return value.length;}",
+    "after": "function f(amount){return amount.length;}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": true,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "rename-explicit-property-value",
+    "path": "case.js",
+    "before": "function f(value){return {result:value};}",
+    "after": "function f(amount){return {result:amount};}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": true,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "rename-with-constant-edit",
+    "path": "case.js",
+    "before": "function f(value){return value+1;}",
+    "after": "function f(amount){return amount+2;}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": true,
+      "visible": ["amount+2"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "rename-shadow-rejected",
+    "path": "case.js",
+    "before": "function f(value){if(ok){let value=2;use(value);}return value;}",
+    "after": "function f(amount){if(ok){let amount=2;use(amount);}return amount;}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["amount"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "rename-capture-rejected",
+    "path": "case.js",
+    "before": "function f(value){return ()=>value;}",
+    "after": "function f(amount){return ()=>amount;}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["amount"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "rename-eval-rejected",
+    "path": "case.js",
+    "before": "function f(value){eval(\"value\");return value;}",
+    "after": "function f(amount){eval(\"value\");return amount;}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["amount"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "rename-destructure-rejected",
+    "path": "case.js",
+    "before": "function f({value}){return value;}",
+    "after": "function f({amount}){return amount;}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["amount"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "rename-destination-free-rejected",
+    "path": "case.js",
+    "before": "function f(value){return value+amount;}",
+    "after": "function f(amount){return amount+amount;}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["amount"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "rename-extra-reference-rejected",
+    "path": "case.js",
+    "before": "function f(value){return value;}",
+    "after": "function f(amount){use(amount);return amount;}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["use(amount)"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "rename-missing-reference-rejected",
+    "path": "case.js",
+    "before": "function f(value){use(value);return value;}",
+    "after": "function f(amount){return amount;}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["return amount"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "rename-arguments-rejected",
+    "path": "case.js",
+    "before": "function f(value){return arguments[0]+value;}",
+    "after": "function f(amount){return arguments[0]+amount;}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["amount"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "rename-var-rejected",
+    "path": "case.js",
+    "before": "function f(){var value=1;return value;}",
+    "after": "function f(){var amount=1;return amount;}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["amount"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "rename-loop-scope-rejected",
+    "path": "case.js",
+    "before": "function f(value){for(let i=0;i<value;i++)use(i);return value;}",
+    "after": "function f(amount){for(let i=0;i<amount;i++)use(i);return amount;}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["amount"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "rename-default-parameter-rejected",
+    "path": "case.js",
+    "before": "function f(value=global){return value;}",
+    "after": "function f(amount=global){return amount;}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["amount"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "vue-script-format",
+    "path": "Component.vue",
+    "before": "<template><p>Hello</p></template>\n<script lang=\"ts\">\nconst x=1;\n</script>",
+    "after": "<template><p>Hello</p></template>\n<script lang=\"ts\">\nconst x = 1;\n</script>",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "vue-script-rename",
+    "path": "Component.vue",
+    "before": "<script>function f(value){return value;}</script>",
+    "after": "<script>function f(amount){return amount;}</script>",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": true,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "vue-template-text",
+    "path": "Component.vue",
+    "before": "<template><p>a b</p></template>",
+    "after": "<template><p>ab</p></template>",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["ab"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "vue-style-scoped",
+    "path": "Component.vue",
+    "before": "<style>.a{color:red}</style>",
+    "after": "<style scoped>.a{color:red}</style>",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["scoped"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "vue-script-setup-attribute",
+    "path": "Component.vue",
+    "before": "<script>const n=1;</script>",
+    "after": "<script setup>const n=1;</script>",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["setup"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "vue-script-lang-change",
+    "path": "Component.vue",
+    "before": "<script lang=\"js\">const n=1;</script>",
+    "after": "<script lang=\"ts\">const n=1;</script>",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["lang=\"ts\""],
+      "fallback": false
+    }
+  },
+  {
+    "id": "vue-unknown-script-lang",
+    "path": "Component.vue",
+    "before": "<script lang=\"coffee\">x=1</script>",
+    "after": "<script lang=\"coffee\">x=2</script>",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["x=2"],
+      "fallback": true
+    }
+  },
+  {
+    "id": "vue-script-src",
+    "path": "Component.vue",
+    "before": "<script src=\"./a.js\"></script>",
+    "after": "<script src=\"./b.js\"></script>",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["b.js"],
+      "fallback": true
+    }
+  },
+  {
+    "id": "vue-vfor-binding",
+    "path": "Component.vue",
+    "before": "<template><li v-for=\"x in xs\">{{x}}</li></template>",
+    "after": "<template><li v-for=\"y in xs\">{{y}}</li></template>",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["{{y}}"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "vue-script-and-template",
+    "path": "Component.vue",
+    "before": "<template><p>a</p></template>\n<script>const n=1;</script>",
+    "after": "<template><p>b</p></template>\n<script>const n = 1;</script>",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": ["<p>b</p>"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "vue-malformed",
+    "path": "Component.vue",
+    "before": "<script>const n=1;</script>",
+    "after": "<script>const n=2;",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["n=2"],
+      "fallback": true
+    }
+  },
+  {
+    "id": "parse-error-incomplete",
+    "path": "case.ts",
+    "before": "function f(){return 1;}",
+    "after": "function f( {",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["function f("],
+      "fallback": true
+    }
+  },
+  {
+    "id": "parse-error-conflict-marker",
+    "path": "case.ts",
+    "before": "const n=1;",
+    "after": "<<<<<<< HEAD\nconst n=2;\n=======\nconst n=3;\n>>>>>>> next",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["<<<<<<<"],
+      "fallback": true
+    }
+  },
+  {
+    "id": "unknown-extension",
+    "path": "notes.txt",
+    "before": "alpha\nbeta\n",
+    "after": "alpha\ngamma\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["gamma"],
+      "fallback": true
+    }
+  },
+  {
+    "id": "empty-to-source",
+    "path": "case.ts",
+    "before": "",
+    "after": "const n=1;\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["const n"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "source-to-empty",
+    "path": "case.ts",
+    "before": "const n=1;\n",
+    "after": "",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["const n"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "unicode-condition",
+    "path": "case.ts",
+    "before": "function 判断(值:number){return 值>2;}",
+    "after": "function 判断(值:number){return 值>=2;}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": [">="],
+      "fallback": false
+    }
+  },
+  {
+    "id": "combining-text",
+    "path": "case.ts",
+    "before": "const text=\"é\";",
+    "after": "const text=\"é\";",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["\"é\""],
+      "fallback": false
+    }
+  },
+  {
+    "id": "emoji-template",
+    "path": "case.ts",
+    "before": "const text=`😀 a`;",
+    "after": "const text=`😀 b`;",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["😀 b"],
+      "fallback": false
+    }
+  },
+  {
+    "id": "no-final-newline",
+    "path": "case.ts",
+    "before": "const a=1;\n",
+    "after": "const a=1;",
+    "expected": {
+      "format": true,
+      "move": false,
+      "rename": false,
+      "visible": [],
+      "fallback": false
+    }
+  },
+  {
+    "id": "CRLF-token-edit",
+    "path": "case.ts",
+    "before": "const a=1;\r\n",
+    "after": "const a=2;\r\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "rename": false,
+      "visible": ["a=2"],
+      "fallback": false
+    }
+  }
+]

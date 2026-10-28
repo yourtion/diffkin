@@ -1,4 +1,7 @@
 * text=auto eol=lf
+
+# Preserve upstream license bytes; manifest SHA256 values refer to these exact files.
+third-party/licenses/*.txt -text -whitespace
 *.png binary
 *.ico binary
 *.icns binary

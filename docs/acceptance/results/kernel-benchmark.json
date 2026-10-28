@@ -1,0 +1,86 @@
+{
+  "reports": [
+    {
+      "afterBytes": 52781,
+      "beforeBytes": 52780,
+      "maxMicros": 37309,
+      "outcome": {
+        "events": 2,
+        "fallbacks": []
+      },
+      "p50Micros": 15293,
+      "p95Micros": 21614,
+      "samplesMicros": [
+        37309, 21614, 18084, 16411, 15409, 15122, 15273, 15165, 14905, 15263, 15078, 15139, 15065,
+        15320, 15164, 15339, 15308, 15267, 15444, 15125, 15609, 15278, 15308, 15462, 15293, 15446,
+        15447, 15178, 15121, 15071
+      ],
+      "scenario": "ordinary-1000-functions"
+    },
+    {
+      "afterBytes": 110,
+      "beforeBytes": 114,
+      "maxMicros": 146,
+      "outcome": {
+        "events": 2,
+        "fallbacks": []
+      },
+      "p50Micros": 63,
+      "p95Micros": 75,
+      "samplesMicros": [
+        146, 75, 68, 65, 64, 64, 65, 64, 64, 64, 69, 63, 63, 63, 63, 63, 66, 63, 63, 63, 63, 63, 65,
+        63, 63, 63, 63, 63, 63, 63
+      ],
+      "scenario": "move-rename-condition"
+    },
+    {
+      "afterBytes": 2097152,
+      "beforeBytes": 2097152,
+      "maxMicros": 236,
+      "outcome": {
+        "error": {
+          "code": "input-too-large",
+          "message": "Each input is limited to 200000 bytes and 5000 lines in this prototype."
+        }
+      },
+      "p50Micros": 62,
+      "p95Micros": 73,
+      "samplesMicros": [
+        236, 73, 72, 67, 66, 66, 64, 64, 64, 66, 66, 66, 62, 62, 61, 62, 61, 61, 61, 61, 61, 61, 61,
+        61, 62, 62, 62, 63, 62, 63
+      ],
+      "scenario": "large-file-rejection"
+    },
+    {
+      "beforeBytes": 80012,
+      "cancelledRuns": 30,
+      "maxMicros": 554,
+      "measurement": "cancel flag set after worker entry plus 2ms; elapsed until thread joined, not just UI result discarded",
+      "p50Micros": 424,
+      "p95Micros": 495,
+      "samplesMicros": [
+        434, 447, 418, 554, 415, 430, 425, 495, 420, 424, 428, 419, 436, 424, 429, 421, 419, 470,
+        421, 420, 415, 413, 458, 432, 424, 422, 424, 376, 419, 413
+      ],
+      "scenario": "active-parser-cancellation"
+    }
+  ],
+  "ruleVersion": "syntax-v1",
+  "scope": "kernel only, warm process; not cold app start or WebView performance",
+  "measuredAt": "2026-10-28T05:02:24.281207+00:00",
+  "environment": {
+    "os": "macOS 27.2",
+    "architecture": "arm64",
+    "rustc": "1.97.0 (2d8144b78 2026-07-07)",
+    "profile": "release, thin LTO, one codegen unit",
+    "hardwareModel": "not available in sandbox",
+    "backgroundLoad": "shared development machine; concurrent agents, not controlled reference hardware"
+  },
+  "sourceFilesSha256": {
+    "crates/analysis/src/lib.rs": "b7de6013c585038720b6b087b904017b2a89ee5844aa7a91b9359e332155a630",
+    "crates/analysis/src/structure.rs": "a356bdc54bfdcc2c7bde3868608508d995332b5fcf9a5a1ca36b57734298851b",
+    "crates/analysis/examples/benchmark.rs": "3dccdd0b6d35b78dbdf84aef7fe761a31262f10f720ca482f738fbceb2091181",
+    "crates/domain/src/structure.rs": "7a0ff6edcc95579bd138fc7ffe0443424de195c43715426d06a16c9f89b7107f",
+    "Cargo.lock": "e857a4221b6af6d30f82bef67caf06b1f9a0a24955014ba918ec0205f16a9e02"
+  }
+}

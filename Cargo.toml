@@ -10,10 +10,11 @@ default-members = ["crates/domain", "crates/analysis", "crates/application", "ap
 resolver = "2"
 
 [workspace.package]
-version = "0.1.0-alpha.0"
+version = "0.1.0-alpha.1"
 edition = "2021"
 rust-version = "1.97"
 publish = false
+license = "MIT"
 
 [workspace.dependencies]
 diffkin-domain = { path = "crates/domain" }

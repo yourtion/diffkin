@@ -1,16 +1,21 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+pub mod repository;
+pub mod structure;
+pub use repository::*;
+pub use structure::*;
+
 pub const SCHEMA_VERSION: u32 = 1;
 
-#[derive(Debug, Deserialize, Serialize, TS)]
+#[derive(Debug, Clone, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CompareRequest {
     pub before: String,
     pub after: String,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, TS)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "lowercase")]
 pub enum LineKind {
     Equal,
@@ -18,7 +23,7 @@ pub enum LineKind {
     Insert,
 }
 
-#[derive(Debug, Serialize, TS)]
+#[derive(Debug, Clone, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct DiffLine {
     pub kind: LineKind,
@@ -28,7 +33,7 @@ pub struct DiffLine {
     pub text: String,
 }
 
-#[derive(Debug, Serialize, TS)]
+#[derive(Debug, Clone, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct Comparison {
     pub schema_version: u32,
@@ -37,9 +42,18 @@ pub struct Comparison {
     pub removed: u32,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, TS)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(tag = "code", rename_all = "kebab-case")]
 pub enum CompareError {
     InputTooLarge { message: String },
+    Cancelled { message: String },
     Internal { message: String },
+}
+
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub struct FileAnalysis {
+    pub file: FrozenFile,
+    pub analysis: Option<AnalysisResult>,
+    pub notice: Option<String>,
 }

@@ -8,6 +8,9 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Check read-only Git capabilities
+      shell: bash
+      run: git --no-lazy-fetch --version
     - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
     - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
       with:
@@ -30,3 +33,6 @@ runs:
     - name: Install JavaScript dependencies
       shell: bash
       run: pnpm install --frozen-lockfile
+    - name: Generate dependency license materials
+      shell: bash
+      run: pnpm licenses:generate

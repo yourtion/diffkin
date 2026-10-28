@@ -1,0 +1,66 @@
+{
+  "measuredAt": "2026-10-28T04:56:58.959696+00:00",
+  "machine": {
+    "model": "Mac14,3",
+    "cpu": "Apple M2",
+    "memoryBytes": 17179869184,
+    "os": "macOS 27.2",
+    "osBuild": "26B123",
+    "git": "git version 2.54.0 (Apple Git-157)"
+  },
+  "build": {
+    "profile": "release; lto=thin; codegen-units=1",
+    "rust": "rustc 1.97.0",
+    "sourceSha256": {
+      "crates/application/src/repository.rs": "162e72a019342a628c5951211201002b01501ed6c115e09180d1155af4db590e",
+      "crates/application/examples/snapshot_bench.rs": "b91a5550ec0840ee936c184af1600600d681f5cd6b27e8bb0660fbe444dd932d"
+    }
+  },
+  "fixture": {
+    "trackedFiles": 10000,
+    "changedFiles": 100,
+    "layout": "group-{n//100}/file-{n}.ts for n=0..9999",
+    "baselineSource": "export function value{n}(input: number) { return input > {n}; }\n",
+    "commitChange": "n=0..99: > becomes >=",
+    "worktreeChange": "n=0..99: constant n becomes n+1",
+    "baselineTree": "7231b32aa3a75be3603045191b30ae2dfe629c58",
+    "headTree": "fffa822de37e6d669460e29304b3baacc021a13b"
+  },
+  "limitations": [
+    "Warm filesystem cache; no result cache. This is not OS cold-start measurement.",
+    "Measures Rust capture through immutable manifest creation, not IPC/UI first paint.",
+    "Shared developer machine with other build activity; trend evidence, not a controlled release gate."
+  ],
+  "results": [
+    {
+      "changedFiles": 100,
+      "maxMs": 102.22966699999999,
+      "mode": "commits",
+      "p50Ms": 95.6815,
+      "p95Ms": 100.422083,
+      "samplesMs": [
+        100.422083, 96.15799999999999, 96.22375, 96.04133300000001, 98.27383300000001,
+        95.91404200000001, 94.989916, 96.23329199999999, 95.6815, 94.597708, 95.18020800000001,
+        98.710958, 102.22966699999999, 100.089916, 97.527417, 95.405542, 95.37275000000001,
+        95.325833, 96.439333, 95.43591599999999, 96.484125, 94.86175, 95.180333, 95.157167,
+        95.54145899999999, 94.907125, 95.45483300000001, 95.78175, 93.922875, 95.9975
+      ],
+      "scope": "Rust snapshot capture only; warm filesystem cache, no result cache; excludes IPC/UI"
+    },
+    {
+      "changedFiles": 100,
+      "maxMs": 757.20925,
+      "mode": "worktree",
+      "p50Ms": 360.984667,
+      "p95Ms": 428.067208,
+      "samplesMs": [
+        757.20925, 360.984667, 428.067208, 365.744625, 365.13925, 357.359916, 357.16249999999997,
+        360.756167, 355.767917, 359.524208, 360.12375000000003, 362.990875, 365.67125, 362.291959,
+        358.11625000000004, 356.746542, 385.13816699999995, 356.361, 358.315125, 368.289125,
+        360.29258400000003, 359.135875, 363.317542, 356.928875, 357.806625, 364.16483300000004,
+        403.341583, 388.810916, 362.608042, 411.144583
+      ],
+      "scope": "Rust snapshot capture only; warm filesystem cache, no result cache; excludes IPC/UI"
+    }
+  ]
+}

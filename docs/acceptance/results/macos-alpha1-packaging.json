@@ -1,0 +1,21 @@
+{
+  "version": "0.1.0-alpha.1",
+  "target": "aarch64-apple-darwin",
+  "dependencyCount": 438,
+  "missingLicenseTexts": 0,
+  "appLogicalBytes": 16788787,
+  "cliArchiveSmoke": "passed: version, executable permissions, structural JSON exit 1, LICENSE and notices",
+  "artifacts": {
+    "Diffkin-0.1.0-alpha.1-aarch64-apple-darwin.dmg": {
+      "bytes": 3372551,
+      "sha256": "034f1d622c2cc1f5d67109c59444f91916535ccadf820c7e6a6d3ad73db14a8e"
+    },
+    "diffkin-cli-0.1.0-alpha.1-aarch64-apple-darwin.tar.gz": {
+      "bytes": 926138,
+      "sha256": "60c4e42c000c297f9a65cf77505efa6ec1ebe720f7b76707ffc3f951bbd30a71"
+    }
+  },
+  "nativeGui": "not tested: session locked",
+  "signing": "Linker ad-hoc signature only; no Developer ID, notarization or resource seal",
+  "dmgVerification": "hdiutil checksum valid; read-only mounted app version and bundled licenses verified"
+}

@@ -1,0 +1,40 @@
+[
+  {
+    "repository": "CodeAtlas",
+    "base": "2ef99afb1811566ce58304f664bfaa834c5ee14c",
+    "head": "f80966d567df0cfb21dae6df03d6753515472a82",
+    "files": 36,
+    "reconstructed": 35,
+    "fallbackFiles": 35,
+    "facets": {},
+    "elapsedMs": 420.166,
+    "stdoutSha256": "70c64b7096adf00e8b9d6f8ed70356968c304f0f7b3e811d82871d18b7f464c8",
+    "verifiedGitSourceSides": 50
+  },
+  {
+    "repository": "lynx-html-renderer",
+    "base": "48f64b56bc229eff0b5042b77222cc32297ee9ea",
+    "head": "6637183578a271758e3e89cdba5077011b19e7b6",
+    "files": 1,
+    "reconstructed": 1,
+    "fallbackFiles": 0,
+    "facets": {},
+    "elapsedMs": 95.133,
+    "stdoutSha256": "2c7720fdb695b375c2045c8be792742c1d1da60daf69ce6fdff7ba615d849157",
+    "verifiedGitSourceSides": 1
+  },
+  {
+    "repository": "vue-json-ui-editor",
+    "base": "f1ade53bb1654c6c526382866e319e6efc6c8e17",
+    "head": "8eba3c3a7bdf245f7532b80ad2af6b4595c95cb1",
+    "files": 21,
+    "reconstructed": 19,
+    "fallbackFiles": 8,
+    "facets": {
+      "edit": 4
+    },
+    "elapsedMs": 137.149,
+    "stdoutSha256": "c12b7c027bd74d3d22ad9987e8e0ad4f4fffa648662a5f81571c231ca2a8d2d9",
+    "verifiedGitSourceSides": 30
+  }
+]

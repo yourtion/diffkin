@@ -1,0 +1,439 @@
+{
+  "cargo/alloc-stdlib@0.3.0": {
+    "revision": "0a81fd6928ea3b33c8cd484aa4575d50ffb98012",
+    "sources": [
+      {
+        "file": "c0c56f26d9c051cac4d200c34c84e7ae9aaa853e01a982a1df08b09931e518ae.txt",
+        "path": "LICENSE",
+        "url": "https://github.com/dropbox/rust-alloc-no-stdlib/blob/0a81fd6928ea3b33c8cd484aa4575d50ffb98012/LICENSE"
+      }
+    ]
+  },
+  "cargo/block2@0.6.2": {
+    "revision": "b4167b582b2f75f9a1be75495c41b765344fd03c",
+    "sources": [
+      {
+        "file": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54.txt",
+        "path": "LICENSE.md",
+        "url": "https://github.com/madsmtm/objc2/blob/b4167b582b2f75f9a1be75495c41b765344fd03c/LICENSE.md"
+      }
+    ]
+  },
+  "cargo/dispatch2@0.3.1": {
+    "revision": "8852b424193ca41602281b3d7540d7c8ed51e49a",
+    "sources": [
+      {
+        "file": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54.txt",
+        "path": "LICENSE.md",
+        "url": "https://github.com/madsmtm/objc2/blob/8852b424193ca41602281b3d7540d7c8ed51e49a/LICENSE.md"
+      }
+    ]
+  },
+  "cargo/dlopen2@0.8.2": {
+    "revision": "cc80e4a0a90d499b677fdf7743699b4b3a43a989",
+    "sources": [
+      {
+        "file": "39fa265207450e77c62e90c5594a06c085b655d8374c7ced4bf7894b6bd95dd2.txt",
+        "path": "LICENSE",
+        "url": "https://github.com/OpenByteDev/dlopen2/blob/cc80e4a0a90d499b677fdf7743699b4b3a43a989/LICENSE"
+      }
+    ]
+  },
+  "cargo/dlopen2_derive@0.4.3": {
+    "revision": "cc80e4a0a90d499b677fdf7743699b4b3a43a989",
+    "sources": [
+      {
+        "file": "39fa265207450e77c62e90c5594a06c085b655d8374c7ced4bf7894b6bd95dd2.txt",
+        "path": "LICENSE",
+        "url": "https://github.com/OpenByteDev/dlopen2/blob/cc80e4a0a90d499b677fdf7743699b4b3a43a989/LICENSE"
+      }
+    ]
+  },
+  "cargo/jni-sys-macros@0.4.1": {
+    "revision": "64d77b7a5f119d7b55b4e2c169a4668067ff59e6",
+    "sources": [
+      {
+        "file": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08.txt",
+        "path": "LICENSE-APACHE",
+        "url": "https://github.com/jni-rs/jni-sys/blob/64d77b7a5f119d7b55b4e2c169a4668067ff59e6/LICENSE-APACHE"
+      },
+      {
+        "file": "1d85bd754b04ceec93e98e890edd1fa3c6a22e81bcb32135806beeccefa51cd1.txt",
+        "path": "LICENSE-MIT",
+        "url": "https://github.com/jni-rs/jni-sys/blob/64d77b7a5f119d7b55b4e2c169a4668067ff59e6/LICENSE-MIT"
+      }
+    ]
+  },
+  "cargo/libappindicator-sys@0.9.0": {
+    "note": "License files from the published parent workspace package whose Cargo manifest declares this sibling dependency.",
+    "sources": [
+      {
+        "file": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2.txt",
+        "sourcePackage": "libappindicator@0.9.0",
+        "path": "LICENSE-APACHE",
+        "url": "https://crates.io/crates/libappindicator/0.9.0"
+      },
+      {
+        "file": "eb227437252b2a7a9c1fc342c93ade1f3d7ce38cc6dd754f613db07d53ceff0b.txt",
+        "sourcePackage": "libappindicator@0.9.0",
+        "path": "LICENSE-MIT",
+        "url": "https://crates.io/crates/libappindicator/0.9.0"
+      }
+    ]
+  },
+  "cargo/ndk-context@0.1.1": {
+    "revision": "10f2ba388fca20f7349996ebae26ccda7a6fda5c",
+    "sources": [
+      {
+        "file": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4.txt",
+        "path": "LICENSE-APACHE",
+        "url": "https://github.com/rust-windowing/android-ndk-rs/blob/10f2ba388fca20f7349996ebae26ccda7a6fda5c/LICENSE-APACHE"
+      },
+      {
+        "file": "508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1.txt",
+        "path": "LICENSE-MIT",
+        "url": "https://github.com/rust-windowing/android-ndk-rs/blob/10f2ba388fca20f7349996ebae26ccda7a6fda5c/LICENSE-MIT"
+      }
+    ]
+  },
+  "cargo/ndk-sys@0.6.0+11769913": {
+    "revision": "49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25",
+    "sources": [
+      {
+        "file": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4.txt",
+        "path": "LICENSE-APACHE",
+        "url": "https://github.com/rust-mobile/ndk/blob/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-APACHE"
+      },
+      {
+        "file": "508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1.txt",
+        "path": "LICENSE-MIT",
+        "url": "https://github.com/rust-mobile/ndk/blob/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-MIT"
+      }
+    ]
+  },
+  "cargo/ndk@0.9.0": {
+    "revision": "49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25",
+    "sources": [
+      {
+        "file": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4.txt",
+        "path": "LICENSE-APACHE",
+        "url": "https://github.com/rust-mobile/ndk/blob/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-APACHE"
+      },
+      {
+        "file": "508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1.txt",
+        "path": "LICENSE-MIT",
+        "url": "https://github.com/rust-mobile/ndk/blob/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-MIT"
+      }
+    ]
+  },
+  "cargo/objc2-app-kit@0.3.2": {
+    "revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+    "sources": [
+      {
+        "file": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54.txt",
+        "path": "LICENSE.md",
+        "url": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+      }
+    ]
+  },
+  "cargo/objc2-cloud-kit@0.3.2": {
+    "revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+    "sources": [
+      {
+        "file": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54.txt",
+        "path": "LICENSE.md",
+        "url": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+      }
+    ]
+  },
+  "cargo/objc2-core-data@0.3.2": {
+    "revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+    "sources": [
+      {
+        "file": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54.txt",
+        "path": "LICENSE.md",
+        "url": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+      }
+    ]
+  },
+  "cargo/objc2-core-foundation@0.3.2": {
+    "revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+    "sources": [
+      {
+        "file": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54.txt",
+        "path": "LICENSE.md",
+        "url": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+      }
+    ]
+  },
+  "cargo/objc2-core-graphics@0.3.2": {
+    "revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+    "sources": [
+      {
+        "file": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54.txt",
+        "path": "LICENSE.md",
+        "url": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+      }
+    ]
+  },
+  "cargo/objc2-core-image@0.3.2": {
+    "revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+    "sources": [
+      {
+        "file": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54.txt",
+        "path": "LICENSE.md",
+        "url": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+      }
+    ]
+  },
+  "cargo/objc2-core-location@0.3.2": {
+    "revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+    "sources": [
+      {
+        "file": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54.txt",
+        "path": "LICENSE.md",
+        "url": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+      }
+    ]
+  },
+  "cargo/objc2-core-text@0.3.2": {
+    "revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+    "sources": [
+      {
+        "file": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54.txt",
+        "path": "LICENSE.md",
+        "url": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+      }
+    ]
+  },
+  "cargo/objc2-encode@4.1.0": {
+    "revision": "8d214f5477365ffcbcbb7de058c86ed9a518efb7",
+    "sources": [
+      {
+        "file": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54.txt",
+        "path": "LICENSE.md",
+        "url": "https://github.com/madsmtm/objc2/blob/8d214f5477365ffcbcbb7de058c86ed9a518efb7/LICENSE.md"
+      }
+    ]
+  },
+  "cargo/objc2-exception-helper@0.1.1": {
+    "revision": "8d214f5477365ffcbcbb7de058c86ed9a518efb7",
+    "sources": [
+      {
+        "file": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54.txt",
+        "path": "LICENSE.md",
+        "url": "https://github.com/madsmtm/objc2/blob/8d214f5477365ffcbcbb7de058c86ed9a518efb7/LICENSE.md"
+      }
+    ]
+  },
+  "cargo/objc2-foundation@0.3.2": {
+    "revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+    "sources": [
+      {
+        "file": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54.txt",
+        "path": "LICENSE.md",
+        "url": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+      }
+    ]
+  },
+  "cargo/objc2-io-surface@0.3.2": {
+    "revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+    "sources": [
+      {
+        "file": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54.txt",
+        "path": "LICENSE.md",
+        "url": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+      }
+    ]
+  },
+  "cargo/objc2-quartz-core@0.3.2": {
+    "revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+    "sources": [
+      {
+        "file": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54.txt",
+        "path": "LICENSE.md",
+        "url": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+      }
+    ]
+  },
+  "cargo/objc2-ui-kit@0.3.2": {
+    "revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+    "sources": [
+      {
+        "file": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54.txt",
+        "path": "LICENSE.md",
+        "url": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+      }
+    ]
+  },
+  "cargo/objc2-user-notifications@0.3.2": {
+    "revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+    "sources": [
+      {
+        "file": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54.txt",
+        "path": "LICENSE.md",
+        "url": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+      }
+    ]
+  },
+  "cargo/objc2-web-kit@0.3.2": {
+    "revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+    "sources": [
+      {
+        "file": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54.txt",
+        "path": "LICENSE.md",
+        "url": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+      }
+    ]
+  },
+  "cargo/objc2@0.6.5": {
+    "revision": "d7d2fa23ceaa5e6096c923b081040e5d81b3b9df",
+    "sources": [
+      {
+        "file": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54.txt",
+        "path": "LICENSE.md",
+        "url": "https://github.com/madsmtm/objc2/blob/d7d2fa23ceaa5e6096c923b081040e5d81b3b9df/LICENSE.md"
+      }
+    ]
+  },
+  "cargo/r-efi@5.3.0": {
+    "revision": "97b55bed1c2c91dcbf787674849f05337ff80b33",
+    "sources": [
+      {
+        "file": "ff92bed461f50338dd703a9ba9aee496a425957873df1d91192776e4bdf5dda7.txt",
+        "path": "AUTHORS",
+        "url": "https://github.com/r-efi/r-efi/blob/97b55bed1c2c91dcbf787674849f05337ff80b33/AUTHORS"
+      }
+    ]
+  },
+  "cargo/r-efi@6.0.0": {
+    "revision": "7e1b0322d31d625f81a5656096330934f9cd835d",
+    "sources": [
+      {
+        "file": "d027e91dbc9cdbb2f1190068e498bd6b61cff022b6a032b191021ba658d96111.txt",
+        "path": "AUTHORS",
+        "url": "https://github.com/r-efi/r-efi/blob/7e1b0322d31d625f81a5656096330934f9cd835d/AUTHORS"
+      }
+    ]
+  },
+  "cargo/selectors@0.38.0": {
+    "revision": "572ecba2d1600e7c3d490586692a209faf703baa",
+    "note": "Upstream source files declare MPL-2.0 and link the canonical license. Canonical MPL-2.0 text is reproduced from the cached cssparser LICENSE.",
+    "sources": [
+      {
+        "file": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85.txt",
+        "path": "MPL-2.0.txt",
+        "url": "https://www.mozilla.org/MPL/2.0/"
+      },
+      {
+        "file": "766674381e88a468d55e07de3596987391cf0e8beebe51baf4fddf11078785b3.txt",
+        "path": "source-license-notice.txt",
+        "url": "https://github.com/servo/stylo/blob/572ecba2d1600e7c3d490586692a209faf703baa/selectors/lib.rs"
+      }
+    ]
+  },
+  "cargo/tree-sitter-html@0.23.2": {
+    "revision": "5a5ca8551a179998360b4a4ca2c0f366a35acc03",
+    "sources": [
+      {
+        "file": "2e0110e07abef7c2548b26ec9d6969775617ca539a0dc8dbeeb14d6452c711d1.txt",
+        "path": "LICENSE",
+        "url": "https://github.com/tree-sitter/tree-sitter-html/blob/5a5ca8551a179998360b4a4ca2c0f366a35acc03/LICENSE"
+      }
+    ]
+  },
+  "cargo/tree-sitter-typescript@0.23.2": {
+    "revision": "f975a621f4e7f532fe322e13c4f79495e0a7b2e7",
+    "sources": [
+      {
+        "file": "49bf33cf78ef5897e4e161ce1517df7de1ae5042a65b6bcfd44401e0fc606559.txt",
+        "path": "LICENSE",
+        "url": "https://github.com/tree-sitter/tree-sitter-typescript/blob/f975a621f4e7f532fe322e13c4f79495e0a7b2e7/LICENSE"
+      }
+    ]
+  },
+  "cargo/ts-rs-macros@12.0.1": {
+    "revision": "7182ad8289596097235406b715fa04506443b4ad",
+    "sources": [
+      {
+        "file": "db7f7f8e7236a2d0b41b855b2501b7b913caebbcda6ce498637a304ad1706ce1.txt",
+        "path": "LICENSE",
+        "url": "https://github.com/Aleph-Alpha/ts-rs/blob/7182ad8289596097235406b715fa04506443b4ad/LICENSE"
+      }
+    ]
+  },
+  "cargo/ts-rs@12.0.1": {
+    "revision": "7182ad8289596097235406b715fa04506443b4ad",
+    "sources": [
+      {
+        "file": "db7f7f8e7236a2d0b41b855b2501b7b913caebbcda6ce498637a304ad1706ce1.txt",
+        "path": "LICENSE",
+        "url": "https://github.com/Aleph-Alpha/ts-rs/blob/7182ad8289596097235406b715fa04506443b4ad/LICENSE"
+      }
+    ]
+  },
+  "cargo/webview2-com-macros@0.8.1": {
+    "revision": "dffa41a8a46d3f5565eefbff2de57d38d399f158",
+    "sources": [
+      {
+        "file": "0dcf41516e608bbcb6cdc5229feb7b86fe4a643b85e7df251133c93408fdac73.txt",
+        "path": "LICENSE",
+        "url": "https://github.com/wravery/webview2-rs/blob/dffa41a8a46d3f5565eefbff2de57d38d399f158/LICENSE"
+      }
+    ]
+  },
+  "cargo/webview2-com-sys@0.39.1": {
+    "revision": "edc2caf886175ccaebe86078c9cfe1ae2a187328",
+    "sources": [
+      {
+        "file": "0dcf41516e608bbcb6cdc5229feb7b86fe4a643b85e7df251133c93408fdac73.txt",
+        "path": "LICENSE",
+        "url": "https://github.com/wravery/webview2-rs/blob/edc2caf886175ccaebe86078c9cfe1ae2a187328/LICENSE"
+      }
+    ]
+  },
+  "cargo/webview2-com@0.39.1": {
+    "revision": "edc2caf886175ccaebe86078c9cfe1ae2a187328",
+    "sources": [
+      {
+        "file": "0dcf41516e608bbcb6cdc5229feb7b86fe4a643b85e7df251133c93408fdac73.txt",
+        "path": "LICENSE",
+        "url": "https://github.com/wravery/webview2-rs/blob/edc2caf886175ccaebe86078c9cfe1ae2a187328/LICENSE"
+      }
+    ]
+  },
+  "cargo/winapi-i686-pc-windows-gnu@0.4.0": {
+    "note": "License files from the published parent workspace package whose Cargo manifest declares this sibling dependency.",
+    "sources": [
+      {
+        "file": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1.txt",
+        "sourcePackage": "winapi@0.3.9",
+        "path": "LICENSE-APACHE",
+        "url": "https://crates.io/crates/winapi/0.3.9"
+      },
+      {
+        "file": "ce7bc3499fee93d5022ef430d5e4201e79a6d9154f3974e42f41349f0569e09b.txt",
+        "sourcePackage": "winapi@0.3.9",
+        "path": "LICENSE-MIT",
+        "url": "https://crates.io/crates/winapi/0.3.9"
+      }
+    ]
+  },
+  "cargo/winapi-x86_64-pc-windows-gnu@0.4.0": {
+    "note": "License files from the published parent workspace package whose Cargo manifest declares this sibling dependency.",
+    "sources": [
+      {
+        "file": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1.txt",
+        "sourcePackage": "winapi@0.3.9",
+        "path": "LICENSE-APACHE",
+        "url": "https://crates.io/crates/winapi/0.3.9"
+      },
+      {
+        "file": "ce7bc3499fee93d5022ef430d5e4201e79a6d9154f3974e42f41349f0569e09b.txt",
+        "sourcePackage": "winapi@0.3.9",
+        "path": "LICENSE-MIT",
+        "url": "https://crates.io/crates/winapi/0.3.9"
+      }
+    ]
+  }
+}

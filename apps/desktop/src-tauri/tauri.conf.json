@@ -4,14 +4,20 @@
   "version": "../../../package.json",
   "identifier": "dev.diffkin.desktop",
   "build": {
-    "beforeDevCommand": "pnpm dev",
+    "beforeDevCommand": "pnpm --dir ../.. licenses:generate && pnpm dev",
     "devUrl": "http://127.0.0.1:1420",
-    "beforeBuildCommand": "pnpm build",
+    "beforeBuildCommand": "pnpm --dir ../.. licenses:generate && pnpm build",
     "frontendDist": "../dist"
   },
   "app": {
     "windows": [
-      { "title": "Diffkin · 观变", "width": 1200, "height": 800, "minWidth": 760, "minHeight": 540 }
+      {
+        "title": "Diffkin \u00b7 \u89c2\u53d8",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 760,
+        "minHeight": 540
+      }
     ],
     "security": {
       "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src ipc: http://ipc.localhost",
@@ -29,6 +35,13 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "license": "MIT",
+    "licenseFile": "../../../LICENSE",
+    "resources": {
+      "../../../LICENSE": "LICENSE",
+      "../../../target/third-party-notices/THIRD-PARTY-NOTICES.txt": "licenses/THIRD-PARTY-NOTICES.txt",
+      "../../../target/third-party-notices/inventory.json": "licenses/inventory.json"
+    }
   }
 }

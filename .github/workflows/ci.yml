@@ -32,6 +32,12 @@ jobs:
       - run: pnpm check
       - run: pnpm protocol:check
       - run: pnpm build
+      - name: Install browser test dependencies
+        if: runner.os == 'Linux'
+        run: pnpm --filter @diffkin/desktop exec playwright install --with-deps chromium
+      - name: Test review interface
+        if: runner.os == 'Linux'
+        run: pnpm test:ui
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - run: cargo test --workspace --locked

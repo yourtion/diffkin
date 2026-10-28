@@ -10,3 +10,6 @@ apps/desktop/src-tauri/gen/
 artifacts/
 *.log
 .cache/
+.pnpm-store/
+test-results/
+playwright-report/

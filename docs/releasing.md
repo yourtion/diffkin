@@ -1,6 +1,6 @@
 # Diffkin 开发与发布说明
 
-当前为 M0 脚手架。CI 与发版配置已写入源码，远端运行需要将项目推送至 GitHub 并启用 Actions。安装包构建成功不代表已经完成所有平台的安装、签名与用户体验验收。
+当前为 M0 脚手架。公开仓库为 [yourtion/diffkin](https://github.com/yourtion/diffkin)，CI 与发版由 [GitHub Actions](https://github.com/yourtion/diffkin/actions) 执行。安装包构建成功不代表已经完成所有平台的安装、签名与用户体验验收。
 
 ## 工具链与依赖
 
@@ -21,7 +21,7 @@ Rust 的默认成员只包含内核与 CLI，`cargo test` 不要求桌面 SDK；
 
 Actions 引用固定到已核验的提交 SHA，Dependabot 定期提出更新。默认 token 只有读取权限；只有 release 的最后一个 job 获得 `contents: write`。PR 不使用签名 secrets，也不使用 `pull_request_target` 执行贡献者代码。
 
-建议在仓库 branch rules 中要求三个 `Checks (...)` job 通过。branch rules、GitHub remote 和 secrets 是仓库配置，不会因提交 YAML 自动设置。
+建议在仓库 branch rules 中要求三个 `Checks (...)` job 通过。branch rules 和 secrets 是仓库配置，不会因提交 YAML 自动设置；本地 `origin` 已连接公开仓库。
 
 ## 版本与发布
 
@@ -49,7 +49,7 @@ Release workflow 的顺序为：校验 tag → 复用完整 CI → 四目标构�
 | `x86_64-unknown-linux-gnu` | DEB、AppImage | tar.gz                  |
 | `x86_64-pc-windows-msvc`   | NSIS EXE      | tar.gz 内含 diffkin.exe |
 
-文件名包含版本和 target，防止矩阵上传时重名。工作流中间产物保留 14 天，GitHub Release 中的产物独立保存。CLI 压缩包只包含可执行文件；在公开发行前补齐项目许可证与所需第三方许可材料。
+文件名包含版本和 target，防止矩阵上传时重名。工作流中间产物保留 14 天，GitHub Release 中的产物独立保存。CLI 压缩包包含可执行文件、MIT `LICENSE` 和 `THIRD-PARTY-NOTICES.txt`；桌面安装包包含同样材料及依赖清单。
 
 本地可以检查相同的收集逻辑：
 
@@ -60,6 +60,22 @@ node scripts/release-assets.mjs collect aarch64-apple-darwin
 ```
 
 `checksums` 步骤要求四目标全部产物，不能用本机单目标冒充完整 release。发布前检查各平台安装、`diffkin --version`、文本比较与 `SHA256SUMS`，编辑发布说明并手动发布草稿。
+
+## 第三方许可材料
+
+安装依赖后运行：
+
+```sh
+pnpm licenses:generate
+```
+
+输出位于 `target/third-party-notices`：`README.md` 列出依赖、声明许可证与随包或固定来源补齐的许可文件；`THIRD-PARTY-NOTICES.txt` 保留这些文件的原文；`inventory.json` 包含完整清单、待补材料、应用版本和两个锁文件的 SHA-256。输出不包含开发机绝对路径，依赖未变时可重复生成。
+
+Rust 清单覆盖锁定的依赖图，包含构建/测试和其他平台的依赖；JavaScript 清单只沿桌面应用已安装的生产依赖遍历。这是一份保守的来源清单，不等同于精确的运行时 SBOM。系统 WebView、Git、系统动态库、工具链与安装器额外下载的组件不在清单内。
+
+项目采用 MIT。缺失的上游许可文本已按精确版本/提交或同一发布工作区补齐到 `third-party/licenses`，保留来源 URL 与 SHA-256 校验；详见 [来源说明](../third-party/README.md)。生成器若遇到新依赖没有许可文本，会保留待检查清单并失败，不自动补写版权声明。CI 和桌面构建会先生成材料；Tauri 通过 `bundle.license`、`licenseFile` 和资源映射携带 MIT 与 notices，CLI 收集脚本也要求这些文件存在。
+
+开发机若需绕开不可用的 Cargo 镜像，可在临时目录生成 `cargo metadata --locked --format-version 1 --manifest-path /path/to/diffkin/Cargo.toml > metadata.json`，再将该文件作为脚本第二个参数（桌面构建可设置 `DIFFKIN_LICENSE_METADATA` 指向此文件）：`node scripts/license-report.mjs target/third-party-notices /path/to/metadata.json`。元数据必须对应当前锁文件，不要复用旧版本清单。
 
 ## 签名和自动更新
 
