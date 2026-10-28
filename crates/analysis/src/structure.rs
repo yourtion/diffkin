@@ -11,7 +11,12 @@ use std::{
 };
 use tree_sitter::{Language, Node, ParseOptions, Parser, Tree};
 
-pub const RULE_VERSION: &str = "syntax-v1";
+#[path = "rename.rs"]
+mod language_renames;
+#[path = "language_syntax.rs"]
+mod language_syntax;
+
+pub const RULE_VERSION: &str = "syntax-v2";
 const MAX_NODES: usize = 100_000;
 const STRUCTURE_BUDGET: Duration = Duration::from_secs(1);
 
@@ -59,6 +64,10 @@ fn language(path: &str) -> Option<(&'static str, Language)> {
             tree_sitter_typescript::LANGUAGE_TYPESCRIPT.into(),
         )),
         "tsx" => Some(("tsx", tree_sitter_typescript::LANGUAGE_TSX.into())),
+        "py" | "pyi" => Some(("python", tree_sitter_python::LANGUAGE.into())),
+        "java" => Some(("java", tree_sitter_java::LANGUAGE.into())),
+        "go" => Some(("go", tree_sitter_go::LANGUAGE.into())),
+        "rs" => Some(("rust", tree_sitter_rust::LANGUAGE.into())),
         _ => None,
     }
 }
@@ -92,16 +101,27 @@ fn parse(source: &str, language: &Language, budget: &Budget<'_>) -> Result<Tree,
 
 // Atomic text-bearing nodes include every byte, not just their named children.
 fn atomic(kind: &str) -> bool {
-    matches!(
-        kind,
-        "string"
-            | "template_string"
-            | "regex"
-            | "jsx_text"
-            | "html_character_reference"
-            | "comment"
-            | "hash_bang_line"
-    )
+    kind.ends_with("string_literal")
+        || matches!(
+            kind,
+            "string"
+                | "template_string"
+                | "regex"
+                | "jsx_text"
+                | "html_character_reference"
+                | "comment"
+                | "hash_bang_line"
+                | "character_literal"
+                | "char_literal"
+                | "rune_literal"
+                | "text_block"
+                | "concatenated_string"
+                | "macro_invocation"
+                | "macro_definition"
+                | "token_tree"
+                | "line_comment"
+                | "block_comment"
+        )
 }
 fn check_walk(count: usize, budget: &Budget<'_>) -> Result<(), String> {
     if count >= MAX_NODES {
@@ -126,6 +146,13 @@ fn sensitive(node: Node<'_>, budget: &Budget<'_>) -> Result<bool, String> {
                 | "jsx_element"
                 | "jsx_self_closing_element"
                 | "template_string"
+                | "line_comment"
+                | "block_comment"
+                | "macro_invocation"
+                | "macro_definition"
+                | "token_tree"
+                | "attribute_item"
+                | "inner_attribute_item"
         ) {
             return Ok(true);
         }
@@ -141,6 +168,7 @@ fn signature(
     source: &str,
     names: &HashMap<String, String>,
     budget: &Budget<'_>,
+    language: &str,
 ) -> Result<Vec<String>, String> {
     let mut signature = Vec::new();
     let mut stack = vec![node];
@@ -150,6 +178,10 @@ fn signature(
         }
         if signature.len().is_multiple_of(256) {
             budget.check()?;
+        }
+        if let Some(inner) = language_syntax::ungroup(node, language, budget, source)? {
+            stack.push(inner);
+            continue;
         }
         let terminal = node.child_count() == 0 || atomic(node.kind());
         let value = if terminal {
@@ -168,6 +200,77 @@ fn signature(
             if terminal { 0 } else { node.child_count() },
             value
         ));
+        // Error-recovering grammars can assign similar CSTs across restricted
+        // productions (notably `return\n(x)`). Preserve the lexical line break.
+        if matches!(
+            language,
+            "javascript" | "typescript" | "tsx" | "go" | "python"
+        ) && matches!(
+            node.kind(),
+            "return"
+                | "throw"
+                | "break"
+                | "continue"
+                | "yield"
+                | "async"
+                | "fallthrough"
+                | "raise"
+                | "assert"
+                | "++"
+                | "--"
+        ) {
+            let after_newline = source[node.end_byte()..]
+                .chars()
+                .take_while(|c| c.is_whitespace() || *c == '\u{feff}')
+                .any(|c| matches!(c, '\n' | '\r' | '\u{2028}' | '\u{2029}'));
+            signature.push(format!("restricted-newline-after:{after_newline}"));
+            if matches!(node.kind(), "++" | "--") {
+                let before_newline = source[..node.start_byte()]
+                    .chars()
+                    .rev()
+                    .take_while(|c| c.is_whitespace() || *c == '\u{feff}')
+                    .any(|c| matches!(c, '\n' | '\r' | '\u{2028}' | '\u{2029}'));
+                signature.push(format!("restricted-newline-before:{before_newline}"));
+            }
+        }
+        if language == "go"
+            && terminal
+            && matches!(
+                node.kind(),
+                "identifier"
+                    | "field_identifier"
+                    | "type_identifier"
+                    | "int_literal"
+                    | "float_literal"
+                    | "imaginary_literal"
+                    | "rune_literal"
+                    | "interpreted_string_literal"
+                    | "raw_string_literal"
+                    | "break"
+                    | "continue"
+                    | "fallthrough"
+                    | "raise"
+                    | "assert"
+                    | "return"
+                    | "++"
+                    | "--"
+                    | ")"
+                    | "]"
+                    | "}"
+            )
+        {
+            let rest = &source[node.end_byte()..];
+            let next = rest.trim_start().chars().next();
+            // Go inserts a semicolon after these tokens at a newline. The
+            // semicolon may be omitted before }, and EOF inserts it either way.
+            let newline = next.is_some()
+                && next != Some('}')
+                && rest
+                    .chars()
+                    .take_while(|c| c.is_whitespace())
+                    .any(|c| matches!(c, '\n' | '\r'));
+            signature.push(format!("go-inserted-semicolon:{newline}"));
+        }
         if !terminal {
             for i in (0..node.child_count()).rev() {
                 stack.push(node.child(i).expect("child"));
@@ -175,98 +278,6 @@ fn signature(
         }
     }
     Ok(signature)
-}
-
-fn functions<'a>(root: Node<'a>, source: &str) -> Vec<(String, Node<'a>)> {
-    let mut result = Vec::new();
-    for index in 0..root.named_child_count() {
-        let mut node = root.named_child(index as u32).expect("child");
-        if node.kind() == "export_statement" {
-            if let Some(declaration) = node.child_by_field_name("declaration") {
-                node = declaration;
-            }
-        }
-        if matches!(
-            node.kind(),
-            "function_declaration" | "generator_function_declaration"
-        ) {
-            if let Some(name) = node.child_by_field_name("name") {
-                result.push((source[name.byte_range()].to_owned(), node));
-            }
-        }
-    }
-    result
-}
-
-fn paired_functions<'a>(
-    before: Node<'a>,
-    after: Node<'a>,
-    old: &str,
-    new: &str,
-) -> Vec<(String, Node<'a>, Node<'a>, bool)> {
-    let old_functions = functions(before, old);
-    let new_functions = functions(after, new);
-    let mut old_counts = HashMap::new();
-    let mut new_counts = HashMap::new();
-    for (name, _) in &old_functions {
-        *old_counts.entry(name.as_str()).or_insert(0) += 1;
-    }
-    for (name, _) in &new_functions {
-        *new_counts.entry(name.as_str()).or_insert(0) += 1;
-    }
-    let unique = |name: &str| old_counts.get(name) == Some(&1) && new_counts.get(name) == Some(&1);
-    let old_order: Vec<_> = old_functions
-        .iter()
-        .filter(|(name, _)| unique(name))
-        .map(|(name, _)| name.as_str())
-        .collect();
-    let new_order: Vec<_> = new_functions
-        .iter()
-        .filter(|(name, _)| unique(name))
-        .map(|(name, _)| name.as_str())
-        .collect();
-    let positions: HashMap<_, _> = new_order
-        .iter()
-        .enumerate()
-        .map(|(i, name)| (*name, i))
-        .collect();
-    let sequence: Vec<_> = old_order.iter().map(|name| positions[name]).collect();
-    // A longest increasing subsequence is the largest unchanged anchor order.
-    // Only anchors outside it need relocation; one move must not mark every shifted neighbor.
-    let mut tails: Vec<usize> = Vec::new();
-    let mut predecessors = vec![None; sequence.len()];
-    for (index, &position) in sequence.iter().enumerate() {
-        let slot = tails.partition_point(|&previous| sequence[previous] < position);
-        if slot > 0 {
-            predecessors[index] = Some(tails[slot - 1]);
-        }
-        if slot == tails.len() {
-            tails.push(index);
-        } else {
-            tails[slot] = index;
-        }
-    }
-    let mut stationary = HashSet::new();
-    let mut cursor = tails.last().copied();
-    while let Some(index) = cursor {
-        stationary.insert(index);
-        cursor = predecessors[index];
-    }
-    let new_nodes: HashMap<_, _> = new_functions
-        .iter()
-        .map(|(name, node)| (name.as_str(), *node))
-        .collect();
-    old_functions
-        .iter()
-        .filter(|(name, _)| unique(name))
-        .enumerate()
-        .map(|(i, (name, a))| {
-            let b = new_nodes[name.as_str()];
-            // Insertions and deletions do not disturb surviving anchor order.
-            let moved = !stationary.contains(&i);
-            (name.clone(), *a, b, moved)
-        })
-        .collect()
 }
 
 // Supported binding domain: a function's simple parameters and simple body-level let/const.
@@ -465,6 +476,90 @@ fn event(
     }
 }
 
+fn whole_lines(node: Node<'_>, source: &str) -> Option<(usize, usize)> {
+    let start = source[..node.start_byte()]
+        .rfind(['\n', '\r'])
+        .map_or(0, |i| i + 1);
+    let mut end = source[node.end_byte()..]
+        .find(['\n', '\r'])
+        .map_or(source.len(), |i| node.end_byte() + i + 1);
+    if end > 0 && source.as_bytes()[end - 1] == b'\r' && source.as_bytes().get(end) == Some(&b'\n')
+    {
+        end += 1;
+    }
+    if source[start..node.start_byte()]
+        .chars()
+        .all(char::is_whitespace)
+        && source[node.end_byte()..end]
+            .chars()
+            .all(char::is_whitespace)
+    {
+        Some((start, end))
+    } else {
+        None
+    }
+}
+
+fn format_regions(
+    a: Node<'_>,
+    b: Node<'_>,
+    before: &str,
+    after: &str,
+    language: &str,
+    budget: &Budget<'_>,
+) -> Result<Vec<ChangeEvent>, String> {
+    if !language_syntax::indentation_safe(before, language)
+        || !language_syntax::indentation_safe(after, language)
+    {
+        return Ok(vec![]);
+    }
+    let mut result = Vec::new();
+    let mut stack = vec![(a, b)];
+    let mut count = 0;
+    let names = HashMap::new();
+    while let Some((old, new)) = stack.pop() {
+        check_walk(count, budget)?;
+        count += 1;
+        if old.kind() != new.kind() || before[old.byte_range()] == after[new.byte_range()] {
+            continue;
+        }
+        if !sensitive(old, budget)?
+            && !sensitive(new, budget)?
+            && signature(old, before, &names, budget, language)?
+                == signature(new, after, &names, budget, language)?
+        {
+            if let (Some(a), Some(b)) = (whole_lines(old, before), whole_lines(new, after)) {
+                result.push(event("局部排版变化".into(),vec!["format"],before,after,Some(a),Some(b),vec!["local-cst-trivia-v2: corresponding subtree has identical safe-normalized syntax/tokens; the entire covered original lines contain only this subtree and whitespace".into()]));
+                continue;
+            }
+        }
+        if atomic(old.kind()) || old.named_child_count() != new.named_child_count() {
+            continue;
+        }
+        for i in (0..old.named_child_count()).rev() {
+            let oa = old.named_child(i as u32).expect("child");
+            let nb = new.named_child(i as u32).expect("child");
+            // Nested scopes are not paired by ordinal position.
+            if matches!(
+                oa.kind(),
+                "function_declaration"
+                    | "function_definition"
+                    | "function_item"
+                    | "method_declaration"
+                    | "method_definition"
+                    | "class_declaration"
+                    | "class_definition"
+                    | "arrow_function"
+                    | "lambda"
+            ) {
+                continue;
+            }
+            stack.push((oa, nb));
+        }
+    }
+    Ok(result)
+}
+
 fn compare_trees(
     before: &str,
     after: &str,
@@ -472,29 +567,38 @@ fn compare_trees(
     b: Node<'_>,
     budget: &Budget<'_>,
     fallbacks: &mut Vec<String>,
+    language: &str,
 ) -> Result<Vec<ChangeEvent>, String> {
     let empty = HashMap::new();
     if before == after {
         return Ok(vec![]);
     }
-    if signature(a, before, &empty, budget)? == signature(b, after, &empty, budget)?
+    if signature(a, before, &empty, budget, language)?
+        == signature(b, after, &empty, budget, language)?
         && !sensitive(a, budget)?
         && !sensitive(b, budget)?
+        && language_syntax::indentation_safe(before, language)
+        && language_syntax::indentation_safe(after, language)
         && before.starts_with('\u{feff}') == after.starts_with('\u{feff}')
     {
-        return Ok(vec![event("仅排版变化".into(),vec!["format"],before,after,Some((0,before.len())),Some((0,after.len())),vec!["cst-trivia-v1: complete concrete syntax shape and every token are identical; no comment/template/JSX sensitive region".into()])]);
+        return Ok(vec![event("仅排版变化".into(),vec!["format"],before,after,Some((0,before.len())),Some((0,after.len())),vec!["cst-trivia-v2: complete syntax shape and tokens match after safe scalar grouping normalization; no sensitive region".into()])]);
     }
     let mut events = Vec::new();
-    for (name, old, new, moved) in paired_functions(a, b, before, after) {
+    for (name, old, new, moved) in language_syntax::pair(a, b, before, after, language, budget)? {
         budget.check()?;
         let old_raw = &before[old.byte_range()];
         let new_raw = &after[new.byte_range()];
         if old_raw == new_raw && !moved {
             continue;
         }
-        let old_signature = signature(old, before, &empty, budget)?;
-        let new_signature = signature(new, after, &empty, budget)?;
-        let renamed = match renames(old, new, before, after, budget) {
+        let old_signature = signature(old, before, &empty, budget, language)?;
+        let new_signature = signature(new, after, &empty, budget, language)?;
+        let rename_result = if matches!(language, "python" | "java" | "go" | "rust") {
+            language_renames::detect(language, old, new, before, after, &|| budget.check())
+        } else {
+            renames(old, new, before, after, budget)
+        };
+        let renamed = match rename_result {
             Ok(names) => names,
             Err(reason) => {
                 fallbacks.push(format!("{name}: {reason}"));
@@ -502,26 +606,28 @@ fn compare_trees(
             }
         };
         let normalization: HashMap<String, String> = renamed.iter().cloned().collect();
-        let normalized_equal =
-            !renamed.is_empty() && signature(old, before, &normalization, budget)? == new_signature;
+        let normalized_equal = !renamed.is_empty()
+            && signature(old, before, &normalization, budget, language)? == new_signature;
         let format = old_signature == new_signature
             && !sensitive(old, budget)?
             && !sensitive(new, budget)?
-            && old_raw != new_raw;
+            && old_raw != new_raw
+            && language_syntax::indentation_safe(before, language)
+            && language_syntax::indentation_safe(after, language);
         let edit = old_signature != new_signature && !normalized_equal;
         let mut facets = Vec::new();
         let mut evidence = Vec::new();
         if moved {
             facets.push("move");
-            evidence.push("unique-function-order-v1: same unique declaration name; outside the longest unchanged relative-order anchor sequence (order may affect behavior; equally minimal reorderings may exist)".into());
+            evidence.push("unique-function-order-v1: same unique scope/name/signature; outside the longest unchanged relative-order anchor sequence (order may affect behavior; equally minimal reorderings may exist)".into());
         }
         if !renamed.is_empty() {
             facets.push("rename");
-            evidence.push(format!("simple-local-binding-v1: {}. Declaration and every identifier-reference syntax path correspond; no nested/dynamic/shorthand scope",renamed.iter().map(|(a,b)|format!("{a} → {b}")).collect::<Vec<_>>().join(", ")));
+            evidence.push(format!("simple-local-binding-v1: {}. Declaration and every identifier-reference syntax path correspond; no nested/dynamic/shorthand scope. Rename remains visible: callers/keyword arguments and runtime binding effects are not proven equivalent",renamed.iter().map(|(a,b)|format!("{a} → {b}")).collect::<Vec<_>>().join(", ")));
         }
         if format {
             facets.push("format");
-            evidence.push("cst-trivia-v1: complete function CST and token bytes match".into());
+            evidence.push("cst-trivia-v2: complete function structure/tokens match after explicitly safe scalar grouping normalization".into());
         }
         if edit {
             facets.push("edit");
@@ -535,12 +641,39 @@ fn compare_trees(
             facets,
             before,
             after,
-            Some((old.start_byte(), old.end_byte())),
-            Some((new.start_byte(), new.end_byte())),
+            Some(if format && !moved {
+                whole_lines(old, before).unwrap_or((old.start_byte(), old.end_byte()))
+            } else {
+                (old.start_byte(), old.end_byte())
+            }),
+            Some(if format && !moved {
+                whole_lines(new, after).unwrap_or((new.start_byte(), new.end_byte()))
+            } else {
+                (new.start_byte(), new.end_byte())
+            }),
             evidence,
         ));
         if edit {
             events.push(event(format!("{name} 内部修改"),vec!["edit"],before,after,Some((old.start_byte(),old.end_byte())),Some((new.start_byte(),new.end_byte())),vec!["Review the paired original function bodies; movement/rename does not prove behavioral equivalence".into()]));
+            events.extend(format_regions(old, new, before, after, language, budget)?);
+        }
+    }
+    if a.named_child_count() == b.named_child_count() {
+        for i in 0..a.named_child_count() {
+            let old = a.named_child(i as u32).expect("child");
+            let new = b.named_child(i as u32).expect("child");
+            if matches!(
+                old.kind(),
+                "lexical_declaration"
+                    | "expression_statement"
+                    | "import_statement"
+                    | "const_declaration"
+                    | "var_declaration"
+                    | "let_declaration"
+            ) && old.kind() == new.kind()
+            {
+                events.extend(format_regions(old, new, before, after, language, budget)?);
+            }
         }
     }
     Ok(events)
@@ -642,7 +775,7 @@ fn vue_events(
         }
         let old = &before[a.start..a.end];
         let new = &after[b.start..b.end];
-        let (_, lang) = language(&format!("block.{}", a.language)).expect("supported script");
+        let (name, lang) = language(&format!("block.{}", a.language)).expect("supported script");
         let old_tree = parse(old, &lang, budget)?;
         let new_tree = parse(new, &lang, budget)?;
         for mut item in compare_trees(
@@ -652,6 +785,7 @@ fn vue_events(
             new_tree.root_node(),
             budget,
             fallbacks,
+            name,
         )? {
             item.before = item.before.map(|r| {
                 source_range(
@@ -679,6 +813,18 @@ fn intersects(range: &SourceRange, start: usize, end: usize) -> bool {
 }
 fn contains(range: &SourceRange, start: usize, end: usize) -> bool {
     range.byte_start as usize <= start && range.byte_end as usize >= end
+}
+
+fn encloses_event(parent: &ChangeEvent, child: &ChangeEvent) -> bool {
+    [&parent.before, &parent.after]
+        .iter()
+        .zip([&child.before, &child.after])
+        .all(|(parent, child)| match (parent.as_ref(), child.as_ref()) {
+            (Some(parent), Some(child)) => {
+                parent.byte_start <= child.byte_start && parent.byte_end >= child.byte_end
+            }
+            _ => false,
+        })
 }
 
 fn coverage(
@@ -709,10 +855,8 @@ fn coverage(
                 (start, new_offset, false)
             }
         };
-        let mut ids = Vec::new();
-        let mut format = false;
-        let mut nonformat = false;
-        for item in events.iter_mut() {
+        let mut intersecting = Vec::new();
+        for (event_index, item) in events.iter_mut().enumerate() {
             steps += 1;
             if steps.is_multiple_of(256) {
                 if let Some(budget) = budget {
@@ -720,23 +864,38 @@ fn coverage(
                 }
             }
             let span = if old { &item.before } else { &item.after };
-            if let Some(span) = span {
-                if intersects(span, start, end) {
-                    item.raw_edit_ids.push(index as u32);
-                    ids.push(item.id.clone());
-                    if item.facets == ["format"] && contains(span, start, end) {
-                        format = true;
-                    } else {
-                        nonformat = true;
-                    }
-                }
+            if span
+                .as_ref()
+                .is_some_and(|span| intersects(span, start, end))
+            {
+                item.raw_edit_ids.push(index as u32);
+                intersecting.push(event_index);
             }
         }
+        let proofs: Vec<_> = intersecting
+            .iter()
+            .copied()
+            .filter(|&i| {
+                let proof = &events[i];
+                let span = if old { &proof.before } else { &proof.after };
+                proof.facets == ["format"]
+                    && span.as_ref().is_some_and(|span| contains(span, start, end))
+                    && intersecting.iter().all(|&j| {
+                        events[j].facets == ["format"] || encloses_event(&events[j], proof)
+                    })
+            })
+            .collect();
+        let format = !proofs.is_empty();
+        let ids = if format {
+            proofs.iter().map(|&i| events[i].id.clone()).collect()
+        } else {
+            intersecting.iter().map(|&i| events[i].id.clone()).collect()
+        };
         coverage.push(CoverageEntry {
             raw_edit_id: index as u32,
             presentation: if fallback {
                 Presentation::TextFallback
-            } else if format && !nonformat {
+            } else if format {
                 Presentation::FoldedFormat
             } else {
                 Presentation::Visible
@@ -796,6 +955,7 @@ pub fn analyze(
                 b.root_node(),
                 &budget,
                 &mut result.fallbacks,
+                name,
             )
         })()
     } else {
@@ -820,6 +980,18 @@ pub fn analyze(
         if result.events[index].title.ends_with(" 内部修改") {
             let id = result.events[index].id.clone();
             result.events[index - 1].children.push(id);
+        }
+    }
+    for index in 0..result.events.len() {
+        if result.events[index].facets == ["format"] {
+            if let Some(parent) = (0..index).rev().find(|&p| {
+                result.events[p].facets != ["format"]
+                    && !result.events[p].title.ends_with(" 内部修改")
+                    && encloses_event(&result.events[p], &result.events[index])
+            }) {
+                let id = result.events[index].id.clone();
+                result.events[parent].children.push(id);
+            }
         }
     }
     if result.events.is_empty() && result.fallbacks.is_empty() {

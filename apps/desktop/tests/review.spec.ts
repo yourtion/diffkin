@@ -411,3 +411,84 @@ test("format folding never hides a neighboring condition edit in a shared unifie
   await page.getByRole("button", { name: "完整原始视图", exact: true }).click();
   await expect(page.locator(".merge-host")).toContainText("return 1", { useInnerText: true });
 });
+
+test("moves connect original locations and retain grouped internal edits", async ({ page }) => {
+  const movedBefore = "function pay(balance, amount) {\n  return balance > amount;\n}\n";
+  const movedAfter = "function pay(balance, requested) {\n  return balance >= requested;\n}\n";
+  const siblings = Array.from(
+    { length: 50 },
+    (_, i) => `function helper${i}() { return ${i}; }\n`,
+  ).join("");
+  const old = movedBefore + siblings;
+  const next = siblings + movedAfter;
+  const range = (source: string, start: number, end: number) => ({
+    byteStart: start,
+    byteEnd: end,
+    utf16Start: start,
+    utf16End: end,
+    startLine: source.slice(0, start).split("\n").length,
+    endLine: source.slice(0, end - 1).split("\n").length,
+  });
+  const parent = {
+    ...result.analysis!.events[0],
+    id: "move-pay",
+    title: "pay: 移动与局部改名",
+    facets: ["move", "rename", "edit"] as ("move" | "rename" | "edit")[],
+    before: range(old, 0, movedBefore.length),
+    after: range(next, siblings.length, next.length),
+    children: ["edit-pay"],
+  };
+  const child = {
+    ...parent,
+    id: "edit-pay",
+    title: "pay: 内部条件修改",
+    facets: ["edit"] as "edit"[],
+    children: [],
+  };
+  const payload: FileAnalysis = {
+    ...result,
+    file: { ...result.file, before: old, after: next },
+    analysis: { ...result.analysis!, events: [parent, child] },
+  };
+  await bridge(page, {}, payload);
+  await open(page);
+  const overlay = page.getByRole("img", { name: /代码移动：pay/ });
+  const curve = overlay.locator("path");
+  await expect(overlay).toBeVisible();
+  await expect(curve).toHaveAttribute("d", /^M .+ C .+/);
+  await expect(page.locator(".move-overlay path")).toHaveCount(1);
+  await expect(page.locator(".event-group")).toHaveCount(1);
+  await expect(page.locator(".event-group .event")).toHaveCount(2);
+  await page.getByLabel("折叠未改行").uncheck();
+  await page.getByRole("button", { name: "起点 L1", exact: true }).click();
+  await page.getByRole("button", { name: "终点 L51", exact: true }).click();
+  await expect(page.locator(".cm-editor").last().locator(".cm-content")).toBeFocused();
+  await expect(overlay).toHaveAttribute("data-before-clipped", "上方");
+  await expect(curve).toHaveAttribute("stroke-dasharray", "4 3");
+  const scrolledPath = await curve.getAttribute("d");
+  await page.locator(".merge-host").evaluate((element) => {
+    element.scrollTop = 0;
+  });
+  await expect.poll(() => curve.getAttribute("d")).not.toBe(scrolledPath);
+  await expect(overlay).toHaveAttribute("data-after-clipped", "下方");
+  await page.getByRole("button", { name: "完整原始视图", exact: true }).click();
+  await expect(overlay).toHaveAttribute("data-after-clipped", "");
+  const firstPath = await curve.getAttribute("d");
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await expect.poll(() => curve.getAttribute("d")).not.toBe(firstPath);
+  await page.getByRole("button", { name: /pay: 内部条件修改/ }).click();
+  await expect(page.getByLabel("仅对照这组变化")).toBeChecked();
+  await expect(overlay).toHaveCount(0);
+  await expect(page.locator(".cm-mergeView")).toContainText("balance > amount");
+  await expect(page.locator(".cm-mergeView")).toContainText("balance >= requested");
+  await expect(page.locator(".cm-mergeView")).not.toContainText("helper0");
+  await page.getByRole("button", { name: /pay: 移动与局部改名/ }).click();
+  await expect(overlay).toBeVisible();
+  await page.screenshot({ path: "test-results/move-connection.png", fullPage: true });
+  await page.getByRole("button", { name: "统一", exact: true }).click();
+  await expect(overlay).toHaveCount(0);
+  await page.getByRole("button", { name: "双栏", exact: true }).click();
+  await expect(overlay).toBeVisible();
+  await page.getByRole("button", { name: "返回完整文件", exact: true }).click();
+  await expect(overlay).toHaveCount(0);
+});

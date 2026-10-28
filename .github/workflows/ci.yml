@@ -35,9 +35,14 @@ jobs:
       - name: Install browser test dependencies
         if: runner.os == 'Linux'
         run: pnpm --filter @diffkin/desktop exec playwright install --with-deps chromium
+      - name: Generate real-kernel review fixtures
+        if: runner.os == 'Linux'
+        run: cargo run -p diffkin-analysis --example ui_fixture --locked > target/ui-fixture.json
       - name: Test review interface
         if: runner.os == 'Linux'
         run: pnpm test:ui
+        env:
+          DIFFKIN_KERNEL_FIXTURE: ${{ github.workspace }}/target/ui-fixture.json
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - run: cargo test --workspace --locked

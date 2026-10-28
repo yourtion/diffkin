@@ -1,0 +1,722 @@
+[
+  {
+    "id": "javascript-format",
+    "path": "case.js",
+    "before": "function f(x){return x+1;}\n",
+    "after": "function f(x) {\n return x + 1;\n}\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "fold": true,
+      "visible": null
+    }
+  },
+  {
+    "id": "javascript-parentheses",
+    "path": "case.js",
+    "before": "function f(x){return ((x+1));}\n",
+    "after": "function f(x){return x+1;}\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "fold": true,
+      "visible": null
+    }
+  },
+  {
+    "id": "javascript-move-edit",
+    "path": "case.js",
+    "before": "function a(){return 1;}\nfunction b(){return 2;}\n",
+    "after": "function b(){return 2;}\nfunction a(){return 3;}\n",
+    "expected": {
+      "format": false,
+      "move": true,
+      "fold": false,
+      "visible": "3"
+    }
+  },
+  {
+    "id": "javascript-literal-edit",
+    "path": "case.js",
+    "before": "function f(x){return x+1;}\n",
+    "after": "function f(x){return x+2;}\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": "+2"
+    }
+  },
+  {
+    "id": "typescript-format",
+    "path": "case.ts",
+    "before": "function f(x:number){return x+1;}\n",
+    "after": "function f(x: number) {\n return x + 1;\n}\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "fold": true,
+      "visible": null
+    }
+  },
+  {
+    "id": "typescript-parentheses",
+    "path": "case.ts",
+    "before": "function f(x:number){return ((x+1));}\n",
+    "after": "function f(x:number){return x+1;}\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "fold": true,
+      "visible": null
+    }
+  },
+  {
+    "id": "typescript-move-edit",
+    "path": "case.ts",
+    "before": "function a():number{return 1;}\nfunction b():number{return 2;}\n",
+    "after": "function b():number{return 2;}\nfunction a():number{return 3;}\n",
+    "expected": {
+      "format": false,
+      "move": true,
+      "fold": false,
+      "visible": "3"
+    }
+  },
+  {
+    "id": "typescript-literal-edit",
+    "path": "case.ts",
+    "before": "function f(x:number){return x+1;}\n",
+    "after": "function f(x:number){return x+2;}\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": "+2"
+    }
+  },
+  {
+    "id": "python-format",
+    "path": "case.py",
+    "before": "def f(x):\n return x+1\n",
+    "after": "def f(x):\n    return x + 1\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "fold": true,
+      "visible": null
+    }
+  },
+  {
+    "id": "python-parentheses",
+    "path": "case.py",
+    "before": "def f(x):\n    return ((x + 1))\n",
+    "after": "def f(x):\n    return x + 1\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "fold": true,
+      "visible": null
+    }
+  },
+  {
+    "id": "python-move-edit",
+    "path": "case.py",
+    "before": "def a():\n    return 1\ndef b():\n    return 2\n",
+    "after": "def b():\n    return 2\ndef a():\n    return 3\n",
+    "expected": {
+      "format": false,
+      "move": true,
+      "fold": false,
+      "visible": "3"
+    }
+  },
+  {
+    "id": "python-literal-edit",
+    "path": "case.py",
+    "before": "def f(x):\n return x+1\n",
+    "after": "def f(x):\n return x+2\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": "+2"
+    }
+  },
+  {
+    "id": "java-format",
+    "path": "Case.java",
+    "before": "class A{int f(int x){return x+1;}}\n",
+    "after": "class A {\n int f(int x) {\n  return x + 1;\n }\n}\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "fold": true,
+      "visible": null
+    }
+  },
+  {
+    "id": "java-parentheses",
+    "path": "Case.java",
+    "before": "class A{int f(int x){return ((x+1));}}\n",
+    "after": "class A{int f(int x){return x+1;}}\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "fold": true,
+      "visible": null
+    }
+  },
+  {
+    "id": "java-move-edit",
+    "path": "Case.java",
+    "before": "class A{int a(){return 1;} int b(){return 2;}}",
+    "after": "class A{int b(){return 2;} int a(){return 3;}}",
+    "expected": {
+      "format": false,
+      "move": true,
+      "fold": false,
+      "visible": "3"
+    }
+  },
+  {
+    "id": "java-literal-edit",
+    "path": "Case.java",
+    "before": "class A{int f(int x){return x+1;}}\n",
+    "after": "class A{int f(int x){return x+2;}}\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": "+2"
+    }
+  },
+  {
+    "id": "go-format",
+    "path": "case.go",
+    "before": "package a\nfunc f(x int) int{return x+1}\n",
+    "after": "package a\nfunc f(x int) int {\n return x + 1\n}\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "fold": true,
+      "visible": null
+    }
+  },
+  {
+    "id": "go-parentheses",
+    "path": "case.go",
+    "before": "package a\nfunc f(x int) int{return ((x+1))}\n",
+    "after": "package a\nfunc f(x int) int{return x+1}\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "fold": true,
+      "visible": null
+    }
+  },
+  {
+    "id": "go-move-edit",
+    "path": "case.go",
+    "before": "package a\nfunc a() int{return 1}\nfunc b() int{return 2}\n",
+    "after": "package a\nfunc b() int{return 2}\nfunc a() int{return 3}\n",
+    "expected": {
+      "format": false,
+      "move": true,
+      "fold": false,
+      "visible": "3"
+    }
+  },
+  {
+    "id": "go-literal-edit",
+    "path": "case.go",
+    "before": "package a\nfunc f(x int) int{return x+1}\n",
+    "after": "package a\nfunc f(x int) int{return x+2}\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": "+2"
+    }
+  },
+  {
+    "id": "rust-format",
+    "path": "case.rs",
+    "before": "fn f(x:i32)->i32{x+1}\n",
+    "after": "fn f(x: i32) -> i32 {\n x + 1\n}\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "fold": true,
+      "visible": null
+    }
+  },
+  {
+    "id": "rust-parentheses",
+    "path": "case.rs",
+    "before": "fn f(x:i32)->i32{((x+1))}\n",
+    "after": "fn f(x:i32)->i32{x+1}\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "fold": true,
+      "visible": null
+    }
+  },
+  {
+    "id": "rust-move-edit",
+    "path": "case.rs",
+    "before": "fn a()->i32{1}\nfn b()->i32{2}\n",
+    "after": "fn b()->i32{2}\nfn a()->i32{3}\n",
+    "expected": {
+      "format": false,
+      "move": true,
+      "fold": false,
+      "visible": "3"
+    }
+  },
+  {
+    "id": "rust-literal-edit",
+    "path": "case.rs",
+    "before": "fn f(x:i32)->i32{x+1}\n",
+    "after": "fn f(x:i32)->i32{x+2}\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": "+2"
+    }
+  },
+  {
+    "id": "vue-format",
+    "path": "Case.vue",
+    "before": "<script lang=\"ts\">\nfunction f(x:number){return x+1;}\n</script>",
+    "after": "<script lang=\"ts\">\nfunction f(x: number) {\n return x + 1;\n}\n</script>",
+    "expected": {
+      "format": true,
+      "move": false,
+      "fold": true,
+      "visible": null
+    }
+  },
+  {
+    "id": "vue-parentheses",
+    "path": "Case.vue",
+    "before": "<script lang=\"ts\">\nfunction f(x:number){return ((x+1));}\n</script>",
+    "after": "<script lang=\"ts\">\nfunction f(x:number){return x+1;}\n</script>",
+    "expected": {
+      "format": true,
+      "move": false,
+      "fold": true,
+      "visible": null
+    }
+  },
+  {
+    "id": "vue-move-edit",
+    "path": "Case.vue",
+    "before": "<script>\nfunction a(){return 1;}\nfunction b(){return 2;}\n</script>",
+    "after": "<script>\nfunction b(){return 2;}\nfunction a(){return 3;}\n</script>",
+    "expected": {
+      "format": false,
+      "move": true,
+      "fold": false,
+      "visible": "3"
+    }
+  },
+  {
+    "id": "vue-literal-edit",
+    "path": "Case.vue",
+    "before": "<script lang=\"ts\">\nfunction f(x:number){return x+1;}\n</script>",
+    "after": "<script lang=\"ts\">\nfunction f(x:number){return x+2;}\n</script>",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": "+2"
+    }
+  },
+  {
+    "id": "python-class-method-move",
+    "path": "case.py",
+    "before": "class A:\n def a(self):\n  return 1\n def b(self):\n  return 2\n",
+    "after": "class A:\n def b(self):\n  return 2\n def a(self):\n  return 3\n",
+    "expected": {
+      "format": false,
+      "move": true,
+      "fold": false,
+      "visible": "3"
+    }
+  },
+  {
+    "id": "python-cross-class-not-move",
+    "path": "case.py",
+    "before": "class A:\n def f(self):\n  return 1\nclass B:\n def f(self):\n  return 2\n",
+    "after": "class B:\n def f(self):\n  return 2\nclass A:\n def f(self):\n  return 1\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": null
+    }
+  },
+  {
+    "id": "python-duplicate-name",
+    "path": "case.py",
+    "before": "def f():\n return 1\ndef f():\n return 2\n",
+    "after": "def f():\n return 2\ndef f():\n return 1\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": null
+    }
+  },
+  {
+    "id": "java-overload-move",
+    "path": "Case.java",
+    "before": "class A{int f(int x){return 1;} int f(String x){return 2;}}",
+    "after": "class A{int f(String x){return 2;} int f(int x){return 3;}}",
+    "expected": {
+      "format": false,
+      "move": true,
+      "fold": false,
+      "visible": "3"
+    }
+  },
+  {
+    "id": "java-cross-class-not-move",
+    "path": "Case.java",
+    "before": "class A{int f(){return 1;}} class B{int f(){return 2;}}",
+    "after": "class B{int f(){return 2;}} class A{int f(){return 1;}}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": null
+    }
+  },
+  {
+    "id": "java-duplicate-method",
+    "path": "Case.java",
+    "before": "class A{int f(){return 1;} int f(){return 2;}}",
+    "after": "class A{int f(){return 2;} int f(){return 1;}}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": null
+    }
+  },
+  {
+    "id": "go-receiver-move",
+    "path": "case.go",
+    "before": "package a\nfunc (x *A) f() int{return 1}\nfunc (x *B) f() int{return 2}\n",
+    "after": "package a\nfunc (x *B) f() int{return 2}\nfunc (x *A) f() int{return 3}\n",
+    "expected": {
+      "format": false,
+      "move": true,
+      "fold": false,
+      "visible": "3"
+    }
+  },
+  {
+    "id": "go-changed-receiver-not-paired",
+    "path": "case.go",
+    "before": "package a\nfunc (x *A) f() int{return 1}\n",
+    "after": "package a\nfunc (x *B) f() int{return 1}\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": null
+    }
+  },
+  {
+    "id": "go-duplicate-name",
+    "path": "case.go",
+    "before": "package a\nfunc f() int{return 1}\nfunc f() int{return 2}\n",
+    "after": "package a\nfunc f() int{return 2}\nfunc f() int{return 1}\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": null
+    }
+  },
+  {
+    "id": "rust-impl-method-move",
+    "path": "case.rs",
+    "before": "impl A{fn a()->i32{1} fn b()->i32{2}}",
+    "after": "impl A{fn b()->i32{2} fn a()->i32{3}}",
+    "expected": {
+      "format": false,
+      "move": true,
+      "fold": false,
+      "visible": "3"
+    }
+  },
+  {
+    "id": "rust-cross-impl-not-move",
+    "path": "case.rs",
+    "before": "impl A{fn f()->i32{1}} impl B{fn f()->i32{2}}",
+    "after": "impl B{fn f()->i32{2}} impl A{fn f()->i32{1}}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": null
+    }
+  },
+  {
+    "id": "rust-duplicate-name",
+    "path": "case.rs",
+    "before": "fn f()->i32{1} fn f()->i32{2}",
+    "after": "fn f()->i32{2} fn f()->i32{1}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": null
+    }
+  },
+  {
+    "id": "js-arrow-move-edit",
+    "path": "case.js",
+    "before": "const a=(x)=>x+1;\nconst b=(x)=>x+2;\n",
+    "after": "const b=(x)=>x+2;\nconst a=(x)=>x+3;\n",
+    "expected": {
+      "format": false,
+      "move": true,
+      "fold": false,
+      "visible": "3"
+    }
+  },
+  {
+    "id": "ts-class-method-move",
+    "path": "case.ts",
+    "before": "class A{a(){return 1;} b(){return 2;}}",
+    "after": "class A{b(){return 2;} a(){return 3;}}",
+    "expected": {
+      "format": false,
+      "move": true,
+      "fold": false,
+      "visible": "3"
+    }
+  },
+  {
+    "id": "js-mixed-local-proof",
+    "path": "case.js",
+    "before": "function f(x){\n const n=1;\n return x>n;\n}\n",
+    "after": "function f(x){\n const n = 1;\n return x>=n;\n}\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "fold": true,
+      "visible": ">="
+    }
+  },
+  {
+    "id": "python-mixed-local-proof",
+    "path": "case.py",
+    "before": "def f(x):\n n=1\n return x>n\n",
+    "after": "def f(x):\n n = 1\n return x>=n\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "fold": true,
+      "visible": ">="
+    }
+  },
+  {
+    "id": "java-mixed-local-proof",
+    "path": "Case.java",
+    "before": "class A{\n boolean f(int x){\n int n=1;\n return x>n;\n }\n}\n",
+    "after": "class A{\n boolean f(int x){\n int n = 1;\n return x>=n;\n }\n}\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "fold": true,
+      "visible": ">="
+    }
+  },
+  {
+    "id": "go-mixed-local-proof",
+    "path": "case.go",
+    "before": "package a\nfunc f(x int) bool{\n var n int=1\n return x>n\n}\n",
+    "after": "package a\nfunc f(x int) bool{\n var n int = 1\n return x>=n\n}\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "fold": true,
+      "visible": ">="
+    }
+  },
+  {
+    "id": "rust-mixed-local-proof",
+    "path": "case.rs",
+    "before": "fn f(x:i32)->bool{\n let n=1;\n x>n\n}\n",
+    "after": "fn f(x:i32)->bool{\n let n = 1;\n x>=n\n}\n",
+    "expected": {
+      "format": true,
+      "move": false,
+      "fold": true,
+      "visible": ">="
+    }
+  },
+  {
+    "id": "python-walrus",
+    "path": "case.py",
+    "before": "def f(x):\n return (y := x)\n",
+    "after": "def f(x):\n return y := x\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": ":="
+    }
+  },
+  {
+    "id": "python-generator-tuple",
+    "path": "case.py",
+    "before": "def f(xs):\n return (x for x in xs)\n",
+    "after": "def f(xs):\n return (x for x in xs),\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": "),"
+    }
+  },
+  {
+    "id": "python-formfeed-indent",
+    "path": "case.py",
+    "before": "def f(x):\n\f return x\n",
+    "after": "def f(x):\n return x\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": "return"
+    }
+  },
+  {
+    "id": "java-lambda-cast",
+    "path": "Case.java",
+    "before": "class A{Object f(){return (Runnable)()->{};}}",
+    "after": "class A{Object f(){return ()->{};}}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": "return"
+    }
+  },
+  {
+    "id": "go-newline-before-brace",
+    "path": "case.go",
+    "before": "package a\nfunc f(){if ready {run()}}\n",
+    "after": "package a\nfunc f(){if ready\n{run()}}\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": "ready"
+    }
+  },
+  {
+    "id": "rust-macro-whitespace",
+    "path": "case.rs",
+    "before": "fn f(){probe!(a + b);}",
+    "after": "fn f(){probe!(a+b);}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": "a+b"
+    }
+  },
+  {
+    "id": "js-u2028-return",
+    "path": "case.js",
+    "before": "function f(){return (1);}",
+    "after": "function f(){return (1);}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": "return"
+    }
+  },
+  {
+    "id": "js-u2029-return",
+    "path": "case.js",
+    "before": "function f(){return (1);}",
+    "after": "function f(){return (1);}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": "return"
+    }
+  },
+  {
+    "id": "vue-optional-chain",
+    "path": "Case.vue",
+    "before": "<script>function f(x){return x?.a.b;}</script>",
+    "after": "<script>function f(x){return (x?.a).b;}</script>",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": "(x?.a)"
+    }
+  },
+  {
+    "id": "go-grouped-condition-newline",
+    "path": "case.go",
+    "before": "package a\nfunc f(){if (ready)\n{run()}}\n",
+    "after": "package a\nfunc f(){if ready {run()}}\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": "ready"
+    }
+  },
+  {
+    "id": "go-grouped-return-newline",
+    "path": "case.go",
+    "before": "package a\nfunc f(x int) int{return (x)\n+1}\n",
+    "after": "package a\nfunc f(x int) int{return x+1}\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": "+1"
+    }
+  },
+  {
+    "id": "js-BOM-before-newline",
+    "path": "case.js",
+    "before": "function f(){return (1);}",
+    "after": "function f(){return ﻿\n(1);}",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": "return"
+    }
+  },
+  {
+    "id": "python-return-newline",
+    "path": "case.py",
+    "before": "def f(x):\n return (x)\n",
+    "after": "def f(x):\n return\n (x)\n",
+    "expected": {
+      "format": false,
+      "move": false,
+      "fold": false,
+      "visible": "return"
+    }
+  }
+]

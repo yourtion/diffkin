@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { EditorState, type Extension } from "@codemirror/state";
 import { EditorView, keymap, lineNumbers } from "@codemirror/view";
-import { javascript } from "@codemirror/lang-javascript";
+import { languageExtensions } from "../lib/languages";
+import { bindMoveConnection } from "../lib/move-connection";
 import { defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { defaultKeymap } from "@codemirror/commands";
 import { openSearchPanel, search, searchKeymap } from "@codemirror/search";
@@ -40,11 +41,14 @@ export function DiffViewer({
   onFoldChange,
 }: Props) {
   const host = useRef<HTMLDivElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
+  const overlay = useRef<SVGSVGElement>(null);
   const views = useRef<{ a?: EditorView; b: EditorView } | null>(null);
   const [layout, setLayout] = useState<"split" | "unified">("split");
   const [collapse, setCollapse] = useState(true);
   const [copied, setCopied] = useState("");
   const focused = scope && event !== null;
+  const move = event?.facets.includes("move") && event.before && event.after ? event : null;
   const old =
     focused && event.before
       ? before.slice(event.before.utf16Start, event.before.utf16End)
@@ -61,14 +65,7 @@ export function DiffViewer({
     if (!host.current) return;
     const extensions = (label: string): Extension[] => [
       lineNumbers(),
-      ...(/\.[cm]?[jt]sx?$/.test(path) || (focused && path.endsWith(".vue"))
-        ? [
-            javascript({
-              typescript: /\.tsx?$/.test(path) || path.endsWith(".vue"),
-              jsx: /\.[jt]sx$/.test(path),
-            }),
-          ]
-        : []),
+      ...languageExtensions(path, focused && path.toLowerCase().endsWith(".vue")),
       syntaxHighlighting(defaultHighlightStyle),
       EditorState.readOnly.of(true),
       EditorView.editable.of(false),
@@ -141,7 +138,20 @@ export function DiffViewer({
       views.current = { a: merge.a, b: merge.b };
       fold(merge.a, "before", before);
       fold(merge.b, "after", after);
+      const disconnect =
+        move && !focused && stage.current && overlay.current
+          ? bindMoveConnection(
+              stage.current,
+              overlay.current,
+              merge.a,
+              merge.b,
+              move,
+              editorOffset(before, move.before!.utf16Start),
+              editorOffset(after, move.after!.utf16Start),
+            )
+          : () => {};
       return () => {
+        disconnect();
         views.current = null;
         merge.destroy();
       };
@@ -167,7 +177,20 @@ export function DiffViewer({
       views.current = null;
       unified.destroy();
     };
-  }, [old, next, layout, collapse, path, focused, analysis, foldFormats, event?.id, before, after]);
+  }, [
+    old,
+    next,
+    layout,
+    collapse,
+    path,
+    focused,
+    analysis,
+    foldFormats,
+    event,
+    move,
+    before,
+    after,
+  ]);
 
   useEffect(() => {
     if (focused || !event || !views.current) return;
@@ -184,8 +207,23 @@ export function DiffViewer({
         });
       }
     }
-  }, [event, focused, before, after, layout, collapse]);
+  }, [event, focused, before, after, layout, collapse, foldFormats]);
 
+  function locate(side: "before" | "after") {
+    const view = side === "before" ? views.current?.a : views.current?.b;
+    const range = event?.[side];
+    if (view && range && !focused) {
+      const position = Math.min(
+        editorOffset(side === "before" ? before : after, range.utf16Start),
+        view.state.doc.length,
+      );
+      view.dispatch({
+        selection: { anchor: position },
+        effects: EditorView.scrollIntoView(position, { y: "center" }),
+      });
+      view.focus();
+    }
+  }
   function jump(direction: "next" | "previous") {
     const view = views.current?.b;
     if (view) {
@@ -239,6 +277,14 @@ export function DiffViewer({
           折叠未改行
         </label>
       </div>
+      {move && !focused && layout === "split" && (
+        <div className="move-navigation">
+          <span>↗ 移动连线 · {move.title}</span>
+          <button onClick={() => locate("before")}>起点 L{move.before?.startLine}</button>
+          <button onClick={() => locate("after")}>终点 L{move.after?.startLine}</button>
+          <small>虚线端点在视口外 · 仅突出当前关系</small>
+        </div>
+      )}
       <div className="source-headings">
         <span>
           修改前{focused && event?.before ? ` · L${event.before.startLine}` : ""}
@@ -249,7 +295,13 @@ export function DiffViewer({
           <button onClick={() => void copy(next)}>复制</button>
         </span>
       </div>
-      <div className="merge-host" ref={host} />
+      <div
+        className={`merge-stage ${move && !focused && layout === "split" ? "has-move" : ""}`}
+        ref={stage}
+      >
+        <div className="merge-host" ref={host} />
+        {move && !focused && layout === "split" && <svg className="move-overlay" ref={overlay} />}
+      </div>
       <div className="source-meta" aria-live="polite">
         {copied ||
           `${focused ? "当前变更局部对照" : foldFormats ? "格式降噪视图 · 原始内容完整保留" : "完整原始内容"} · 只读 · ${before.includes("\r\n") ? "CRLF" : "LF"} → ${after.includes("\r\n") ? "CRLF" : "LF"}${!after.endsWith("\n") && after ? " · 修改后无末尾换行" : ""}`}

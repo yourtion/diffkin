@@ -119,6 +119,7 @@ export function App({
       if (result.analysis && result.analysis.schemaVersion !== 1)
         throw new Error("不支持的比较协议版本");
       setData(result);
+      setEvent(result.analysis?.events.find((item) => item.facets.includes("move")) ?? null);
       setReviewBases((current) => ({ ...current, [file.id]: analysisBasis(result) }));
     } catch (cause) {
       if (fileGeneration.current.isCurrent(generation)) setError(message(cause));
@@ -523,7 +524,7 @@ export function App({
               <div className="empty-features">
                 <span>原始内容完整保留</span>
                 <span>移动与内部修改对照</span>
-                <span>JS / TS 结构分析</span>
+                <span>多语言结构分析</span>
               </div>
             </div>
           )}
@@ -537,7 +538,10 @@ export function App({
             onFoldChange={setFoldFormats}
             onSelect={(selected) => {
               setEvent(selected);
-              setScope(selected?.facets.includes("move") ?? false);
+              setScope(
+                !!selected &&
+                  !!data.analysis?.events.some((parent) => parent.children.includes(selected.id)),
+              );
             }}
           />
         )}

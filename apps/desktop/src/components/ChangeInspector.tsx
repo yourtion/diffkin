@@ -25,6 +25,31 @@ export function ChangeInspector({
   const formatOnly = (event: ChangeEvent) => isProvenFormat(event, result);
   const hidden = result.events.filter(formatOnly);
   const visible = result.events.filter((event) => !fold || !formatOnly(event));
+  const childIds = new Set(visible.flatMap((event) => event.children));
+  const roots = visible.filter((event) => !childIds.has(event.id));
+  function eventButton(event: ChangeEvent, child = false) {
+    return (
+      <button
+        className={`event ${child ? "child" : ""} ${selected?.id === event.id ? "selected" : ""}`}
+        key={event.id}
+        aria-pressed={selected?.id === event.id}
+        onClick={() => onSelect(selected?.id === event.id ? null : event)}
+      >
+        <span className="facets">
+          {event.facets.map((facet) => (
+            <span key={facet} className={`facet ${facet}`}>
+              {facets[facet] ?? facet}
+            </span>
+          ))}
+        </span>
+        <strong>{event.title}</strong>
+        <span className="event-location">
+          {event.before ? `L${event.before.startLine}–${event.before.endLine}` : "新增"} →{" "}
+          {event.after ? `L${event.after.startLine}–${event.after.endLine}` : "删除"}
+        </span>
+      </button>
+    );
+  }
   return (
     <aside className="inspector" aria-label="结构变化">
       <div className="panel-heading">
@@ -51,25 +76,13 @@ export function ChangeInspector({
         </button>
       )}
       <div className="event-list">
-        {visible.map((event) => (
-          <button
-            className={`event ${selected?.id === event.id ? "selected" : ""}`}
-            key={event.id}
-            onClick={() => onSelect(selected?.id === event.id ? null : event)}
-          >
-            <span className="facets">
-              {event.facets.map((facet) => (
-                <span key={facet} className={`facet ${facet}`}>
-                  {facets[facet] ?? facet}
-                </span>
-              ))}
-            </span>
-            <strong>{event.title}</strong>
-            <span className="event-location">
-              {event.before ? `L${event.before.startLine}–${event.before.endLine}` : "新增"} →{" "}
-              {event.after ? `L${event.after.startLine}–${event.after.endLine}` : "删除"}
-            </span>
-          </button>
+        {roots.map((event) => (
+          <fieldset className="event-group" key={event.id} aria-label={event.title}>
+            {eventButton(event)}
+            {visible
+              .filter((child) => event.children.includes(child.id))
+              .map((child) => eventButton(child, true))}
+          </fieldset>
         ))}
         {visible.length === 0 && (
           <p className="muted">

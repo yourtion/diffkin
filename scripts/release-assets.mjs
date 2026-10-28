@@ -48,6 +48,8 @@ export function packageCli(
       ["-czf", "package.tar.gz", executable, "LICENSE", "THIRD-PARTY-NOTICES.txt"],
       {
         cwd: stage,
+        // BSD tar otherwise adds AppleDouble files for macOS extended attributes.
+        env: { ...process.env, COPYFILE_DISABLE: "1" },
         stdio: "inherit",
       },
     );

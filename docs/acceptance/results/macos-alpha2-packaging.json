@@ -1,0 +1,30 @@
+{
+  "version": "0.1.0-alpha.2",
+  "target": "aarch64-apple-darwin",
+  "verifiedAt": "2026-10-28T05:43:49.530653+00:00",
+  "dependencyCount": 455,
+  "missingLicenseTexts": 0,
+  "licenseInventoryInputs": {
+    "Cargo.lock": "053cb0c945f9501d83bd3e24333175638f4535428a99a10ed89a259940adb538",
+    "pnpm-lock.yaml": "328cad85cebce6a97698a7be999c47fc6ce9a7f06045637a4d5ea8ce21f1c857"
+  },
+  "appLogicalBytes": 19249691,
+  "appExecutableSha256": "66e6d5d9ee3fb508c0af9b38ac9de0aab1949e3794517e5c14f721ade3bdb8c4",
+  "buildInputsUnchangedSinceBuildStarted": true,
+  "buildInputFiles": 55,
+  "cliArchiveSmoke": "passed: exact three-file archive, alpha.2 version, executable permissions, Python structural JSON exit 1, LICENSE and notices",
+  "artifacts": {
+    "Diffkin-0.1.0-alpha.2-aarch64-apple-darwin.dmg": {
+      "bytes": 3802250,
+      "sha256": "1084070e68edca22716c89e4d80fb67e3ee75361acf8b80d06364c76e0b98680"
+    },
+    "diffkin-cli-0.1.0-alpha.2-aarch64-apple-darwin.tar.gz": {
+      "bytes": 1260668,
+      "sha256": "4c0a9447ceaa920017de15dd288bab094b33422f17a683926348342ff8b599fd"
+    }
+  },
+  "nativeGui": "not tested: deferred by user; session locked",
+  "signing": "Linker ad-hoc signature only; no Developer ID, notarization or resource seal",
+  "dmgVerification": "hdiutil checksum valid; read-only mounted app version, executable, MIT license and 455-dependency inventory/notices match the local .app",
+  "appArtifactPath": "artifacts/Diffkin-0.1.0-alpha.2-aarch64-apple-darwin.app"
+}

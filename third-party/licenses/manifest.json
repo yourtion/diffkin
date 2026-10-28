@@ -435,5 +435,15 @@
         "url": "https://crates.io/crates/winapi/0.3.9"
       }
     ]
+  },
+  "cargo/tree-sitter-java@0.23.5": {
+    "revision": "94703d5a6bed02b98e438d7cad1136c01a60ba2c",
+    "sources": [
+      {
+        "file": "52ed137b039cd9c46409bc22e89938af911c95b157feae2d040b51e6084369a7.txt",
+        "path": "LICENSE",
+        "url": "https://github.com/tree-sitter/tree-sitter-java/blob/94703d5a6bed02b98e438d7cad1136c01a60ba2c/LICENSE"
+      }
+    ]
   }
 }

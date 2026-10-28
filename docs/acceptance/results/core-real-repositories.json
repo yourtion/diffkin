@@ -1,0 +1,49 @@
+[
+  {
+    "repository": "CodeAtlas",
+    "base": "2ef99afb1811566ce58304f664bfaa834c5ee14c",
+    "head": "f80966d567df0cfb21dae6df03d6753515472a82",
+    "files": 36,
+    "reconstructed": 35,
+    "facets": {
+      "edit": 30,
+      "format": 2
+    },
+    "elapsedMs": 517.992,
+    "stdoutSha256": "521010fc897104fa8200e4206de4d98c0336e226d19998ebee6ff3cab8b7e2a3",
+    "verifiedGitSourceSides": 50,
+    "profile": "debug",
+    "ruleVersion": "syntax-v2",
+    "filesWithAnyFallbackNotice": 35
+  },
+  {
+    "repository": "lynx-html-renderer",
+    "base": "48f64b56bc229eff0b5042b77222cc32297ee9ea",
+    "head": "6637183578a271758e3e89cdba5077011b19e7b6",
+    "files": 1,
+    "reconstructed": 1,
+    "facets": {},
+    "elapsedMs": 130.023,
+    "stdoutSha256": "2b365bc02f24d7d3bca7c1e34801e770192e458294163b19b0c790020af5aa6b",
+    "verifiedGitSourceSides": 1,
+    "profile": "debug",
+    "ruleVersion": "syntax-v2",
+    "filesWithAnyFallbackNotice": 1
+  },
+  {
+    "repository": "vue-json-ui-editor",
+    "base": "f1ade53bb1654c6c526382866e319e6efc6c8e17",
+    "head": "8eba3c3a7bdf245f7532b80ad2af6b4595c95cb1",
+    "files": 21,
+    "reconstructed": 19,
+    "facets": {
+      "edit": 10
+    },
+    "elapsedMs": 292.126,
+    "stdoutSha256": "6c29905575acb315c19659117bb7e5c2abe22e208be08b620107c72ae6e8c24a",
+    "verifiedGitSourceSides": 30,
+    "profile": "debug",
+    "ruleVersion": "syntax-v2",
+    "filesWithAnyFallbackNotice": 21
+  }
+]

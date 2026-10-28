@@ -17,6 +17,15 @@ test("CLI archive uses local paths on Windows drives and preserves the executabl
     const notices = join(directory, "notices.txt");
     writeFileSync(license, "MIT fixture");
     writeFileSync(notices, "Third party fixture");
+    if (process.platform === "darwin") {
+      const attribute = spawnSync("xattr", [
+        "-w",
+        "com.diffkin.archive-test",
+        "fixture",
+        executable,
+      ]);
+      assert.equal(attribute.status, 0, attribute.stderr.toString());
+    }
     packageCli(executable, archive, { license, notices });
     const extracted = spawnSync("tar", ["-xzOf", "release.tar.gz", "diffkin.exe"], {
       cwd: directory,
