@@ -1,0 +1,149 @@
+{
+  "version": "0.3.0-alpha.0",
+  "target": "aarch64-apple-darwin",
+  "verifiedAt": "2026-10-28T06:40:50.255338+00:00",
+  "dependencyCount": 457,
+  "missingLicenseTexts": 0,
+  "licenseInventoryInputs": {
+    "Cargo.lock": "b145fb9a44e3537018185513c4b8748c56b4ce5048bc0a031436d2859bb5b2d2",
+    "pnpm-lock.yaml": "328cad85cebce6a97698a7be999c47fc6ce9a7f06045637a4d5ea8ce21f1c857"
+  },
+  "noticesSha256": "3aadfce52c58d6ccfcb46b897ce2c33c3e292bc4c750a6a92862fd1b80623a4b",
+  "appLogicalBytes": 20270221,
+  "appExecutableSha256": "6b3c066647795a05374422f58b78ceedbf6e7d849df0a05c782cbd569555e583",
+  "appArtifactPath": "artifacts/Diffkin-0.3.0-alpha.0-aarch64-apple-darwin.app",
+  "buildInputsUnchangedSinceFinalBuildStarted": true,
+  "rebuiltAfterInputChanges": [
+    "Cargo.toml",
+    "crates/application/Cargo.toml",
+    "crates/validation/src/lib.rs"
+  ],
+  "buildInputFiles": 84,
+  "buildInputs": {
+    "Cargo.lock": "b145fb9a44e3537018185513c4b8748c56b4ce5048bc0a031436d2859bb5b2d2",
+    "Cargo.toml": "7443d76d64eb4fc3d3cc829c7146c7efc2a4360db1eb64a7c0c72877bc38f050",
+    "LICENSE": "c4fe0c8d7361db2eec2e5136904a2d3d22cd3395b46962d812f8aa75110a3549",
+    "apps/cli/Cargo.toml": "6cd73834d74e0f8b4ba829320f2500ba389a100bad5dde753daf7201fc94d0e9",
+    "apps/cli/src/main.rs": "5c3b8f7b55cc8e681dfca0f881e150ee9d9bc0c1a704fa6e80f34dd23d89f143",
+    "apps/desktop/package.json": "c18e95f771e8d9a23a9333c4801e8104054479fff8f0d6738bad540530b7d64e",
+    "apps/desktop/rsbuild.config.ts": "e8c7f598e2558ebeed1c44fc6e9f214a5c26524645d4e8b758efb13324d9827d",
+    "apps/desktop/src/App.tsx": "32fc81bb97def2e237223b176b749530d77feca1d4e8f80383f99f1de5e8ba37",
+    "apps/desktop/src/components/ChangeInspector.tsx": "fa15afaa78d3edd020770c6d85313b808cbcc579a4aec6f83a92bbe34219e527",
+    "apps/desktop/src/components/DiffViewer.tsx": "7ab2b05e76002466013e1e7bf2c8bdc19c7f171b9ec50c402d5f8121b0e4b22a",
+    "apps/desktop/src/components/ValidationPanel.tsx": "26f60875d68291db9f0b8d519e092244f16af718ba6f304327d8c4dc4b8402d0",
+    "apps/desktop/src/components/WorkspacePanel.tsx": "17a6b2a106c222099b8f81397a6237a519f024a5630569cf6945553111f3cc1c",
+    "apps/desktop/src/components/validation.css": "c5b451ef8ed6572791412352fbf37a4aa7b7ae8cc89fa1c04ba2ba6c2a1a2e53",
+    "apps/desktop/src/components/workspace.css": "ca845413f7a37f280d855c1ee5c6b939ab4803f202ee1443c2a95c299d686a9b",
+    "apps/desktop/src/lib/client.ts": "72561df9535e45cf87afecd4c07a38852e73f24f8dc3540e3e42f96de531ed8b",
+    "apps/desktop/src/lib/format-folding.ts": "0a59211faa3b87913cc407fd1d804ee9873acfca8cef4e553ada1cc7a865b2f8",
+    "apps/desktop/src/lib/languages.ts": "d0c037832b520b78605d81f2f46371946e8498dfba1de78fe9cc91d13f7d87bf",
+    "apps/desktop/src/lib/move-connection.ts": "fb9e38bd95a9cf8b21c1d38f835203090c6416f1c22d8ff349687d06e86e003b",
+    "apps/desktop/src/lib/preferences.ts": "94949fa9ee02a42a0fea1904e6ff635217484d53d8758af221a662ae450d1bf8",
+    "apps/desktop/src/lib/presentation.ts": "d9c9028c7ca282de2d799e13dc786a8dd3b4fc52bc3aa7a673bdf4331cce0763",
+    "apps/desktop/src/lib/validation-client.ts": "4741888288684b8b83426f48408e2fba40791712fed6469ae837880ceb3ed485",
+    "apps/desktop/src/lib/workspace-client.ts": "770885715c2bd09d84737b24fac40a58475f19fa244bcad1f2901e7ca841403b",
+    "apps/desktop/src/main.tsx": "412c44a09f9fba300a9c36d5221b51e330e923416bac18392912ff3df0cdaa66",
+    "apps/desktop/src/style.css": "f407e18b9991b42e0eb6d92bcf9471afd1e690ecb7775d17cb1bfe589a4e98a8",
+    "apps/desktop/src-tauri/Cargo.toml": "e45b5755e6a1cb3a212cc602a414c05172e54e8dd5e9c51a6a4dd7b2cbd887cf",
+    "apps/desktop/src-tauri/build.rs": "6aeeab41bc35efde4e3c2b644a6248f7fc06d24ae30b75c0d33491cbb0c1fa31",
+    "apps/desktop/src-tauri/capabilities/default.json": "c45ee57abe32c5c1e24016d8904f183a4030870a50ae29668d319bb3559225e0",
+    "apps/desktop/src-tauri/icons/128x128.png": "831adf75824bf352ac50c3dfe12f883f5e4caeb6912c6541f3e9f1ebd8da0162",
+    "apps/desktop/src-tauri/icons/128x128@2x.png": "fa62cf55d0de46b1923fe6fef4f414a39ac2df518af7cf977e9e023abb7ae941",
+    "apps/desktop/src-tauri/icons/32x32.png": "db9afcb25210c5c9a0ebfe798efac9ce6d7bc8967d5ad4d1b06b8f0e7b7a2a50",
+    "apps/desktop/src-tauri/icons/icon.icns": "e6209e976088bc08e07e3dd4b4211c9c0875cfc8a90614251c35cb9d281f207a",
+    "apps/desktop/src-tauri/icons/icon.ico": "5e288836b96ef6f663742bd34f2ae7da6866ca0ddf511d024f3743ae050a46e3",
+    "apps/desktop/src-tauri/icons/icon.png": "3ae5e92953f57150ba1da287285c982d0e1214dc4493c93fc2deeb0d7943ce99",
+    "apps/desktop/src-tauri/src/main.rs": "53ceb7d69e19b0e2af56d265ff4e02241bdf0ed583eda555b590abeb999e32b8",
+    "apps/desktop/src-tauri/src/runtime.rs": "21d2c2f58cfa8d20b0b0b97da6418b3677b8398352a91cde994d2e7a9618f693",
+    "apps/desktop/src-tauri/src/validation_commands.rs": "54a431f3a1a16f0f0ec63a710772c88ead9e6772be7c343e1717b3ae0719de40",
+    "apps/desktop/src-tauri/src/workspace_commands.rs": "e9176263e5eb1715bede7ecb460b177f6ecf89997e0dd1f5a1d92019853dc7db",
+    "apps/desktop/src-tauri/tauri.conf.json": "8cc6de153c04ac608ea8582b709e8e858fa9ce0b6fabb76336505a4944529d62",
+    "apps/desktop/tsconfig.json": "7b429ae779d480d56533c9a5325abc9acaae5bec3373a40289779529bc45c748",
+    "crates/analysis/Cargo.toml": "336e0c0e31afba150594e86a2914c6ac5c16dbce94bf4c6b70f5b805321992a4",
+    "crates/analysis/src/language_syntax.rs": "d4004645445471462e7ee11a27161669546956c2d1de6add2fe84055825eccc2",
+    "crates/analysis/src/lib.rs": "b7de6013c585038720b6b087b904017b2a89ee5844aa7a91b9359e332155a630",
+    "crates/analysis/src/rename.rs": "440a18e68fcb4f79e5a85504b1b0016bd573f31035da794554ee55dce8425fe7",
+    "crates/analysis/src/structure.rs": "c871b0c13dd9061086d1094576970a86ca429b27ce4178e0a9df02b9709e0d4d",
+    "crates/application/Cargo.toml": "130769fd9fbbc4a267ffad78027c431cb358e935deb715eac07fd5f6efb4f4ec",
+    "crates/application/src/lib.rs": "a5cd670d21552944e104b46cfd2dac7e5aa36b4295466d3088d9aaa0eebdd1f8",
+    "crates/application/src/repository.rs": "ab0d82561c035729d34d36820672f0fba4ed07062693a351341f4257c3e1529e",
+    "crates/application/src/workspace.rs": "76aa578c308bd201556dd3833f905830a47a96f670d8b00384ea859f1d3b1c71",
+    "crates/domain/Cargo.toml": "a7557a1e315b856eea586f3c5fc7b240efd892a6d79ce0b8a7e271a175b379b7",
+    "crates/domain/src/lib.rs": "7fc35cf86ed8232e99590dc75a67b7ebee297ec1f1cda6075721dd03124ddc88",
+    "crates/domain/src/repository.rs": "be29af605cb9745a644f7a3558f20d8319ab5ccd65be9450a52d06805600b9e2",
+    "crates/domain/src/structure.rs": "7a0ff6edcc95579bd138fc7ffe0443424de195c43715426d06a16c9f89b7107f",
+    "crates/domain/src/validation.rs": "1225c02218bd309998cb24572facfad463fd3421346683dec9ba4bce3044e83b",
+    "crates/domain/src/workspace.rs": "7f44053f9880a6b79bcb4920645ba8a0688a81e42bcbc82fe238d4991ceb87b4",
+    "crates/validation/Cargo.toml": "2853fe90538545fc76f9da76ceb63975cfaa17d6a6a63cb463b79dd85921095f",
+    "crates/validation/src/lib.rs": "ffc296c83d58587bdcb3e3a3c86a99fa1d8d397ed770bd4aceeee69286bb75b7",
+    "package.json": "e2058b9a2333a3a5415b7f472db9f1db3cbf373e95a5ad4a3e8761819fc679ce",
+    "packages/protocol/package.json": "fb5cb55785cb8c4b9d0a2dcac2f880f1db943566681c5702a94a17bb3890d6a3",
+    "packages/protocol/src/generated.ts": "8ef3843984c294234360bd0d4e6a241662509f628c96c72f18a00d7470e66767",
+    "pnpm-lock.yaml": "328cad85cebce6a97698a7be999c47fc6ce9a7f06045637a4d5ea8ce21f1c857",
+    "pnpm-workspace.yaml": "5f27b45de2a9f51d454d0e151fad57f02ef3ec9e25ddcfb6be5e4c00d248d2fb",
+    "scripts/license-report.mjs": "56f7a706a52fa21c7d9daa93fe99e72d0ba0f0e513b5eab19ad900c658160656",
+    "scripts/release-assets.mjs": "c19af775937e02af87ee1e0c76243eeed2d9aa8c8e951922e087a3ddd79ac3f4",
+    "third-party/licenses/0dcf41516e608bbcb6cdc5229feb7b86fe4a643b85e7df251133c93408fdac73.txt": "0dcf41516e608bbcb6cdc5229feb7b86fe4a643b85e7df251133c93408fdac73",
+    "third-party/licenses/1d85bd754b04ceec93e98e890edd1fa3c6a22e81bcb32135806beeccefa51cd1.txt": "1d85bd754b04ceec93e98e890edd1fa3c6a22e81bcb32135806beeccefa51cd1",
+    "third-party/licenses/2e0110e07abef7c2548b26ec9d6969775617ca539a0dc8dbeeb14d6452c711d1.txt": "2e0110e07abef7c2548b26ec9d6969775617ca539a0dc8dbeeb14d6452c711d1",
+    "third-party/licenses/39fa265207450e77c62e90c5594a06c085b655d8374c7ced4bf7894b6bd95dd2.txt": "39fa265207450e77c62e90c5594a06c085b655d8374c7ced4bf7894b6bd95dd2",
+    "third-party/licenses/49bf33cf78ef5897e4e161ce1517df7de1ae5042a65b6bcfd44401e0fc606559.txt": "49bf33cf78ef5897e4e161ce1517df7de1ae5042a65b6bcfd44401e0fc606559",
+    "third-party/licenses/508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1.txt": "508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1",
+    "third-party/licenses/52ed137b039cd9c46409bc22e89938af911c95b157feae2d040b51e6084369a7.txt": "52ed137b039cd9c46409bc22e89938af911c95b157feae2d040b51e6084369a7",
+    "third-party/licenses/766674381e88a468d55e07de3596987391cf0e8beebe51baf4fddf11078785b3.txt": "766674381e88a468d55e07de3596987391cf0e8beebe51baf4fddf11078785b3",
+    "third-party/licenses/7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54.txt": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+    "third-party/licenses/a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2.txt": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+    "third-party/licenses/b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1.txt": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+    "third-party/licenses/c0c56f26d9c051cac4d200c34c84e7ae9aaa853e01a982a1df08b09931e518ae.txt": "c0c56f26d9c051cac4d200c34c84e7ae9aaa853e01a982a1df08b09931e518ae",
+    "third-party/licenses/c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08.txt": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08",
+    "third-party/licenses/c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4.txt": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "third-party/licenses/ce7bc3499fee93d5022ef430d5e4201e79a6d9154f3974e42f41349f0569e09b.txt": "ce7bc3499fee93d5022ef430d5e4201e79a6d9154f3974e42f41349f0569e09b",
+    "third-party/licenses/d027e91dbc9cdbb2f1190068e498bd6b61cff022b6a032b191021ba658d96111.txt": "d027e91dbc9cdbb2f1190068e498bd6b61cff022b6a032b191021ba658d96111",
+    "third-party/licenses/db7f7f8e7236a2d0b41b855b2501b7b913caebbcda6ce498637a304ad1706ce1.txt": "db7f7f8e7236a2d0b41b855b2501b7b913caebbcda6ce498637a304ad1706ce1",
+    "third-party/licenses/eb227437252b2a7a9c1fc342c93ade1f3d7ce38cc6dd754f613db07d53ceff0b.txt": "eb227437252b2a7a9c1fc342c93ade1f3d7ce38cc6dd754f613db07d53ceff0b",
+    "third-party/licenses/fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85.txt": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+    "third-party/licenses/ff92bed461f50338dd703a9ba9aee496a425957873df1d91192776e4bdf5dda7.txt": "ff92bed461f50338dd703a9ba9aee496a425957873df1d91192776e4bdf5dda7",
+    "third-party/licenses/manifest.json": "4b2d966304ee80256751a7b05e00fc9fb0e95687564dd8906bd8e65349cf14dd"
+  },
+  "frontendFiles": {
+    "index.html": {
+      "bytes": 552,
+      "sha256": "d99264795e6237e45e93b9060c0de997c348840144d81b9f898dd2028429187a"
+    },
+    "static/css/index.9e53439e23.css": {
+      "bytes": 16034,
+      "sha256": "93ff1b5a0ce89780c97636e493f16b91e5af13131ae59d8a5f3dec72ea06cf86"
+    },
+    "static/js/index.f14d4dc444.js": {
+      "bytes": 52261,
+      "sha256": "7ac688f649b10fe584cecffaf5e7fd0f6a737a211eb16bb15c3586d0e9e2719c"
+    },
+    "static/js/lib-react.7be49915de.js": {
+      "bytes": 218198,
+      "sha256": "68c5f0ef5e7d53a00bff722347e65491ec83e53ff29a6faa0a02e59b441b1c33"
+    },
+    "static/js/lib-react.7be49915de.js.LICENSE.txt": {
+      "bytes": 1209,
+      "sha256": "e47a413b62a5bf023d2b81a25d0ef4213ff1bb756df7f3c31ba57f88334e1e0f"
+    },
+    "static/js/m.81953e6e25.js": {
+      "bytes": 752882,
+      "sha256": "bfde4a6f8265ac88cb4b682ea0ba3e7b171917942c16a0a97ecc07960d252c32"
+    }
+  },
+  "cliArchiveSmoke": "passed: exact three-file archive, 0.3.0-alpha.0 version, executable permissions, Python structural JSON exit 1, immutable Git repository capture with source identities and unchanged index/worktree, LICENSE and notices",
+  "artifacts": {
+    "Diffkin-0.3.0-alpha.0-aarch64-apple-darwin.dmg": {
+      "bytes": 4206324,
+      "sha256": "9bce12632a6a45d8f8ca4513f65c5a34642ffff0c338437699627f02d2b274a5"
+    },
+    "diffkin-cli-0.3.0-alpha.0-aarch64-apple-darwin.tar.gz": {
+      "bytes": 1261356,
+      "sha256": "e44e7acf9cebbee1235b10a84d925e4b0b46989341fe12b09ea19293f814e0e1"
+    }
+  },
+  "nativeGui": "not tested: deferred by user; no native application launch during packaging acceptance",
+  "signing": "Linker ad-hoc signature only; no Developer ID, notarization or resource seal",
+  "dmgVerification": "hdiutil checksum valid; read-only mounted app version, executable, MIT license and 457-dependency inventory/notices match the collected .app",
+  "finalManifestVerification": "Cargo metadata remained identical after the EOF whitespace cleanup; validation platform import is outside the CLI dependency graph. Desktop was rebuilt and DMG was reverified after both final changes."
+}

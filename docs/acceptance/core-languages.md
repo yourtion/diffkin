@@ -65,4 +65,4 @@ Vue 要求可完整解析的 script 块；普通 script 与 setup 模式分别�
 
 macOS ARM DMG **3.63 MiB**，CLI 压缩包 **1.20 MiB**，应用逻辑大小 **18.36 MiB**。镜像校验与只读挂载、版本信息、455 项依赖许可证材料均通过；CLI 解包后的版本和 Python 结构比较可运行。精确字节数与 SHA-256 见[打包记录](results/macos-alpha2-packaging.json)。修复 macOS tar 夹带 AppleDouble 元数据，CLI 归档固定包含可执行文件、MIT LICENSE 和第三方 notices。
 
-当前仍仅有 linker ad-hoc 签名，没有 Developer ID 签名/公证。alpha.2 的远端 CI 和四目标 Release 草稿由该 tag 启动，状态以 Actions 为准，不沿用 alpha.1 的成功状态。
+当前仍仅有 linker ad-hoc 签名，没有 Developer ID 签名/公证。alpha.2 的[三平台 CI](https://github.com/yourtion/diffkin/actions/runs/40639800012)与[四目标发版](https://github.com/yourtion/diffkin/actions/runs/40639799724)均成功；[Release 草稿](https://github.com/yourtion/diffkin/releases/tag/untagged-7db95ff6da4eb675d9f4)已核对包含 9 个产物和 SHA256SUMS，尚未公开发布。

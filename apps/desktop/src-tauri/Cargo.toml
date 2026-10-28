@@ -11,8 +11,12 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 diffkin-application.workspace = true
+diffkin-validation.workspace = true
 diffkin-domain.workspace = true
 tauri = { version = "2", features = [] }
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

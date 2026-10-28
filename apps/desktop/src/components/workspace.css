@@ -1,0 +1,105 @@
+.workspace-manager {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  max-height: 48vh;
+  overflow: auto;
+  flex: 0 0 auto;
+}
+.workspace-manager-heading,
+.workspace-actions,
+.repository-config {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.workspace-manager-heading {
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.workspace-actions {
+  margin: 9px 0;
+}
+.workspace-actions label {
+  font-size: 12px;
+}
+.repository-configs {
+  display: grid;
+  gap: 8px;
+}
+.repository-config {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 8px;
+}
+.repository-config legend {
+  font-size: 11px;
+  color: var(--muted);
+}
+.repository-config input {
+  width: 130px;
+}
+.repository-config .workspace-path {
+  min-width: 180px;
+  flex: 1;
+}
+.manual-relations {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  font-size: 12px;
+}
+.manual-relations p {
+  overflow-wrap: anywhere;
+  margin-top: 6px;
+}
+.workspace-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 8px 18px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  overflow: auto;
+  flex: 0 0 auto;
+  align-items: center;
+}
+.workspace-tabs button {
+  white-space: nowrap;
+}
+.workspace-tabs button[aria-pressed="true"] {
+  color: var(--accent);
+  background: var(--tint);
+  border-color: var(--accent);
+}
+.workspace-tabs .repository-error {
+  color: #a33d36;
+}
+.workspace-tabs small {
+  margin-left: 7px;
+  color: var(--muted);
+}
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.validation-container {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.validation-container[hidden] {
+  display: none;
+}
+
+.workspace[hidden],
+.snapshot-bar[hidden] {
+  display: none;
+}
+
+.header-actions button[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--tint);
+  color: var(--accent);
+}

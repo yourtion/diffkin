@@ -3,8 +3,12 @@ use ts_rs::TS;
 
 pub mod repository;
 pub mod structure;
+pub mod validation;
+pub mod workspace;
 pub use repository::*;
 pub use structure::*;
+pub use validation::*;
+pub use workspace::*;
 
 pub const SCHEMA_VERSION: u32 = 1;
 

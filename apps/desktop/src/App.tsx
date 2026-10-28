@@ -5,11 +5,16 @@ import type {
   ComparisonSpec,
   FileAnalysis,
   FileSummary,
+  WorkspaceSession,
+  EvidenceBasis,
 } from "@diffkin/protocol";
 import { client, desktopAvailable, Generation, message, type DiffkinClient } from "./lib/client";
 import { loadPreferences, savePreferences } from "./lib/preferences";
 import { DiffViewer } from "./components/DiffViewer";
 import { ChangeInspector } from "./components/ChangeInspector";
+import { WorkspacePanel } from "./components/WorkspacePanel";
+import { ValidationPanel } from "./components/ValidationPanel";
+import { workspaceClient, sameBasis } from "./lib/workspace-client";
 
 const status: Record<string, string> = {
   added: "A",
@@ -56,6 +61,13 @@ export function App({
   available?: boolean;
 }) {
   const [initial] = useState(loadPreferences);
+  const [workspaceSession, setWorkspaceSession] = useState<WorkspaceSession | null>(null);
+  const [repositoryId, setRepositoryId] = useState<string | null>(null);
+  const [showWorkspace, setShowWorkspace] = useState(false);
+  const [workspaceBusy, setWorkspaceBusy] = useState(false);
+  const [validationOpen, setValidationOpen] = useState(false);
+  const [validationMounted, setValidationMounted] = useState(false);
+  const [savingReview, setSavingReview] = useState(false);
   const [spec, setSpec] = useState<ComparisonSpec>(initial.spec);
   const [recent, setRecent] = useState(initial.recent);
   const [manifest, setManifest] = useState<ComparisonManifest | null>(null);
@@ -139,6 +151,8 @@ export function App({
     const generation = captureGeneration.current.next();
     const job = jobId();
     captureJob.current = job;
+    setWorkspaceSession(null);
+    setRepositoryId(null);
     setManifest(null);
     setReviewBases({});
     setData(null);
@@ -192,8 +206,100 @@ export function App({
       if (pageGeneration.current.isCurrent(generation)) setPaging(false);
     }
   }
-  function markReviewed() {
+  function beginWorkspaceOperation() {
+    cancelOne(captureJob);
+    cancelOne(fileJob);
+    fileGeneration.current.next();
+    pageGeneration.current.next();
+    setPending(null);
+    setPaging(false);
+    return captureGeneration.current.next();
+  }
+  function activateWorkspace(
+    session: WorkspaceSession,
+    preferredRepository?: string,
+    ticket?: number,
+  ) {
+    if (ticket !== undefined && !captureGeneration.current.isCurrent(ticket)) return;
+    cancelOne(captureJob);
+    cancelOne(fileJob);
+    captureGeneration.current.next();
+    fileGeneration.current.next();
+    pageGeneration.current.next();
+    const snapshot = session.snapshots.find((item) => item.id === session.activeSnapshotId);
+    const selected =
+      snapshot?.repositories.find((repo) => repo.repositoryId === preferredRepository) ??
+      snapshot?.repositories.find((repo) => repo.manifest) ??
+      snapshot?.repositories[0];
+    setWorkspaceSession(session);
+    setRepositoryId(selected?.repositoryId ?? null);
+    setManifest(selected?.manifest ?? null);
+    setData(null);
+    setSelectedFile(null);
+    setEvent(null);
+    setReviewBases({});
+    setFilter("");
+    setScope(false);
+    setPaging(false);
+    setPending(null);
+    setError(selected?.error ? message(selected.error) : null);
+    const config = session.config.repositories.find((repo) => repo.id === selected?.repositoryId);
+    if (config) setSpec(config.spec);
+    if (selected?.manifest?.files[0])
+      void selectFile(selected.manifest.files[0], selected.manifest);
+  }
+  function updateWorkspace(session: WorkspaceSession) {
+    setWorkspaceSession((current) =>
+      current?.config.id === session.config.id &&
+      current.activeSnapshotId === session.activeSnapshotId
+        ? session
+        : current,
+    );
+  }
+  function currentBasis(file: FileSummary, basis: string): EvidenceBasis | null {
+    if (!workspaceSession?.activeSnapshotId || !repositoryId || !manifest) return null;
+    const separator = basis.indexOf(":");
+    return {
+      workspaceSnapshotId: workspaceSession.activeSnapshotId,
+      repositoryId,
+      repositorySnapshotId: manifest.id,
+      fileId: file.id,
+      beforeId: file.beforeId,
+      afterId: file.afterId,
+      schemaVersion: separator < 0 ? 1 : Number(basis.slice(0, separator)),
+      ruleVersion: separator < 0 ? basis : basis.slice(separator + 1),
+    };
+  }
+  async function markReviewed() {
     if (!manifest || !selectedFile || !data) return;
+    if (workspaceSession && repositoryId) {
+      const expected = currentBasis(selectedFile, analysisBasis(data));
+      if (!expected) return;
+      const wasReviewed = workspaceSession.reviews.some(
+        (record) => record.state === "reviewed" && sameBasis(record.basis, expected),
+      );
+      setSavingReview(true);
+      try {
+        const basis = await workspaceClient.basis(
+          workspaceSession.config.id,
+          repositoryId,
+          selectedFile.id,
+        );
+        if (!sameBasis(basis, expected)) throw new Error("工作区依据已变化，请刷新后重新审查。");
+        updateWorkspace(
+          await workspaceClient.review(
+            workspaceSession.config.id,
+            basis,
+            wasReviewed ? "pending" : "reviewed",
+          ),
+        );
+      } catch (cause) {
+        setError(message(cause));
+      } finally {
+        setSavingReview(false);
+      }
+      return;
+    }
     const key = reviewKey(manifest, selectedFile, analysisBasis(data));
     const next = reviews.includes(key)
       ? reviews.filter((item) => item !== key)
@@ -238,10 +344,22 @@ export function App({
     [cancelOne],
   );
 
-  const isReviewed = (file: FileSummary) =>
-    !!manifest &&
-    !!reviewBases[file.id] &&
-    reviews.includes(reviewKey(manifest, file, reviewBases[file.id]));
+  const isReviewed = (file: FileSummary) => {
+    if (!manifest || !reviewBases[file.id]) return false;
+    if (workspaceSession) {
+      const basis = currentBasis(file, reviewBases[file.id]);
+      return (
+        !!basis &&
+        workspaceSession.reviews.some(
+          (record) => record.state === "reviewed" && sameBasis(record.basis, basis),
+        )
+      );
+    }
+    return reviews.includes(reviewKey(manifest, file, reviewBases[file.id]));
+  };
+  const activeWorkspace = workspaceSession?.snapshots.find(
+    (item) => item.id === workspaceSession.activeSnapshotId,
+  );
   const reviewed = selectedFile ? isReviewed(selectedFile) : false;
   return (
     <main className="app-shell">
@@ -253,9 +371,34 @@ export function App({
           </h1>
           <span className="alpha">ALPHA</span>
         </div>
-        <span className="local-badge">
-          <i /> 本地 · 只读审查
-        </span>
+        <div className="header-actions">
+          <button aria-pressed={!validationOpen} onClick={() => setValidationOpen(false)}>
+            比较
+          </button>
+          <button
+            aria-pressed={validationOpen}
+            disabled={!available || workspaceBusy}
+            onClick={() => {
+              setValidationMounted(true);
+              setValidationOpen(true);
+            }}
+          >
+            验证
+          </button>
+          <button
+            aria-pressed={showWorkspace && !validationOpen}
+            disabled={!available || workspaceBusy}
+            onClick={() => {
+              setValidationOpen(false);
+              setShowWorkspace(validationOpen ? true : !showWorkspace);
+            }}
+          >
+            工作区
+          </button>
+          <span className="local-badge">
+            <i /> 本地 · 只读审查
+          </span>
+        </div>
       </header>
       <form
         className="repository-bar"
@@ -324,7 +467,7 @@ export function App({
         <button
           className="primary"
           type="submit"
-          disabled={!available || !spec.repository.trim() || pending === "capture"}
+          disabled={!available || !spec.repository.trim() || pending === "capture" || workspaceBusy}
         >
           {pending === "capture" ? "捕获中…" : manifest ? "刷新比较" : "打开比较"}
         </button>
@@ -334,6 +477,42 @@ export function App({
           </button>
         )}
       </form>
+      {showWorkspace && !validationOpen && (
+        <WorkspacePanel
+          available={available}
+          currentSpec={spec}
+          session={workspaceSession}
+          repositoryId={repositoryId}
+          selectedFile={selectedFile}
+          onActivate={activateWorkspace}
+          onBegin={beginWorkspaceOperation}
+          onUpdate={updateWorkspace}
+          onClose={() => setShowWorkspace(false)}
+          onBusyChange={setWorkspaceBusy}
+        />
+      )}
+      {activeWorkspace && !validationOpen && (
+        <nav className="workspace-tabs" aria-label="工作区仓库">
+          <strong>{workspaceSession?.config.name}</strong>
+          {activeWorkspace.repositories.map((repo) => (
+            <button
+              key={repo.repositoryId}
+              className={repo.error ? "repository-error" : ""}
+              aria-pressed={repositoryId === repo.repositoryId}
+              onClick={() => activateWorkspace(workspaceSession!, repo.repositoryId)}
+            >
+              {repo.label}
+              <small>
+                {repo.error
+                  ? "不可用"
+                  : repo.manifest?.totalFiles
+                    ? `${repo.manifest.totalFiles} 个变化`
+                    : "未修改 · 上下文"}
+              </small>
+            </button>
+          ))}
+        </nav>
+      )}
       {!available && (
         <p className="notice">浏览器仅预览界面。请运行桌面应用以读取本地 Git 仓库。</p>
       )}
@@ -343,7 +522,7 @@ export function App({
         </p>
       )}
       {manifest && (
-        <div className="snapshot-bar">
+        <div className="snapshot-bar" hidden={validationOpen}>
           <span>{modeNames[manifest.mode]}</span>
           <code title={manifest.baseLabel}>{manifest.baseLabel}</code>
           <span>→</span>
@@ -358,7 +537,11 @@ export function App({
           {warning}
         </p>
       ))}
-      <div className={`workspace ${!manifest ? "unopened" : ""}`} aria-busy={pending !== null}>
+      <div
+        className={`workspace ${!manifest ? "unopened" : ""}`}
+        aria-busy={pending !== null}
+        hidden={validationOpen}
+      >
         <nav className="files-panel" aria-label="变更文件">
           <div className="panel-heading">
             <h2>变更文件</h2>
@@ -417,10 +600,10 @@ export function App({
                   </p>
                 </div>
                 <button
-                  disabled={!data}
+                  disabled={!data || savingReview}
                   className={reviewed ? "reviewed" : ""}
                   aria-pressed={reviewed}
-                  onClick={markReviewed}
+                  onClick={() => void markReviewed()}
                 >
                   {reviewed ? "✓ 已审查此版本" : "标记已审查"}
                 </button>
@@ -546,6 +729,11 @@ export function App({
           />
         )}
       </div>
+      {validationMounted && (
+        <div className="validation-container" hidden={!validationOpen}>
+          <ValidationPanel repository={spec.repository} manifest={manifest} />
+        </div>
+      )}
       <footer>
         <span>
           {pending === "capture"
@@ -558,7 +746,7 @@ export function App({
           {manifest
             ? `${manifest.files.filter(isReviewed).length} / ${manifest.totalFiles} 已审查 · `
             : ""}
-          源码留在本机 · 不执行仓库脚本
+          源码留在本机 · 比较不执行脚本
         </span>
       </footer>
     </main>

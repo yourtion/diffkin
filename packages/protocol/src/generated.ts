@@ -34,3 +34,31 @@ export type Presentation = "visible" | "folded-format" | "text-fallback";
 export type CoverageEntry = { rawEditId: number, presentation: Presentation, eventIds: Array<string>, };
 export type AnalysisResult = { schemaVersion: number, language: string, ruleVersion: string, raw: Comparison, events: Array<ChangeEvent>, coverage: Array<CoverageEntry>, fallbacks: Array<string>, };
 export type FileAnalysis = { file: FrozenFile, analysis: AnalysisResult | null, notice: string | null, };
+export type WorkspaceRepository = { id: string, label: string, spec: ComparisonSpec, };
+export type WorkspaceConfig = { id: string, name: string, repositories: Array<WorkspaceRepository>, };
+export type RepositorySnapshot = { repositoryId: string, label: string, manifest: ComparisonManifest | null, error: RepositoryError | null, };
+export type WorkspaceSnapshot = { id: string, workspaceId: string,
+/**
+ * Decimal Unix milliseconds. A string avoids integer precision loss in IPC.
+ */
+capturedAtMs: string, repositories: Array<RepositorySnapshot>, };
+export type EvidenceBasis = { workspaceSnapshotId: string, repositoryId: string, repositorySnapshotId: string, fileId: string, beforeId: string | null, afterId: string | null, schemaVersion: number, ruleVersion: string, };
+export type ReviewState = "pending" | "reviewed" | "needs-attention";
+export type ManualRelation = { id: string, from: EvidenceBasis, to: EvidenceBasis, note: string, };
+export type ReviewRecord = { basis: EvidenceBasis, state: ReviewState, };
+export type WorkspaceSession = { config: WorkspaceConfig, snapshots: Array<WorkspaceSnapshot>, activeSnapshotId: string | null, relations: Array<ManualRelation>, reviews: Array<ReviewRecord>, };
+export type WorkspaceSummary = { id: string, name: string, repositoryCount: number, snapshotCount: number, error: string | null, };
+export type WorkspaceExport = { schemaVersion: number, workspaceId: string, snapshotId: string | null, repositories: Array<ExportRepository>, relations: Array<ExportRelation>, reviews: Array<ReviewRecord>, };
+export type ExportRepository = { repositoryId: string, snapshotId: string | null, mode: CompareMode | null, baseIdentity: string | null, headIdentity: string | null, available: boolean, files: Array<ExportFile>, };
+export type ExportFile = { fileId: string, beforeId: string | null, afterId: string | null, status: FileStatus, };
+export type ExportRelation = { id: string, from: EvidenceBasis, to: EvidenceBasis, };
+export type ValidationSpec = { repository: string, candidateRef: string, baselineRef: string | null, program: string, args: Array<string>, workingDirectory: string, timeoutSeconds: number, };
+export type ValidationIdentity = { path: string, digest: string, };
+export type ValidationSnapshot = { commit: string, tree: string, contentId: string, root: string, fileCount: number, totalBytes: number, locks: Array<ValidationIdentity>, complete: boolean, };
+export type ValidationPlan = { id: string, createdAtMs: number, repository: string, program: string, programId: string, args: Array<string>, workingDirectory: string, timeoutSeconds: number, commandId: string, candidate: ValidationSnapshot, baseline: ValidationSnapshot | null, executable: boolean, blockers: Array<string>, dependencyStatus: string, limitations: Array<string>, };
+export type ValidationTarget = "candidate" | "baseline";
+export type ValidationStatus = "passed" | "failed" | "not-run" | "indeterminate" | "cancelled" | "interrupted" | "env-error" | "running";
+export type ValidationLog = { sequence: number, stream: string, text: string, };
+export type ValidationLogPage = { entries: Array<ValidationLog>, nextSequence: number, truncated: boolean, };
+export type ValidationResult = { id: string, planId: string, target: ValidationTarget, status: ValidationStatus, exitCode: number | null, startedAtMs: number, finishedAtMs: number, sourceId: string, programId: string, commandId: string, dependencyStatus: string, sourceChanged: boolean, changedPaths: Array<string>, logTail: Array<ValidationLog>, logTruncated: boolean, message: string, };
+export type ValidationError = { "code": "invalid", message: string, } | { "code": "io", message: string, } | { "code": "cancelled", message: string, } | { "code": "unsupported", message: string, };

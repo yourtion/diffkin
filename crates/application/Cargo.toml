@@ -9,6 +9,8 @@ license.workspace = true
 [dependencies]
 diffkin-analysis.workspace = true
 diffkin-domain.workspace = true
+serde = { workspace = true, features = ["rc"] }
+serde_json.workspace = true
 
 [lints]
 workspace = true
@@ -18,6 +20,3 @@ version = "0.10"
 
 [dependencies.sha2]
 version = "0.10"
-
-[dev-dependencies]
-serde_json.workspace = true

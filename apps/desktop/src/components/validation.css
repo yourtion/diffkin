@@ -1,0 +1,135 @@
+.validation-panel {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  overflow: auto;
+  min-height: 0;
+  background: var(--panel);
+}
+.validation-panel header,
+.validation-actions,
+.validation-run-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.validation-panel h2 {
+  font-size: 16px;
+}
+.validation-panel h3 {
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.validation-form,
+.validation-plan,
+.validation-run,
+.validation-history {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.validation-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.validation-panel label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+}
+.validation-arguments {
+  display: grid;
+  gap: 6px;
+}
+.validation-panel label.validation-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.validation-panel textarea {
+  resize: vertical;
+  min-height: 66px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font:
+    12px ui-monospace,
+    monospace;
+  color: var(--code);
+  background: var(--surface);
+}
+.validation-panel textarea:focus-visible {
+  outline: 2px solid #87b69c;
+  outline-offset: 1px;
+}
+.validation-panel code,
+.validation-panel pre {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.validation-panel dl {
+  display: grid;
+  grid-template-columns: minmax(90px, auto) minmax(0, 1fr);
+  gap: 7px 14px;
+  font-size: 12px;
+  margin: 0;
+}
+.validation-panel dt {
+  color: var(--muted);
+}
+.validation-panel dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.validation-warning {
+  padding: 10px 12px;
+  border-left: 3px solid #b68a43;
+  background: #fcf8ed;
+}
+.validation-error {
+  color: #a13434;
+}
+.validation-status {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 3px 7px;
+  font-size: 12px;
+}
+.validation-logs {
+  margin: 0;
+  padding: 12px;
+  max-height: 300px;
+  overflow: auto;
+  background: #17251d;
+  color: #dceade;
+  border-radius: 6px;
+  line-height: 1.5;
+}
+.validation-history-list {
+  display: grid;
+  gap: 7px;
+}
+.validation-history-list button {
+  text-align: left;
+  display: grid;
+  gap: 4px;
+}
+.validation-history-list button[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--tint);
+}
+@media (max-width: 850px) {
+  .validation-fields {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,8 +1,10 @@
 pub mod repository;
+pub mod workspace;
 pub use diffkin_analysis::analyze as analyze_text;
 pub use diffkin_analysis::compare as compare_text;
 pub use diffkin_analysis::MAX_BYTES as MAX_INPUT_BYTES;
 pub use repository::{capture, FrozenComparison};
+pub use workspace::{capture_workspace, FrozenWorkspace, WorkspaceStore};
 
 /// Shared by the native bridge and CLI; metadata-only changes never become empty-text claims.
 pub fn analyze_file(
@@ -48,5 +50,27 @@ pub fn analyze_file(
         }),
         Err(CompareError::Cancelled { message }) => Err(RepositoryError::Cancelled { message }),
         Err(CompareError::Internal { message }) => Err(RepositoryError::IoFailure { message }),
+    }
+}
+
+/// Stable basis for review records; metadata views must not impersonate syntax analysis.
+pub fn file_rule_version(file: &diffkin_domain::FrozenFile) -> &'static str {
+    let metadata = [&file.summary.old_mode, &file.summary.new_mode]
+        .into_iter()
+        .flatten()
+        .any(|mode| mode == "120000" || mode == "160000")
+        || (file.summary.before_id.is_some() && file.before.is_none())
+        || (file.summary.after_id.is_some() && file.after.is_none())
+        || file.before_truncated
+        || file.after_truncated
+        || file.summary.status == diffkin_domain::FileStatus::Conflict
+        || !diffkin_analysis::supports_detail(
+            file.before.as_deref().unwrap_or(""),
+            file.after.as_deref().unwrap_or(""),
+        );
+    if metadata {
+        "metadata-v1"
+    } else {
+        diffkin_analysis::RULE_VERSION
     }
 }

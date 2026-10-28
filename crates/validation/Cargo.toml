@@ -1,0 +1,20 @@
+[package]
+name = "diffkin-validation"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[dependencies]
+diffkin-domain.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2 = "0.10"
+uuid = { version = "1", features = ["v4"] }
+
+[target.'cfg(unix)'.dependencies]
+nix = { version = "0.31.3", features = ["process", "signal", "fs"] }
+
+[lints]
+workspace = true

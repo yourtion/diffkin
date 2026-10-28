@@ -695,12 +695,94 @@ fn blobs(
 }
 
 /// A captured comparison contains only immutable, bounded data. No methods reread the repository.
-#[derive(Clone)]
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct FrozenComparison {
     manifest: ComparisonManifest,
     files: BTreeMap<String, FrozenFile>,
 }
 impl FrozenComparison {
+    /// Validate deserialized snapshots before they can become review evidence.
+    pub(crate) fn validate_stored(&self) -> Result<(), RepositoryError> {
+        fn valid_id(id: &str, lengths: &[usize]) -> bool {
+            lengths.contains(&id.len()) && id.bytes().all(|byte| byte.is_ascii_hexdigit())
+        }
+        if !valid_id(&self.manifest.id, &[64])
+            || self.files.len() > MAX_CHANGES
+            || self.manifest.total_files as usize != self.files.len()
+            || self.manifest.files.len() != self.files.len()
+        {
+            return Err(io_error("Invalid frozen comparison manifest"));
+        }
+        let mut seen = BTreeSet::new();
+        let mut bytes = 0;
+        for summary in &self.manifest.files {
+            if !valid_id(&summary.id, &[64]) || !seen.insert(&summary.id) {
+                return Err(io_error("Duplicate or invalid frozen file identity"));
+            }
+            let file = self
+                .files
+                .get(&summary.id)
+                .ok_or_else(|| io_error("Frozen file is missing"))?;
+            if serde_json::to_vec(summary).map_err(io_error)?
+                != serde_json::to_vec(&file.summary).map_err(io_error)?
+            {
+                return Err(io_error("Frozen file summary does not match its manifest"));
+            }
+            for (value, truncated, oid, mode) in [
+                (
+                    &file.before,
+                    file.before_truncated,
+                    &summary.before_id,
+                    &summary.old_mode,
+                ),
+                (
+                    &file.after,
+                    file.after_truncated,
+                    &summary.after_id,
+                    &summary.new_mode,
+                ),
+            ] {
+                if oid.as_ref().is_some_and(|oid| !valid_id(oid, &[40, 64]))
+                    || mode.as_ref().is_some_and(|mode| {
+                        !matches!(mode.as_str(), "100644" | "100755" | "120000" | "160000")
+                    })
+                    || oid.is_some() != mode.is_some()
+                {
+                    return Err(io_error("Invalid frozen source identity or mode"));
+                }
+                if let Some(text) = value {
+                    if text.len() > MAX_FILE || oid.is_none() {
+                        return Err(io_error("Invalid frozen source content"));
+                    }
+                    bytes += text.len();
+                    if !truncated {
+                        let oid = oid.as_deref().expect("checked source identity");
+                        if mode.as_deref() == Some("160000") {
+                            if text != &format!("Submodule commit {oid}\n") {
+                                return Err(io_error("Invalid frozen gitlink preview"));
+                            }
+                        } else {
+                            let mut raw = format!("blob {}\0", text.len()).into_bytes();
+                            raw.extend_from_slice(text.as_bytes());
+                            let actual = if oid.len() == 40 {
+                                format!("{:x}", Sha1::digest(&raw))
+                            } else {
+                                format!("{:x}", Sha256::digest(&raw))
+                            };
+                            if actual != oid {
+                                return Err(io_error("Frozen source checksum mismatch"));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if bytes > MAX_SNAPSHOT {
+            return Err(budget("Frozen comparison exceeds its content budget"));
+        }
+        Ok(())
+    }
     pub fn manifest(&self, offset: usize, limit: usize) -> ComparisonManifest {
         let mut manifest = self.manifest.clone();
         manifest.files = manifest
