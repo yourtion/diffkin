@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main-window",
+  "description": "Only the bundled main window uses the text comparison command. No filesystem or shell plugins.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

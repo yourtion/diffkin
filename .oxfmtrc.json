@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/target/**",
+    "**/node_modules/**",
+    "**/gen/**",
+    "packages/protocol/src/generated.ts",
+    "pnpm-lock.yaml",
+    "Cargo.lock"
+  ]
+}

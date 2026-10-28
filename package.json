@@ -1,0 +1,30 @@
+{
+  "name": "diffkin",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @diffkin/desktop dev",
+    "desktop": "pnpm --filter @diffkin/desktop tauri",
+    "build": "pnpm --filter @diffkin/desktop build",
+    "typecheck": "pnpm --filter @diffkin/desktop typecheck",
+    "lint": "oxlint --deny-warnings",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "test": "node --test scripts/*.test.mjs",
+    "check": "pnpm check:versions && pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
+    "check:versions": "node scripts/version.mjs check",
+    "version:set": "node scripts/version.mjs set",
+    "protocol:generate": "cargo run -p diffkin-domain --example export_protocol",
+    "protocol:check": "node scripts/check-protocol.mjs"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.12.4",
+    "oxfmt": "0.75.0",
+    "oxlint": "1.90.0",
+    "smol-toml": "1.9.1"
+  },
+  "engines": {
+    "node": ">=24.22.1 <25"
+  },
+  "packageManager": "pnpm@10.13.1"
+}

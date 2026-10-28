@@ -1,0 +1,12 @@
+node_modules/
+target/
+dist/
+coverage/
+.DS_Store
+.env
+.env.*
+!.env.example
+apps/desktop/src-tauri/gen/
+artifacts/
+*.log
+.cache/

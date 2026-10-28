@@ -1,0 +1,18 @@
+[package]
+name = "diffkin-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "diffkin"
+path = "src/main.rs"
+
+[dependencies]
+diffkin-application.workspace = true
+diffkin-domain.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

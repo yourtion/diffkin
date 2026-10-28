@@ -1,0 +1,8 @@
+{
+  "name": "@diffkin/protocol",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/generated.ts"
+  }
+}
