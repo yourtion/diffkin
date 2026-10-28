@@ -30,7 +30,7 @@ diffkin-application = { path = "crates/application" }
 diffkin-validation = { path = "crates/validation" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-similar = "2.7"
+similar = "3.2"
 ts-rs = { version = "12", features = ["serde-compat"] }
 
 [workspace.lints.rust]
