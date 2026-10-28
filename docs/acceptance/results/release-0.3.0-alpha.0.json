@@ -1,0 +1,104 @@
+{
+  "verifiedAt": "2026-10-28T06:56:52.221451+00:00",
+  "releaseUrl": "https://github.com/yourtion/diffkin/releases/tag/untagged-1b8380f3424092b54ce0",
+  "tag": "v0.3.0-alpha.0",
+  "draft": true,
+  "prerelease": true,
+  "assetCount": 9,
+  "checksumsMatchAllAssets": true,
+  "assets": [
+    {
+      "name": "Diffkin-0.3.0-alpha.0-aarch64-apple-darwin.dmg",
+      "bytes": 4206299,
+      "sha256": "1ada6db5bc2efab7adf86938b742fa8a754d3a8c60e2b65155b1d593ea1c9add"
+    },
+    {
+      "name": "Diffkin-0.3.0-alpha.0-x86_64-apple-darwin.dmg",
+      "bytes": 4361927,
+      "sha256": "8254144dacc343226776e1bf96b38e506e6ee98e7115dd63e0df510c1cf49511"
+    },
+    {
+      "name": "Diffkin-0.3.0-alpha.0-x86_64-pc-windows-msvc.exe",
+      "bytes": 3160357,
+      "sha256": "711ca9a469821ddabf682ed1a3c2c6b095dd7ea54f7c0e53c6d91d70fa1f5eb6"
+    },
+    {
+      "name": "Diffkin-0.3.0-alpha.0-x86_64-unknown-linux-gnu.AppImage",
+      "bytes": 82713080,
+      "sha256": "9dceb7153c09d60626d1dc4bbc3bc2bfeafef5207dee5cccae18545f891a969d"
+    },
+    {
+      "name": "Diffkin-0.3.0-alpha.0-x86_64-unknown-linux-gnu.deb",
+      "bytes": 4293856,
+      "sha256": "1f25f3120f81af1908c766bf50025431aa7849ea20317501149682587a536598"
+    },
+    {
+      "name": "diffkin-cli-0.3.0-alpha.0-aarch64-apple-darwin.tar.gz",
+      "bytes": 1260468,
+      "sha256": "8ebe205aab06632a865a2c73377ae7180f314bc66c30ed98aef6e5e8cff15656"
+    },
+    {
+      "name": "diffkin-cli-0.3.0-alpha.0-x86_64-apple-darwin.tar.gz",
+      "bytes": 1277991,
+      "sha256": "5bbde40129f1e9f61ec8fb72994d9449e5df61617c79eaa89ba851420f635947"
+    },
+    {
+      "name": "diffkin-cli-0.3.0-alpha.0-x86_64-pc-windows-msvc.tar.gz",
+      "bytes": 1196880,
+      "sha256": "225c29278ab9bed10f43023fda3ab0ea19657da13753e34f18be1ee725c38767"
+    },
+    {
+      "name": "diffkin-cli-0.3.0-alpha.0-x86_64-unknown-linux-gnu.tar.gz",
+      "bytes": 1292513,
+      "sha256": "52cb1175f356f3f6150a4983800ba4beb7a0a073f73b8b7610a400bb119860dd"
+    },
+    {
+      "name": "SHA256SUMS",
+      "bytes": 1064,
+      "sha256": "1b9989f6f45d45db1700ae8895b7aaa790c8d0f8a7560df47673956f297957a0"
+    }
+  ],
+  "cliArchives": [
+    {
+      "name": "diffkin-cli-0.3.0-alpha.0-aarch64-apple-darwin.tar.gz",
+      "exactContents": true,
+      "targetHeader": true,
+      "license": true,
+      "noticesBytes": 3517667
+    },
+    {
+      "name": "diffkin-cli-0.3.0-alpha.0-x86_64-apple-darwin.tar.gz",
+      "exactContents": true,
+      "targetHeader": true,
+      "license": true,
+      "noticesBytes": 3517667
+    },
+    {
+      "name": "diffkin-cli-0.3.0-alpha.0-x86_64-pc-windows-msvc.tar.gz",
+      "exactContents": true,
+      "targetHeader": true,
+      "license": true,
+      "noticesBytes": 3517667
+    },
+    {
+      "name": "diffkin-cli-0.3.0-alpha.0-x86_64-unknown-linux-gnu.tar.gz",
+      "exactContents": true,
+      "targetHeader": true,
+      "license": true,
+      "noticesBytes": 3517667
+    }
+  ],
+  "macArmRemoteVersion": "diffkin 0.3.0-alpha.0",
+  "dependencyCount": 457,
+  "allCliNoticesMatchVerifiedLocalInventory": true,
+  "commit": "bdf58249c25a35bd895489fa17529b3868d30641",
+  "mainCi": {
+    "url": "https://github.com/yourtion/diffkin/actions/runs/40645404066",
+    "conclusion": "success"
+  },
+  "releaseWorkflow": {
+    "url": "https://github.com/yourtion/diffkin/actions/runs/40645404084",
+    "conclusion": "success"
+  },
+  "nativeInstallers": "Downloaded and checksum-verified; no remote installer was launched. This report does not certify native UI, installation, signing or notarization."
+}
