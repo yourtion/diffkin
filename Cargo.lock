@@ -568,7 +568,7 @@ dependencies = [
 
 [[package]]
 name = "diffkin-analysis"
-version = "0.3.0-alpha.1"
+version = "0.3.0-alpha.2"
 dependencies = [
  "diffkin-domain",
  "serde",
@@ -586,7 +586,7 @@ dependencies = [
 
 [[package]]
 name = "diffkin-application"
-version = "0.3.0-alpha.1"
+version = "0.3.0-alpha.2"
 dependencies = [
  "diffkin-analysis",
  "diffkin-domain",
@@ -598,7 +598,7 @@ dependencies = [
 
 [[package]]
 name = "diffkin-cli"
-version = "0.3.0-alpha.1"
+version = "0.3.0-alpha.2"
 dependencies = [
  "diffkin-application",
  "diffkin-domain",
@@ -608,7 +608,7 @@ dependencies = [
 
 [[package]]
 name = "diffkin-desktop"
-version = "0.3.0-alpha.1"
+version = "0.3.0-alpha.2"
 dependencies = [
  "diffkin-application",
  "diffkin-domain",
@@ -621,7 +621,7 @@ dependencies = [
 
 [[package]]
 name = "diffkin-domain"
-version = "0.3.0-alpha.1"
+version = "0.3.0-alpha.2"
 dependencies = [
  "serde",
  "ts-rs",
@@ -629,7 +629,7 @@ dependencies = [
 
 [[package]]
 name = "diffkin-validation"
-version = "0.3.0-alpha.1"
+version = "0.3.0-alpha.2"
 dependencies = [
  "diffkin-domain",
  "nix",

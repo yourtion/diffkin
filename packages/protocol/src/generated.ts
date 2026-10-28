@@ -10,7 +10,12 @@ text: string, };
 export type Comparison = { schemaVersion: number, lines: Array<DiffLine>, added: number, removed: number, };
 export type CompareError = { "code": "input-too-large", message: string, } | { "code": "cancelled", message: string, } | { "code": "internal", message: string, };
 export type CompareMode = "commits" | "staged" | "unstaged" | "worktree";
-export type ComparisonSpec = { repository: string, mode: CompareMode, base: string | null, head: string | null, includeUntracked: boolean, };
+export type ComparisonSpec = { repository: string, mode: CompareMode, base: string | null, head: string | null, includeUntracked: boolean,
+/**
+ * Full literal verification, including files accepted by the Git stat cache.
+ * Omitted false values preserve existing workspace archive serialization.
+ */
+verifyAll?: boolean, };
 export type FileStatus = "added" | "deleted" | "modified" | "renamed" | "type-changed" | "conflict";
 export type FileSummary = { id: string,
 /**
@@ -62,3 +67,18 @@ export type ValidationLog = { sequence: number, stream: string, text: string, };
 export type ValidationLogPage = { entries: Array<ValidationLog>, nextSequence: number, truncated: boolean, };
 export type ValidationResult = { id: string, planId: string, target: ValidationTarget, status: ValidationStatus, exitCode: number | null, startedAtMs: number, finishedAtMs: number, sourceId: string, programId: string, commandId: string, dependencyStatus: string, sourceChanged: boolean, changedPaths: Array<string>, logTail: Array<ValidationLog>, logTruncated: boolean, message: string, };
 export type ValidationError = { "code": "invalid", message: string, } | { "code": "io", message: string, } | { "code": "cancelled", message: string, } | { "code": "unsupported", message: string, };
+export type RepositoryRefKind = "branch" | "remote" | "tag";
+export type RepositoryRef = {
+/**
+ * Full refname is passed unchanged to the existing comparison resolver.
+ */
+name: string, label: string, kind: RepositoryRefKind, target: string, symbolicTarget: string | null, };
+export type RepositoryRefs = { repository: string, refs: Array<RepositoryRef>, currentBranch: string | null, offset: number, nextOffset: number | null,
+/**
+ * Additional matching refs exist beyond the bounded 4096-ref scan.
+ */
+truncated: boolean, warnings: Array<string>, };
+export type DiffLayout = "split" | "unified";
+export type ViewPreferences = { layout: DiffLayout, foldFormats: boolean, collapseUnchanged: boolean, };
+export type AppPreferences = { schemaVersion: number, spec: ComparisonSpec, recent: Array<string>, view: ViewPreferences, };
+export type PreferencesError = { "code": "unsupported-version", message: string, } | { "code": "corrupt", message: string, } | { "code": "invalid", message: string, } | { "code": "unsafe-path", message: string, } | { "code": "io", message: string, };
