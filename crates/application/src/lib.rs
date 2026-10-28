@@ -1,3 +1,5 @@
+pub mod navigation;
+pub mod preferences;
 pub mod repository;
 pub mod workspace;
 pub use diffkin_analysis::analyze as analyze_text;

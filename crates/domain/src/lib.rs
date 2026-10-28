@@ -1,3 +1,7 @@
+pub mod preferences;
+pub use preferences::*;
+pub mod navigation;
+pub use navigation::*;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 

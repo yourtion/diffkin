@@ -1,0 +1,36 @@
+{
+  "version": "0.3.0-alpha.1",
+  "comparison": "Differential against alpha.2 captured commits",
+  "repositories": [
+    {
+      "repository": "CodeAtlas",
+      "base": "2ef99afb1811566ce58304f664bfaa834c5ee14c",
+      "head": "f80966d567df0cfb21dae6df03d6753515472a82",
+      "files": 36,
+      "sourceHashesVerified": 50,
+      "frozenFilesAndAnalysisIdentical": true,
+      "indexUnchanged": true,
+      "debugElapsedSeconds": 0.94
+    },
+    {
+      "repository": "lynx-html-renderer",
+      "base": "48f64b56bc229eff0b5042b77222cc32297ee9ea",
+      "head": "6637183578a271758e3e89cdba5077011b19e7b6",
+      "files": 1,
+      "sourceHashesVerified": 1,
+      "frozenFilesAndAnalysisIdentical": true,
+      "indexUnchanged": true,
+      "debugElapsedSeconds": 0.108
+    },
+    {
+      "repository": "vue-json-ui-editor",
+      "base": "f1ade53bb1654c6c526382866e319e6efc6c8e17",
+      "head": "8eba3c3a7bdf245f7532b80ad2af6b4595c95cb1",
+      "files": 21,
+      "sourceHashesVerified": 30,
+      "frozenFilesAndAnalysisIdentical": true,
+      "indexUnchanged": true,
+      "debugElapsedSeconds": 0.285
+    }
+  ]
+}

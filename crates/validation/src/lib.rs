@@ -652,7 +652,16 @@ fn copy_snapshot(
     copy.root = root.to_string_lossy().into();
     Ok(copy)
 }
-fn lock_plan(store: &Path, id: &str) -> Result<File> {
+struct PlanLock(File);
+impl Drop for PlanLock {
+    fn drop(&mut self) {
+        // A concurrent fork may briefly retain this open file description even
+        // with CLOEXEC. Closing our fd alone would then leave flock held until
+        // that child execs. Release the shared lock explicitly before closing.
+        let _ = self.0.unlock();
+    }
+}
+fn lock_plan(store: &Path, id: &str) -> Result<PlanLock> {
     valid_id(id)?;
     real_directory(&store.join("plans"))?;
     real_directory(&store.join("plans").join(id))?;
@@ -666,7 +675,7 @@ fn lock_plan(store: &Path, id: &str) -> Result<File> {
     }
     let file = options.open(path).map_err(io)?;
     file.try_lock().map_err(io)?;
-    Ok(file)
+    Ok(PlanLock(file))
 }
 /// Run only a previously prepared, explicitly approved plan. Callbacks are ordered, bounded logs.
 pub fn run(
@@ -1041,4 +1050,51 @@ fn process(
         std::io::ErrorKind::Unsupported,
         "Reliable process tree termination unavailable on this platform",
     ))
+}
+
+#[cfg(all(test, unix))]
+mod lock_tests {
+    use super::*;
+
+    struct Fixture(PathBuf, String);
+    impl Fixture {
+        fn new() -> Self {
+            let root =
+                std::env::temp_dir().join(format!("diffkin-plan-lock-test-{}", Uuid::new_v4()));
+            let id = Uuid::new_v4().to_string();
+            fs::create_dir_all(root.join("plans").join(&id)).unwrap();
+            Self(root, id)
+        }
+    }
+    impl Drop for Fixture {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
+
+    #[test]
+    fn dropping_plan_lock_releases_it_while_an_inherited_fd_remains_open() {
+        let fixture = Fixture::new();
+        let guard = lock_plan(&fixture.0, &fixture.1).unwrap();
+        // dup and fork reference the same open file description and flock.
+        let inherited = guard.0.try_clone().unwrap();
+        assert!(lock_plan(&fixture.0, &fixture.1).is_err());
+        drop(guard);
+        assert!(lock_plan(&fixture.0, &fixture.1).is_ok());
+        drop(inherited);
+    }
+
+    #[test]
+    fn panic_releases_plan_lock_while_an_inherited_fd_remains_open() {
+        let fixture = Fixture::new();
+        let guard = lock_plan(&fixture.0, &fixture.1).unwrap();
+        let inherited = guard.0.try_clone().unwrap();
+        let result = std::panic::catch_unwind(move || {
+            let _guard = guard;
+            panic!("controlled plan failure");
+        });
+        assert!(result.is_err());
+        assert!(lock_plan(&fixture.0, &fixture.1).is_ok());
+        drop(inherited);
+    }
 }

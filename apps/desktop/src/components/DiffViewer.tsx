@@ -25,6 +25,10 @@ type Props = {
   analysis: AnalysisResult | null;
   foldFormats: boolean;
   onFoldChange: (fold: boolean) => void;
+  layout: "split" | "unified";
+  collapse: boolean;
+  onLayoutChange: (layout: "split" | "unified") => void;
+  onCollapseChange: (collapse: boolean) => void;
 };
 export function editorOffset(source: string, offset: number) {
   return source.slice(0, offset).replace(/\r\n?/g, "\n").length;
@@ -39,13 +43,15 @@ export function DiffViewer({
   analysis,
   foldFormats,
   onFoldChange,
+  layout,
+  collapse,
+  onLayoutChange: setLayout,
+  onCollapseChange: setCollapse,
 }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const overlay = useRef<SVGSVGElement>(null);
   const views = useRef<{ a?: EditorView; b: EditorView } | null>(null);
-  const [layout, setLayout] = useState<"split" | "unified">("split");
-  const [collapse, setCollapse] = useState(true);
   const [copied, setCopied] = useState("");
   const focused = scope && event !== null;
   const move = event?.facets.includes("move") && event.before && event.after ? event : null;

@@ -10,12 +10,14 @@ import type {
 import { client, message } from "../lib/client";
 import { workspaceClient } from "../lib/workspace-client";
 import "./workspace.css";
+import { RepositoryPicker } from "./RepositoryPicker";
+import { RevisionPicker } from "./RevisionPicker";
 
 const modes = {
   worktree: "全部本地改动",
   staged: "已暂存",
   unstaged: "未暂存",
-  commits: "两个提交",
+  commits: "分支 / 提交",
 };
 const identifier = () => crypto.randomUUID();
 function repository(spec: ComparisonSpec): WorkspaceRepository {
@@ -281,6 +283,12 @@ export function WorkspacePanel({
                 updateRepo(repo.id, { spec: { ...repo.spec, repository: e.target.value } })
               }
             />
+            <RepositoryPicker
+              value={repo.spec.repository}
+              label={`选择仓库 ${index + 1} 目录`}
+              disabled={!available || busy}
+              onChoose={(path) => updateRepo(repo.id, { spec: { ...repo.spec, repository: path } })}
+            />
             <select
               aria-label={`仓库 ${index + 1} 模式`}
               value={repo.spec.mode}
@@ -298,22 +306,22 @@ export function WorkspacePanel({
             </select>
             {repo.spec.mode === "commits" ? (
               <>
-                <input
-                  aria-label={`仓库 ${index + 1} 基线`}
+                <RevisionPicker
+                  repository={repo.spec.repository}
+                  label={`仓库 ${index + 1} 基线`}
                   value={repo.spec.base ?? ""}
                   placeholder="HEAD~1"
-                  onChange={(e) =>
-                    updateRepo(repo.id, { spec: { ...repo.spec, base: e.target.value } })
-                  }
+                  disabled={!available || busy}
+                  onChange={(base) => updateRepo(repo.id, { spec: { ...repo.spec, base } })}
                 />
                 <span>→</span>
-                <input
-                  aria-label={`仓库 ${index + 1} 候选`}
+                <RevisionPicker
+                  repository={repo.spec.repository}
+                  label={`仓库 ${index + 1} 候选`}
                   value={repo.spec.head ?? ""}
                   placeholder="HEAD"
-                  onChange={(e) =>
-                    updateRepo(repo.id, { spec: { ...repo.spec, head: e.target.value } })
-                  }
+                  disabled={!available || busy}
+                  onChange={(head) => updateRepo(repo.id, { spec: { ...repo.spec, head } })}
                 />
               </>
             ) : (
@@ -328,6 +336,18 @@ export function WorkspacePanel({
                   }
                 />
                 纳入未跟踪
+              </label>
+            )}
+            {(repo.spec.mode === "worktree" || repo.spec.mode === "unstaged") && (
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={repo.spec.verifyAll === true}
+                  onChange={(event) =>
+                    updateRepo(repo.id, { spec: { ...repo.spec, verifyAll: event.target.checked } })
+                  }
+                />
+                完整原文核验
               </label>
             )}
             <button

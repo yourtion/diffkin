@@ -1,0 +1,101 @@
+.repository-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.picker-error {
+  color: #a03835;
+  font-size: 12px;
+}
+.revision-picker {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+}
+.revision-picker > input {
+  width: 155px;
+  border-radius: 6px 0 0 6px;
+}
+.revision-picker > button {
+  border-radius: 0 6px 6px 0;
+  margin-left: -1px;
+  white-space: nowrap;
+}
+.revision-menu {
+  margin: 0;
+  left: auto;
+  color: inherit;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: min(420px, 85vw);
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 8px 30px #24342b22;
+  border-radius: 9px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.revision-search {
+  display: flex;
+  gap: 5px;
+}
+.revision-search input {
+  flex: 1;
+  min-width: 0;
+}
+.revision-menu p {
+  color: var(--muted);
+  font-size: 11px;
+}
+.revision-options {
+  max-height: 270px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.revision-options button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+.revision-options span {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.revision-options small {
+  color: var(--muted);
+}
+.revision-options code {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.preferences-panel {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 14px 20px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.preferences-panel > div:first-child {
+  flex-basis: 100%;
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+}
+.preferences-panel p {
+  font-size: 11px;
+}
+.preferences-status {
+  color: var(--muted);
+}

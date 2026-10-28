@@ -2,9 +2,9 @@
 
 看清代码的每一次变化。
 
-轻量、本地的代码审查客户端。当前为 **0.3.0-alpha.0 / M3–M4 功能候选**：只读 Git 与多语言结构 diff、多仓库冻结审查，以及需要明确确认的单仓固定提交验证。采用 **MIT** 许可证。
+轻量、本地的代码审查客户端。当前为 **0.3.0-alpha.1 / 大仓库与导航改进候选**：只读 Git 与多语言结构 diff、多仓库冻结审查，以及需要明确确认的单仓固定提交验证。采用 **MIT** 许可证。
 
-[公开仓库](https://github.com/yourtion/diffkin) · [Actions](https://github.com/yourtion/diffkin/actions) · [当前验收记录](docs/acceptance/m3-m4.md)
+[公开仓库](https://github.com/yourtion/diffkin) · [Actions](https://github.com/yourtion/diffkin/actions) · [本轮验收记录](docs/acceptance/large-repositories.md) · [M3/M4 验收记录](docs/acceptance/m3-m4.md)
 
 ## 开始使用
 
@@ -15,7 +15,9 @@ pnpm install --frozen-lockfile
 pnpm desktop dev
 ```
 
-输入本地仓库路径，选择比较模式：
+点击“浏览…”选择本地仓库目录，或直接输入路径，再选择比较模式。⌘/Ctrl O 可打开目录选择。比较两个提交时，使用“分支 ▾”选择来源与目标的本地分支、远程跟踪分支或标签，也可直接输入 commit ID / ref；引用列表支持搜索和分页，不自动拉取远程。
+
+比较模式：
 
 | 模式         | 基线 → 候选                             |
 | ------------ | --------------------------------------- |
@@ -24,9 +26,17 @@ pnpm desktop dev
 | 未暂存       | 冻结 index → 原始工作区文件             |
 | 两个提交     | 两个输入 ref 解析并固定后的 commit      |
 
+默认工作区比较使用完整 index/stat 元数据筛选，按实际变化读取源码。需要逐一核对所有已跟踪文件原始字节时，勾选“完整原文核验”；这也覆盖已删除历史转换规则留下的内容，大仓库会更慢且仍受捕获时间预算限制。CLI 对应 `--verify-all`。
+
 文件捕获后保持不变；刷新创建新比较。使用 J/K 切换文件、⌘/Ctrl F 搜索、Alt+↑/↓ 跳转变化。打开含移动的文件会突出首个移动关系；连线支持起点/终点定位，选择内部修改可直接对照其双侧内容。格式折叠有明确依据，可点击展开或切回完整原始视图。已审查标记绑定快照、内容和分析规则版本。
 
 `pnpm dev` 只预览浏览器界面；本地 Git、比较内核和验证执行由桌面应用提供。普通比较及工作区捕获不执行仓库脚本、Git filters、外部 diff、hooks 或自动拉取缺失对象。验证是独立的显式执行入口。
+
+### 本地设置
+
+点击“设置”调整双栏/统一视图、格式折叠和未修改区域折叠。仓库路径、最近 8 个仓库、比较模式与来源/目标也会自动保存到平台应用数据目录的 `settings.json`。下次打开只恢复设置，点击“打开比较”后才读取仓库。
+
+旧 WebView 会话缓存会迁移；本地文件损坏或版本未知时保留原文件并显示恢复入口。只有点击“保存当前设置并替换本地文件”才会覆盖该文件。工作区及审查证据继续使用各自的持久化存储。
 
 ### 多仓库审查
 
@@ -74,6 +84,7 @@ cargo run -p diffkin-cli -- before.ts after.ts
 cargo run -p diffkin-cli -- --structure before.ts after.ts
 cargo run -p diffkin-cli -- --repo /path/to/repo --mode commits --base HEAD~1 --head HEAD
 cargo run -p diffkin-cli -- --repo /path/to/repo --mode worktree --untracked
+cargo run -p diffkin-cli -- --repo /path/to/repo --mode worktree --verify-all
 ```
 
 输出 JSON。退出码：`0` 无变化，`1` 有变化，`2` 错误。CLI 与桌面共用快照、文本和结构内核。
@@ -112,12 +123,12 @@ CI 会先运行 `diffkin-analysis` 的 `ui_fixture` 和 `diffkin-desktop` 的 `w
 以下版本号仅为流程示例，以实际准备发布的版本为准。
 
 ```sh
-pnpm version:set 0.3.0-alpha.1
+pnpm version:set 0.3.0-alpha.2
 pnpm format
 pnpm check
 # 提交版本、源码及锁文件后
-# git tag v0.3.0-alpha.1
-# git push origin v0.3.0-alpha.1
+# git tag v0.3.0-alpha.2
+# git push origin v0.3.0-alpha.2
 ```
 
 Tag 触发版本校验、三平台 CI，以及 macOS Apple Silicon / Intel、Windows x64、Linux x64 构建。全部产物齐备后生成 `SHA256SUMS` 和 **Release 草稿**。CLI 与桌面包附带许可证和第三方材料。已公开 Release 不允许重跑覆盖。

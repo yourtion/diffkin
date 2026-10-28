@@ -1,5 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+mod navigation_commands;
 mod runtime;
+mod settings_commands;
 mod validation_commands;
 mod workspace_commands;
 
@@ -87,6 +89,7 @@ fn cancel_job(job_id: String, state: State<'_, Shared>) {
 fn main() {
     let quitting = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let application = tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .manage(Arc::new(Runtime::default()))
         .manage(Arc::new(workspace_commands::WorkspaceRuntime::default()))
         .manage(Arc::new(validation_commands::ValidationRuntime::default()))
@@ -95,6 +98,10 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            settings_commands::preferences_load,
+            settings_commands::preferences_save,
+            navigation_commands::pick_repository_directory,
+            navigation_commands::list_repository_refs,
             open_comparison,
             list_changes,
             request_file,

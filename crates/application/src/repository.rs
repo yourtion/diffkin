@@ -8,7 +8,7 @@ use sha2::{Digest, Sha256};
 use std::{
     collections::{BTreeMap, BTreeSet},
     fs::{self, File, Metadata},
-    io::{Read, Write},
+    io::{BufRead, BufReader, Read, Write},
     path::{Component, PathBuf},
     process::{Command, Stdio},
     sync::atomic::{AtomicBool, Ordering},
@@ -19,7 +19,7 @@ use std::{
 const MAX_FILE: usize = 2 * 1024 * 1024;
 const MAX_SNAPSHOT: usize = 64 * 1024 * 1024;
 const MAX_GIT_OUTPUT: usize = 80 * 1024 * 1024;
-const MAX_FILES: usize = 50_000;
+
 const MAX_CHANGES: usize = 2_000;
 const CAPTURE_BUDGET: Duration = Duration::from_secs(20);
 
@@ -47,9 +47,9 @@ struct Context<'a> {
     cancel: &'a AtomicBool,
     deadline: Instant,
 }
-struct Output {
+struct Output<T = Vec<u8>> {
     success: bool,
-    stdout: Vec<u8>,
+    stdout: T,
     stderr: String,
 }
 
@@ -66,7 +66,12 @@ impl Context<'_> {
         Ok(())
     }
 
-    fn git(&self, arguments: &[&str], input: Option<&[u8]>) -> Result<Output, RepositoryError> {
+    fn git_read<T: Send>(
+        &self,
+        arguments: &[&str],
+        input: Option<&[u8]>,
+        read: impl FnOnce(std::process::ChildStdout) -> Result<T, RepositoryError> + Send,
+    ) -> Result<Output<T>, RepositoryError> {
         self.check()?;
         let mut command = Command::new("git");
         command
@@ -122,7 +127,7 @@ impl Context<'_> {
         let stderr = child.stderr.take().expect("piped stderr");
         let stdin = child.stdin.take().expect("piped stdin");
         thread::scope(|scope| {
-            let out = scope.spawn(move || read_bounded(stdout, MAX_GIT_OUTPUT));
+            let out = scope.spawn(move || read(stdout));
             let err = scope.spawn(move || read_bounded(stderr, 256 * 1024));
             let write = scope.spawn(move || {
                 let mut stdin = stdin;
@@ -162,6 +167,12 @@ impl Context<'_> {
                 stdout,
                 stderr: String::from_utf8_lossy(&stderr).trim().into(),
             })
+        })
+    }
+
+    fn git(&self, arguments: &[&str], input: Option<&[u8]>) -> Result<Output, RepositoryError> {
+        self.git_read(arguments, input, |stdout| {
+            read_bounded(stdout, MAX_GIT_OUTPUT)
         })
     }
 
@@ -249,62 +260,539 @@ struct Entry {
 }
 type Entries = BTreeMap<Vec<u8>, Entry>;
 
-fn tree(context: &Context<'_>, oid: Option<&str>) -> Result<Entries, RepositoryError> {
-    let Some(oid) = oid else {
-        return Ok(Entries::new());
+/// Raw tree/index diff metadata is bounded by actual changes, not repository size.
+fn raw_diff(
+    context: &Context<'_>,
+    base: Option<&str>,
+    head: Option<&str>,
+) -> Result<(Entries, Entries, BTreeSet<Vec<u8>>), RepositoryError> {
+    let args = if let Some(head) = head {
+        vec![
+            "diff-tree",
+            "-r",
+            "--raw",
+            "--no-abbrev",
+            "-z",
+            "--no-renames",
+            "--ignore-submodules=none",
+            "--no-ext-diff",
+            "--no-textconv",
+            base.expect("commit base"),
+            head,
+            "--",
+        ]
+    } else {
+        let mut args = vec![
+            "diff",
+            "--cached",
+            "--raw",
+            "--no-abbrev",
+            "-z",
+            "--no-renames",
+            "--ignore-submodules=none",
+            "--no-ext-diff",
+            "--no-textconv",
+            "--ita-invisible-in-index",
+        ];
+        if let Some(base) = base {
+            args.push(base);
+        }
+        args.push("--");
+        args
     };
-    let bytes = context.required(&["ls-tree", "-r", "-z", "--full-tree", oid], None)?;
-    parse_entries(&bytes, false)
-}
-
-fn index(context: &Context<'_>) -> Result<(Entries, BTreeSet<Vec<u8>>), RepositoryError> {
-    // ls-files' NUL path delimiter keeps even newline-containing names unambiguous.
-    // --debug is the only Git interface exposing CE_INTENT_TO_ADD; reject unfamiliar
-    // metadata layouts instead of guessing flags after a Git format change.
-    let bytes = context.required(&["ls-files", "--stage", "--debug", "-z"], None)?;
-    let mut rest = bytes.as_slice();
-    let mut entries = Entries::new();
-    let mut intents = BTreeSet::new();
-    while !rest.is_empty() {
-        let nul = rest
-            .iter()
-            .position(|byte| *byte == 0)
-            .ok_or_else(|| io_error("Missing index path delimiter"))?;
-        let record = &rest[..nul];
-        let parsed = parse_entries(record, true)?;
-        rest = &rest[nul + 1..];
-        let mut flags = None;
-        for label in ["  ctime:", "  mtime:", "  dev:", "  uid:", "  size:"] {
-            let newline = rest
-                .iter()
-                .position(|byte| *byte == b'\n')
-                .ok_or_else(|| io_error("Unsupported Git index debug format"))?;
-            let line = std::str::from_utf8(&rest[..newline]).map_err(io_error)?;
-            if !line.starts_with(label) {
-                return Err(RepositoryError::Unsupported {
-                    message: "Unsupported Git index metadata format".into(),
-                });
-            }
-            if let Some(value) = line.split("flags: ").nth(1) {
-                flags = Some(u32::from_str_radix(value.trim(), 16).map_err(io_error)?);
-            }
-            rest = &rest[newline + 1..];
+    // Explicit raw format never invokes an external diff or text conversion.
+    let bytes = context.required(&args, None)?;
+    let mut before = Entries::new();
+    let mut after = Entries::new();
+    let mut paths = BTreeSet::new();
+    let mut records = bytes
+        .split(|byte| *byte == 0)
+        .filter(|record| !record.is_empty());
+    for header in records.by_ref().collect::<Vec<_>>().chunks(2) {
+        if header.len() != 2 {
+            return Err(io_error("Malformed raw Git diff"));
         }
-        let flags = flags.ok_or_else(|| io_error("Index flags are unavailable"))?;
-        for (path, entry) in parsed {
-            if flags & 0x2000_0000 != 0 {
-                intents.insert(path.clone());
-            }
-            entries
-                .entry(path)
-                .and_modify(|previous: &mut Entry| previous.conflict |= entry.conflict)
-                .or_insert(entry);
+        let fields = std::str::from_utf8(header[0])
+            .map_err(io_error)?
+            .strip_prefix(':')
+            .ok_or_else(|| io_error("Malformed raw Git entry"))?
+            .split_whitespace()
+            .collect::<Vec<_>>();
+        if fields.len() != 5 || fields[4].len() != 1 {
+            return Err(io_error("Unexpected raw Git diff layout"));
         }
-        if entries.len() > MAX_FILES {
-            return Err(budget("Repository exceeds 50,000 index entries"));
+        let path = header[1].to_vec();
+        validate_path(&path)?;
+        paths.insert(path.clone());
+        for (mode, oid, target) in [
+            (fields[0], fields[2], &mut before),
+            (fields[1], fields[3], &mut after),
+        ] {
+            if mode == "000000" || oid.bytes().all(|byte| byte == b'0') {
+                continue;
+            }
+            if !matches!(mode, "100644" | "100755" | "120000" | "160000") {
+                return Err(io_error("Unsupported raw Git mode"));
+            }
+            validate_oid(oid)?;
+            target.insert(
+                path.clone(),
+                Entry {
+                    mode: mode.into(),
+                    oid: oid.into(),
+                    conflict: fields[4] == "U",
+                },
+            );
         }
     }
-    Ok((entries, intents))
+    Ok((before, after, paths))
+}
+
+// Portable Git debug fields are used for the conservative Unix stat fast path.
+#[cfg_attr(not(unix), allow(dead_code))]
+#[derive(Default, Clone)]
+struct IndexStat {
+    ctime: (i64, i64),
+    mtime: (i64, i64),
+    dev: u64,
+    ino: u64,
+    size: u64,
+    flags: u32,
+}
+struct IndexRecord {
+    path: Vec<u8>,
+    entry: Entry,
+    stat: IndexStat,
+}
+fn pair(line: &str, label: &str) -> Result<(i64, i64), RepositoryError> {
+    let value = line
+        .strip_prefix(label)
+        .ok_or_else(|| io_error("Unsupported Git index metadata format"))?
+        .trim();
+    let (a, b) = value
+        .split_once(':')
+        .ok_or_else(|| io_error("Unsupported Git index timestamp"))?;
+    Ok((
+        a.trim().parse().map_err(io_error)?,
+        b.trim().parse().map_err(io_error)?,
+    ))
+}
+/// Parse one record at a time. A huge index never becomes a huge captured snapshot.
+fn scan_index(
+    context: &Context<'_>,
+    mut visit: impl FnMut(IndexRecord) -> Result<(), RepositoryError> + Send,
+) -> Result<(), RepositoryError> {
+    let result = context.git_read(&["ls-files", "--stage", "--debug", "-z"], None, |stdout| {
+        let mut reader = BufReader::new(stdout);
+        let mut pending: Option<IndexRecord> = None;
+        loop {
+            context.check()?;
+            let mut record = Vec::new();
+            if reader
+                .by_ref()
+                .take(64 * 1024 + 1)
+                .read_until(0, &mut record)
+                .map_err(io_error)?
+                == 0
+            {
+                break;
+            }
+            if record.len() > 64 * 1024 || record.pop() != Some(0) {
+                return Err(io_error("Index path exceeds the bounded record size"));
+            }
+            let parsed = parse_entries(&record, true)?;
+            let (path, entry) = parsed
+                .into_iter()
+                .next()
+                .ok_or_else(|| io_error("Empty index entry"))?;
+            let mut lines = Vec::new();
+            for _ in 0..5 {
+                let mut line = String::new();
+                reader
+                    .by_ref()
+                    .take(1025)
+                    .read_line(&mut line)
+                    .map_err(io_error)?;
+                if line.len() > 1024 || !line.ends_with('\n') {
+                    return Err(io_error("Unsupported Git index debug format"));
+                }
+                lines.push(line);
+            }
+            let ctime = pair(&lines[0], "  ctime:")?;
+            let mtime = pair(&lines[1], "  mtime:")?;
+            let dev_line = lines[2]
+                .strip_prefix("  dev:")
+                .ok_or_else(|| io_error("Unsupported index device field"))?;
+            let (dev, ino) = dev_line
+                .split_once("ino:")
+                .ok_or_else(|| io_error("Unsupported index inode field"))?;
+            if !lines[3].starts_with("  uid:") {
+                return Err(io_error("Unsupported index user field"));
+            }
+            let size_line = lines[4]
+                .strip_prefix("  size:")
+                .ok_or_else(|| io_error("Unsupported index size field"))?;
+            let (size, flags) = size_line
+                .split_once("flags:")
+                .ok_or_else(|| io_error("Index flags are unavailable"))?;
+            let stat = IndexStat {
+                ctime,
+                mtime,
+                dev: dev.trim().parse().map_err(io_error)?,
+                ino: ino.trim().parse().map_err(io_error)?,
+                size: size.trim().parse().map_err(io_error)?,
+                flags: u32::from_str_radix(flags.trim(), 16).map_err(io_error)?,
+            };
+            let next = IndexRecord { path, entry, stat };
+            if let Some(previous) = &mut pending {
+                if previous.path == next.path {
+                    previous.entry.conflict |= next.entry.conflict;
+                    previous.stat.flags |= next.stat.flags;
+                    continue;
+                }
+                visit(pending.take().unwrap())?;
+            }
+            pending = Some(next);
+        }
+        if let Some(record) = pending {
+            visit(record)?;
+        }
+        Ok(())
+    })?;
+    if !result.success {
+        return Err(io_error(format!("Git ls-files failed: {}", result.stderr)));
+    }
+    Ok(())
+}
+
+fn index_modified(context: &Context<'_>) -> Result<Option<SystemTime>, RepositoryError> {
+    let path = context.required(
+        &["rev-parse", "--path-format=absolute", "--git-path", "index"],
+        None,
+    )?;
+    let path = String::from_utf8(path).map_err(io_error)?;
+    match fs::metadata(path.trim_end()) {
+        Ok(metadata) => Ok(metadata.modified().ok()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(error) => Err(io_error(error)),
+    }
+}
+fn index_matches(
+    record: &IndexRecord,
+    metadata: &Metadata,
+    index_time: Option<SystemTime>,
+) -> bool {
+    if record.entry.conflict
+        || record.stat.flags & (0x2000_0000 | 0x4000_0000 | 0x8000) != 0
+        || !metadata.is_file()
+        || record.entry.mode == "120000"
+        || record.entry.mode == "160000"
+    {
+        return false;
+    }
+    if index_time.is_none()
+        || metadata
+            .modified()
+            .ok()
+            .is_none_or(|time| Some(time) >= index_time)
+    {
+        return false;
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        let mode = if metadata.mode() & 0o111 != 0 {
+            "100755"
+        } else {
+            "100644"
+        };
+        record.entry.mode == mode
+            && metadata.len() == record.stat.size
+            && (metadata.ctime(), metadata.ctime_nsec()) == record.stat.ctime
+            && (metadata.mtime(), metadata.mtime_nsec()) == record.stat.mtime
+            && (metadata.dev() & 0xffff_ffff) == record.stat.dev
+            && (metadata.ino() & 0xffff_ffff) == record.stat.ino
+    }
+    #[cfg(not(unix))]
+    {
+        false
+    }
+}
+fn observe(
+    context: &Context<'_>,
+    path: &[u8],
+    hash: &mut Sha256,
+) -> Result<Option<Metadata>, RepositoryError> {
+    context.check()?;
+    let full = working_path(context, path)?;
+    let meta = match fs::symlink_metadata(full) {
+        Ok(meta) => Some(meta),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+        Err(error) => return Err(io_error(error)),
+    };
+    hash.update((path.len() as u64).to_le_bytes());
+    hash.update(path);
+    hash.update(format!("{:?}", meta.as_ref().map(stamp)).as_bytes());
+    Ok(meta)
+}
+fn index_observation(context: &Context<'_>) -> Result<String, RepositoryError> {
+    let mut hash = Sha256::new();
+    scan_index(context, |record| {
+        observe(context, &record.path, &mut hash)?;
+        Ok(())
+    })?;
+    Ok(format!("{:x}", hash.finalize()))
+}
+
+/// Fast-path only when no configuration/attribute can change the stored blob bytes.
+struct Attributes {
+    always: bool,
+    global: bool,
+    directories: BTreeMap<PathBuf, bool>,
+    indexed_directories: BTreeSet<PathBuf>,
+}
+impl Attributes {
+    fn new(context: &Context<'_>) -> Result<Self, RepositoryError> {
+        // check-attr falls back to tracked attributes when a worktree attribute
+        // file is missing. Keep only their parent directories, never the catalogue.
+        let mut indexed_directories = BTreeSet::new();
+        let mut attribute_bytes = 0;
+        let mut attribute_overflow = false;
+        let listing = context.git_read(&["ls-files", "--cached", "-z"], None, |stdout| {
+            let mut reader = BufReader::new(stdout);
+            loop {
+                context.check()?;
+                let mut path = Vec::new();
+                if reader
+                    .by_ref()
+                    .take(64 * 1024 + 1)
+                    .read_until(0, &mut path)
+                    .map_err(io_error)?
+                    == 0
+                {
+                    break;
+                }
+                if path.len() > 64 * 1024 || path.pop() != Some(0) {
+                    return Err(io_error("Index path exceeds the bounded record size"));
+                }
+                if path.rsplit(|byte| *byte == b'/').next() == Some(b".gitattributes".as_slice())
+                    && !attribute_overflow
+                {
+                    validate_path(&path)?;
+                    attribute_bytes += path.len();
+                    if indexed_directories.len() >= 4096 || attribute_bytes > 1024 * 1024 {
+                        indexed_directories.clear();
+                        attribute_overflow = true;
+                    } else {
+                        let path = path_from_bytes(&path)?;
+                        indexed_directories.insert(
+                            path.parent()
+                                .unwrap_or(std::path::Path::new(""))
+                                .to_path_buf(),
+                        );
+                    }
+                }
+            }
+            Ok(())
+        })?;
+        if !listing.success {
+            return Err(io_error(format!(
+                "Git attribute discovery failed: {}",
+                listing.stderr
+            )));
+        }
+        let autocrlf = context.git(&["config", "--get", "core.autocrlf"], None)?;
+        let always = autocrlf.success
+            && !matches!(
+                String::from_utf8_lossy(&autocrlf.stdout).trim(),
+                "false" | "0" | ""
+            );
+        let configured = context.git(&["config", "--get", "core.attributesFile"], None)?;
+        // Git also loads default XDG/HOME and system attribute files without any
+        // core.attributesFile setting. Ask Git for its paths; older Git versions
+        // that cannot report them take the literal fallback instead of guessing.
+        let mut global = configured.success;
+        let mut unknown_attributes = false;
+        for variable in ["GIT_ATTR_GLOBAL", "GIT_ATTR_SYSTEM"] {
+            let output = context.git(&["var", variable], None)?;
+            if !output.success {
+                unknown_attributes = true;
+                continue;
+            }
+            let path =
+                path_from_bytes(output.stdout.strip_suffix(b"\n").unwrap_or(&output.stdout))?;
+            if !path.as_os_str().is_empty() {
+                match fs::symlink_metadata(path) {
+                    Ok(_) => global = true,
+                    Err(error) if error.kind() == std::io::ErrorKind::NotFound => (),
+                    Err(_) => unknown_attributes = true,
+                }
+            }
+        }
+        let info = context.required(
+            &[
+                "rev-parse",
+                "--path-format=absolute",
+                "--git-path",
+                "info/attributes",
+            ],
+            None,
+        )?;
+        let info = String::from_utf8(info).map_err(io_error)?;
+        Ok(Self {
+            always: always || unknown_attributes || attribute_overflow,
+            global: global || PathBuf::from(info.trim_end()).exists(),
+            directories: BTreeMap::new(),
+            indexed_directories,
+        })
+    }
+    fn possible(&mut self, context: &Context<'_>, path: &[u8]) -> Result<bool, RepositoryError> {
+        if self.always || self.global {
+            return Ok(true);
+        }
+        let path = path_from_bytes(path)?;
+        let mut directory = path
+            .parent()
+            .unwrap_or(std::path::Path::new(""))
+            .to_path_buf();
+        let mut visited = Vec::new();
+        let result = loop {
+            if let Some(value) = self.directories.get(&directory) {
+                break *value;
+            }
+            visited.push(directory.clone());
+            if self.indexed_directories.contains(&directory)
+                || context
+                    .root
+                    .join(&directory)
+                    .join(".gitattributes")
+                    .exists()
+            {
+                break true;
+            }
+            if !directory.pop() {
+                break false;
+            }
+        };
+        // Cache only a bounded directory working set, not the repository's path catalogue.
+        if self.directories.len() + visited.len() > 4096 {
+            self.directories.clear();
+        }
+        for directory in visited {
+            self.directories.insert(directory, result);
+        }
+        Ok(result)
+    }
+    fn conversions(
+        &self,
+        context: &Context<'_>,
+        records: &[IndexRecord],
+    ) -> Result<BTreeSet<Vec<u8>>, RepositoryError> {
+        if self.always {
+            return Ok(records.iter().map(|record| record.path.clone()).collect());
+        }
+        let mut input = Vec::new();
+        for record in records {
+            input.extend_from_slice(&record.path);
+            input.push(0);
+        }
+        let mut affected = BTreeSet::new();
+        // Both current rules and cached rules can explain why an index entry's
+        // stat matches raw bytes that differ from its normalized object.
+        for cached in [false, true] {
+            let mut args = vec!["check-attr", "-z", "--stdin"];
+            if cached {
+                args.push("--cached");
+            }
+            args.extend(["filter", "text", "eol", "working-tree-encoding", "ident"]);
+            let result = context.required(&args, Some(&input))?;
+            let fields = result
+                .split(|byte| *byte == 0)
+                .filter(|part| !part.is_empty())
+                .collect::<Vec<_>>();
+            if fields.len() != records.len() * 15 {
+                return Err(io_error("Unsupported Git attribute response"));
+            }
+            for triple in fields.chunks(3) {
+                if !matches!(triple[2], b"unspecified" | b"unset") {
+                    affected.insert(triple[0].to_vec());
+                }
+            }
+        }
+        Ok(affected)
+    }
+}
+
+struct WorkingCapture<'a, 'b> {
+    context: &'a Context<'b>,
+    before: Entries,
+    after: Entries,
+    staged_paths: BTreeSet<Vec<u8>>,
+    unstaged: bool,
+    has_head: bool,
+    sha256: bool,
+    work_contents: &'a mut BTreeMap<Vec<u8>, Content>,
+    observations: &'a mut BTreeMap<Vec<u8>, Option<Stamp>>,
+    intents: &'a mut BTreeSet<Vec<u8>>,
+    kept_bytes: usize,
+    changed_count: usize,
+}
+impl WorkingCapture<'_, '_> {
+    fn retain_index(&mut self, record: &IndexRecord) {
+        if self.unstaged || (self.has_head && !self.staged_paths.contains(&record.path)) {
+            self.before
+                .insert(record.path.clone(), record.entry.clone());
+        }
+        self.after.insert(record.path.clone(), record.entry.clone());
+    }
+    fn freeze(&mut self, record: IndexRecord) -> Result<(), RepositoryError> {
+        let intent = record.stat.flags & 0x2000_0000 != 0;
+        if intent {
+            self.intents.insert(record.path.clone());
+        }
+        if (self.unstaged || (self.has_head && !self.staged_paths.contains(&record.path)))
+            && !intent
+        {
+            self.before
+                .insert(record.path.clone(), record.entry.clone());
+        }
+        self.freeze_path(&record.path, Some(&record.entry))
+    }
+    fn freeze_path(&mut self, path: &[u8], prior: Option<&Entry>) -> Result<(), RepositoryError> {
+        match work_file(self.context, path, prior, self.sha256)? {
+            Some((entry, content, observed)) => {
+                if self.before.get(path) != Some(&entry) || entry.conflict {
+                    self.changed_count += 1;
+                    self.kept_bytes += content.data.len();
+                    if self.kept_bytes > MAX_SNAPSHOT {
+                        return Err(budget(
+                            "Changed worktree content exceeds the 64 MiB snapshot budget",
+                        ));
+                    }
+                    self.work_contents.insert(path.to_vec(), content);
+                    self.observations.insert(path.to_vec(), Some(observed));
+                    self.after.insert(path.to_vec(), entry);
+                } else {
+                    // A stat false positive needs no retained catalogue entry or body.
+                    self.before.remove(path);
+                    self.after.remove(path);
+                }
+            }
+            None => {
+                self.after.remove(path);
+                if self.before.contains_key(path) {
+                    self.changed_count += 1;
+                    self.observations.insert(path.to_vec(), None);
+                }
+            }
+        }
+        if self.changed_count > MAX_CHANGES {
+            return Err(budget(
+                "Comparison exceeds 2,000 changed paths; compare a smaller commit range",
+            ));
+        }
+        Ok(())
+    }
 }
 
 fn parse_entries(bytes: &[u8], index: bool) -> Result<Entries, RepositoryError> {
@@ -343,9 +831,6 @@ fn parse_entries(bytes: &[u8], index: bool) -> Result<Entries, RepositoryError> 
             .entry(path)
             .and_modify(|previous: &mut Entry| previous.conflict |= conflict)
             .or_insert(entry);
-        if entries.len() > MAX_FILES {
-            return Err(budget("Repository exceeds 50,000 listed files"));
-        }
     }
     Ok(entries)
 }
@@ -357,7 +842,7 @@ fn untracked(context: &Context<'_>) -> Result<Vec<Vec<u8>>, RepositoryError> {
         .filter(|path| !path.is_empty())
         .map(<[u8]>::to_vec)
         .collect();
-    if paths.len() > MAX_FILES {
+    if paths.len() > MAX_CHANGES {
         return Err(budget("Too many untracked files"));
     }
     for path in &paths {
@@ -414,11 +899,12 @@ struct Content {
     truncated: bool,
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 struct Stamp {
     len: u64,
     modified: Option<SystemTime>,
     created: Option<SystemTime>,
+    changed: Option<(i64, i64)>,
     identity: Option<(u64, u64)>,
     symlink: bool,
     file: bool,
@@ -439,7 +925,15 @@ fn stamp(metadata: &Metadata) -> Stamp {
     };
     #[cfg(not(unix))]
     let identity = None;
+    #[cfg(unix)]
+    let changed = {
+        use std::os::unix::fs::MetadataExt;
+        Some((metadata.ctime(), metadata.ctime_nsec()))
+    };
+    #[cfg(not(unix))]
+    let changed = None;
     Stamp {
+        changed,
         len: metadata.len(),
         modified: metadata.modified().ok(),
         created: metadata.created().ok(),
@@ -457,7 +951,19 @@ fn index_identity(context: &Context<'_>) -> Result<String, RepositoryError> {
     )?;
     let path = String::from_utf8(path).map_err(io_error)?;
     match File::open(path.trim_end()) {
-        Ok(file) => Ok(digest(&read_bounded(file, MAX_GIT_OUTPUT)?)),
+        Ok(mut file) => {
+            let mut hash = Sha256::new();
+            let mut buffer = [0; 64 * 1024];
+            loop {
+                context.check()?;
+                let n = file.read(&mut buffer).map_err(io_error)?;
+                if n == 0 {
+                    break;
+                }
+                hash.update(&buffer[..n]);
+            }
+            Ok(format!("{:x}", hash.finalize()))
+        }
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(digest(&[])),
         Err(error) => Err(io_error(error)),
     }
@@ -860,36 +1366,42 @@ pub fn capture(
     let mut after;
     let mut work_contents = BTreeMap::new();
     let mut observations = BTreeMap::new();
+    let mut index_observed = None;
     let mut untracked_before = Vec::new();
     let mut intent_paths = BTreeSet::new();
     if spec.mode == CompareMode::Commits {
         let base = context.resolve(spec.base.as_deref().unwrap_or("HEAD~1"))?;
         let head = context.resolve(spec.head.as_deref().unwrap_or("HEAD"))?;
-        before = tree(&context, Some(&base))?;
-        after = tree(&context, Some(&head))?;
+        (before, after, _) = raw_diff(&context, Some(&base), Some(&head))?;
         before_label = base;
         after_label = head;
     } else {
         let head = context.head()?;
-        let (index_entries, intents) = index(&context)?;
-        intent_paths = intents;
-        let frozen_index: Entries = index_entries
-            .iter()
-            .filter(|(path, _)| !intent_paths.contains(*path))
-            .map(|(path, entry)| (path.clone(), entry.clone()))
-            .collect();
-        before = if spec.mode == CompareMode::Unstaged {
-            frozen_index.clone()
+        let (staged_before, staged_after, staged_paths) = if spec.mode == CompareMode::Unstaged {
+            (Entries::new(), Entries::new(), BTreeSet::new())
         } else {
-            tree(&context, head.as_deref())?
+            raw_diff(&context, head.as_deref(), None)?
         };
         before_label = if spec.mode == CompareMode::Unstaged {
             format!("index:{}", index_before.as_deref().unwrap_or_default())
         } else {
-            head.unwrap_or_else(|| "unborn HEAD (empty tree)".into())
+            head.clone()
+                .unwrap_or_else(|| "unborn HEAD (empty tree)".into())
         };
-        after = frozen_index;
         if spec.mode == CompareMode::Staged {
+            before = staged_before;
+            after = staged_after;
+            scan_index(&context, |record| {
+                if staged_paths.contains(&record.path) {
+                    if record.stat.flags & 0x2000_0000 != 0 {
+                        intent_paths.insert(record.path.clone());
+                        after.remove(&record.path);
+                    } else {
+                        after.insert(record.path, record.entry);
+                    }
+                }
+                Ok(())
+            })?;
             after_label = format!("index:{}", index_before.as_deref().unwrap_or_default());
         } else {
             let sha256 = String::from_utf8_lossy(
@@ -897,48 +1409,108 @@ pub fn capture(
             )
             .trim()
                 == "sha256";
-            if spec.include_untracked {
-                untracked_before = untracked(&context)?;
+            let index_time = index_modified(&context)?;
+            let mut attributes = Attributes::new(&context)?;
+            if staged_paths.iter().any(|path| {
+                path.rsplit(|byte| *byte == b'/').next() == Some(b".gitattributes".as_slice())
+            }) {
+                // A staged rule change may remove the only description of an
+                // earlier normalization. Verify this capture literally.
+                attributes.always = true;
             }
-            let paths: BTreeSet<_> = index_entries
-                .keys()
-                .cloned()
-                .chain(untracked_before.iter().cloned())
-                .collect();
-            if paths.len() > MAX_FILES {
-                return Err(budget("Repository exceeds 50,000 worktree files"));
-            }
-            let mut kept_bytes = 0;
-            for path in paths {
-                let prior = index_entries.get(&path);
-                match work_file(&context, &path, prior, sha256)? {
-                    Some((entry, content, observed)) => {
-                        observations.insert(path.clone(), Some(observed));
-                        if before.get(&path) != Some(&entry) || entry.conflict {
-                            kept_bytes += content.data.len();
-                            if kept_bytes > MAX_SNAPSHOT {
-                                return Err(budget(
-                                    "Changed worktree content exceeds the 64 MiB snapshot budget",
-                                ));
-                            }
-                            work_contents.insert(path.clone(), content);
-                        }
-                        after.insert(path, entry);
+            let mut capture = WorkingCapture {
+                context: &context,
+                before: if spec.mode == CompareMode::Unstaged {
+                    Entries::new()
+                } else {
+                    staged_before
+                },
+                after: if spec.mode == CompareMode::Unstaged {
+                    Entries::new()
+                } else {
+                    staged_after
+                },
+                staged_paths,
+                unstaged: spec.mode == CompareMode::Unstaged,
+                has_head: head.is_some(),
+                sha256,
+                work_contents: &mut work_contents,
+                observations: &mut observations,
+                intents: &mut intent_paths,
+                kept_bytes: 0,
+                changed_count: 0,
+            };
+            let mut observed = Sha256::new();
+            let mut possible_conversions = Vec::new();
+            let mut batch_bytes = 0;
+            scan_index(&context, |record| {
+                let metadata = observe(&context, &record.path, &mut observed)?;
+                // Sparse absence is context, not a deletion. Existing sparse files are checked.
+                if metadata.is_none() && record.stat.flags & 0x4000_0000 != 0 {
+                    if capture.staged_paths.contains(&record.path) {
+                        capture.retain_index(&record);
                     }
-                    None => {
-                        observations.insert(path.clone(), None);
-                        after.remove(&path);
+                    return Ok(());
+                }
+                if spec.verify_all
+                    || capture.staged_paths.contains(&record.path)
+                    || !metadata
+                        .as_ref()
+                        .is_some_and(|meta| index_matches(&record, meta, index_time))
+                {
+                    capture.freeze(record)?;
+                } else if attributes.possible(&context, &record.path)? {
+                    batch_bytes += record.path.len();
+                    possible_conversions.push(record);
+                    if possible_conversions.len() >= 1024 || batch_bytes >= 64 * 1024 {
+                        let affected = attributes.conversions(&context, &possible_conversions)?;
+                        for record in possible_conversions.drain(..) {
+                            if affected.contains(&record.path) {
+                                capture.freeze(record)?;
+                            }
+                        }
+                        batch_bytes = 0;
+                    }
+                }
+                Ok(())
+            })?;
+            if !possible_conversions.is_empty() {
+                let affected = attributes.conversions(&context, &possible_conversions)?;
+                for record in possible_conversions {
+                    if affected.contains(&record.path) {
+                        capture.freeze(record)?;
                     }
                 }
             }
+            index_observed = Some(format!("{:x}", observed.finalize()));
+            if spec.include_untracked {
+                untracked_before = untracked(&context)?;
+            }
+            for path in &untracked_before {
+                capture.freeze_path(path, None)?;
+            }
+            before = capture.before;
+            after = capture.after;
             #[cfg(windows)]
             warnings.push("Windows executable bits are inherited from the index. A symlink checked out as a regular file is shown as a literal file-type change.".into());
             warnings.push("Working-tree bytes are captured literally; clean/smudge filters and line-ending conversion are not executed. Capture is not a filesystem-wide atomic transaction.".into());
-            if after.values().any(|entry| entry.mode == "160000") {
+            warnings.push(if spec.verify_all {
+                "Full literal verification: all existing tracked file bytes were checked within the capture budget; absent sparse files retain index context."
+            } else {
+                "Fast capture uses Git index/stat metadata for unchanged tracked files. Changed, flagged, racy or known conversion-affected files are hashed literally. Historical conversion rules may no longer be discoverable; enable full literal verification to check all existing tracked bytes."
+            }.into());
+            if before
+                .values()
+                .chain(after.values())
+                .any(|entry| entry.mode == "160000")
+            {
                 warnings.push("Submodule working directories are not traversed; nested dirty state is not captured. Gitlink changes remain visible in staged/commit comparisons.".into());
             }
-            let identity = entry_identity(&after);
-            after_label = format!("worktree:{identity}");
+            after_label = format!(
+                "worktree:{}:{}",
+                index_before.as_deref().unwrap_or_default(),
+                entry_identity(&after)
+            );
         }
     }
     let mut changed: Vec<_> = before
@@ -1096,6 +1668,13 @@ pub fn capture(
         if index_identity(&context)? != previous {
             return Err(stale(
                 "Git index changed during capture; refresh the comparison",
+            ));
+        }
+    }
+    if let Some(expected) = index_observed {
+        if index_observation(&context)? != expected {
+            return Err(stale(
+                "Working tree metadata changed during capture; refresh the comparison",
             ));
         }
     }

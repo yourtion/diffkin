@@ -19,6 +19,14 @@ pub struct ComparisonSpec {
     pub head: Option<String>,
     #[serde(default)]
     pub include_untracked: bool,
+    /// Full literal verification, including files accepted by the Git stat cache.
+    /// Omitted false values preserve existing workspace archive serialization.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub verify_all: bool,
+}
+
+fn is_false(value: &bool) -> bool {
+    !*value
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, TS)]

@@ -116,6 +116,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 base: Some("HEAD~1".into()),
                 head: Some("HEAD".into()),
                 include_untracked: false,
+                verify_all: false,
             },
         });
     }

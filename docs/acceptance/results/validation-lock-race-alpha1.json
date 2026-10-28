@@ -1,0 +1,93 @@
+{
+  "version": "0.3.0-alpha.1",
+  "recordedAt": "2026-10-28T13:14:29.509515+00:00",
+  "platform": "macOS arm64",
+  "source": "crates/validation/src/lib.rs",
+  "sourceSha256": "4ee6a3910343f3a01ee42e5c3fa3181c64decd4f669f4090198bb1304e64e404",
+  "symptom": {
+    "test": "changed_source_is_indeterminate_and_repeated_run_is_fresh",
+    "error": "Io: lock acquisition failed because the operation would block",
+    "operation": "Immediate second run of the same prepared validation plan"
+  },
+  "rootCause": "A concurrent fork can temporarily retain the running.lock open file description until exec, even with close-on-exec set. Closing only the parent File can therefore leave its flock held after run returns and make an immediate independent try_lock fail.",
+  "controlsBeforeFix": {
+    "isolated": {
+      "test": "changed_source_is_indeterminate_and_repeated_run_is_fresh",
+      "attempts": 100,
+      "passed": 100,
+      "failed": 0,
+      "elapsedSeconds": 52.65387175
+    },
+    "parallelProcesses": {
+      "command": "processes --test-threads=18 --nocapture",
+      "testsPerAttempt": 18,
+      "attempts": 30,
+      "passed": 28,
+      "failed": 2,
+      "failedAttempts": [9, 29],
+      "sameSymptomInFailures": true,
+      "elapsedSeconds": 58.382605333
+    }
+  },
+  "controlledForkProof": {
+    "description": "The parent holds flock with a CLOEXEC fd, forks a controlled child, waits for confirmation that the child still retains that fd without exec, then closes the parent fd and probes an independent lock. Compare plain close with explicit unlock followed by close.",
+    "cases": [
+      {
+        "explicitUnlock": false,
+        "closeOnExec": true,
+        "forkChildStillHasOriginalFd": true,
+        "newIndependentLockBlocked": true
+      },
+      {
+        "explicitUnlock": true,
+        "closeOnExec": true,
+        "forkChildStillHasOriginalFd": true,
+        "newIndependentLockBlocked": false
+      }
+    ],
+    "reference": "macOS flock(2): dup/fork descriptors reference the same lock"
+  },
+  "fix": {
+    "guard": "PlanLock(File)",
+    "release": "Drop explicitly calls File::unlock before File closes",
+    "appliesTo": ["normal return", "early error", "panic unwind", "interrupted recovery"],
+    "noRetryAdded": true,
+    "processCleanupOrder": "The process-group RAII scope exits before run returns and its plan-lock guard drops"
+  },
+  "deterministicRegressions": [
+    {
+      "test": "lock_tests::dropping_plan_lock_releases_it_while_an_inherited_fd_remains_open",
+      "mechanism": "A real duplicate fd retains the same open file description as fork; another independent lock remains denied while the guard is active and becomes immediately available after guard drop.",
+      "beforeFix": "failed reacquisition assertion",
+      "afterFix": "passed"
+    },
+    {
+      "test": "lock_tests::panic_releases_plan_lock_while_an_inherited_fd_remains_open",
+      "mechanism": "Controlled panic unwinds the guard while a real duplicate fd stays open, then immediately reacquires an independent lock.",
+      "beforeFix": "failed reacquisition assertion",
+      "afterFix": "passed"
+    }
+  ],
+  "verificationAfterFix": {
+    "crateTests": {
+      "command": "cargo test -p diffkin-validation --locked --offline",
+      "unitPassed": 2,
+      "processPassed": 18,
+      "reviewPassed": 7,
+      "failed": 0
+    },
+    "clippy": {
+      "command": "cargo clippy -p diffkin-validation --all-targets --locked --offline -- -D warnings",
+      "passed": true
+    },
+    "rustfmt": true,
+    "parallelProcesses": {
+      "command": "processes --test-threads=18 --nocapture",
+      "testsPerAttempt": 18,
+      "attempts": 30,
+      "passed": 30,
+      "failed": 0,
+      "elapsedSeconds": 60.718484791
+    }
+  }
+}

@@ -14,6 +14,7 @@ diffkin-application.workspace = true
 diffkin-validation.workspace = true
 diffkin-domain.workspace = true
 tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
 
 [lints]
 workspace = true

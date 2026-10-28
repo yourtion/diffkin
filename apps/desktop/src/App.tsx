@@ -9,11 +9,14 @@ import type {
   EvidenceBasis,
 } from "@diffkin/protocol";
 import { client, desktopAvailable, Generation, message, type DiffkinClient } from "./lib/client";
-import { loadPreferences, savePreferences } from "./lib/preferences";
+import { usePreferences } from "./lib/use-preferences";
+import { PreferencesPanel } from "./components/PreferencesPanel";
 import { DiffViewer } from "./components/DiffViewer";
 import { ChangeInspector } from "./components/ChangeInspector";
 import { WorkspacePanel } from "./components/WorkspacePanel";
 import { ValidationPanel } from "./components/ValidationPanel";
+import { RepositoryPicker } from "./components/RepositoryPicker";
+import { RevisionPicker } from "./components/RevisionPicker";
 import { workspaceClient, sameBasis } from "./lib/workspace-client";
 
 const status: Record<string, string> = {
@@ -28,7 +31,7 @@ const modeNames = {
   worktree: "全部本地改动",
   staged: "已暂存",
   unstaged: "未暂存",
-  commits: "两个提交",
+  commits: "分支 / 提交",
 };
 let nextJob = 0;
 function jobId() {
@@ -60,7 +63,14 @@ export function App({
   api?: DiffkinClient;
   available?: boolean;
 }) {
-  const [initial] = useState(loadPreferences);
+  const settings = usePreferences(available);
+  const { spec, recent, view } = settings.preferences;
+  const setSpec = (next: ComparisonSpec) =>
+    settings.update((current) => ({ ...current, spec: next }));
+  const foldFormats = view.foldFormats;
+  const setFoldFormats = (foldFormats: boolean) =>
+    settings.update((current) => ({ ...current, view: { ...current.view, foldFormats } }));
+  const [showPreferences, setShowPreferences] = useState(false);
   const [workspaceSession, setWorkspaceSession] = useState<WorkspaceSession | null>(null);
   const [repositoryId, setRepositoryId] = useState<string | null>(null);
   const [showWorkspace, setShowWorkspace] = useState(false);
@@ -68,14 +78,11 @@ export function App({
   const [validationOpen, setValidationOpen] = useState(false);
   const [validationMounted, setValidationMounted] = useState(false);
   const [savingReview, setSavingReview] = useState(false);
-  const [spec, setSpec] = useState<ComparisonSpec>(initial.spec);
-  const [recent, setRecent] = useState(initial.recent);
   const [manifest, setManifest] = useState<ComparisonManifest | null>(null);
   const [selectedFile, setSelectedFile] = useState<FileSummary | null>(null);
   const [data, setData] = useState<FileAnalysis | null>(null);
   const [event, setEvent] = useState<ChangeEvent | null>(null);
   const [scope, setScope] = useState(false);
-  const [foldFormats, setFoldFormats] = useState(true);
   const [filter, setFilter] = useState("");
   const [reviews, setReviews] = useState(readReviews);
   const [reviewBases, setReviewBases] = useState<Record<string, string>>({});
@@ -88,6 +95,7 @@ export function App({
   const captureJob = useRef<string | null>(null);
   const fileJob = useRef<string | null>(null);
   const pathInput = useRef<HTMLInputElement>(null);
+  const pickerButton = useRef<HTMLButtonElement>(null);
   const visibleFiles =
     manifest?.files.filter((file) =>
       file.path.toLocaleLowerCase().includes(filter.toLocaleLowerCase()),
@@ -167,7 +175,10 @@ export function App({
       const result = await api.open(request, job);
       if (!captureGeneration.current.isCurrent(generation)) return;
       setManifest(result);
-      setRecent(savePreferences(request, recent));
+      settings.update((current) => ({
+        ...current,
+        recent: [...new Set([request.repository, ...current.recent])].slice(0, 8),
+      }));
       if (result.files[0]) void selectFile(result.files[0], result);
       else setPending(null);
     } catch (cause) {
@@ -315,7 +326,8 @@ export function App({
     function keyboard(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "o") {
         e.preventDefault();
-        pathInput.current?.focus();
+        if (available) pickerButton.current?.click();
+        else pathInput.current?.focus();
         return;
       }
       if (
@@ -395,11 +407,28 @@ export function App({
           >
             工作区
           </button>
+          <button
+            aria-pressed={showPreferences}
+            onClick={() => setShowPreferences(!showPreferences)}
+          >
+            {settings.failure ? "设置 · 未保存" : "设置"}
+          </button>
           <span className="local-badge">
             <i /> 本地 · 只读审查
           </span>
         </div>
       </header>
+      {showPreferences && (
+        <PreferencesPanel
+          preferences={settings.preferences}
+          onChange={settings.update}
+          status={settings.status}
+          failure={settings.failure}
+          onSave={settings.saveExplicitly}
+          onClose={() => setShowPreferences(false)}
+          available={available}
+        />
+      )}
       <form
         className="repository-bar"
         onSubmit={(e) => {
@@ -418,6 +447,12 @@ export function App({
             list="recent-repositories"
           />
         </label>
+        <RepositoryPicker
+          buttonRef={pickerButton}
+          value={spec.repository}
+          onChoose={(repository) => setSpec({ ...spec, repository })}
+          disabled={!available || pending === "capture" || workspaceBusy}
+        />
         <datalist id="recent-repositories">
           {recent.map((path) => (
             <option key={path} value={path}>
@@ -438,18 +473,22 @@ export function App({
         </select>
         {spec.mode === "commits" ? (
           <div className="revision-inputs">
-            <input
-              aria-label="基线提交"
+            <RevisionPicker
+              repository={spec.repository}
+              label="来源分支或提交"
               value={spec.base ?? ""}
-              onChange={(e) => setSpec({ ...spec, base: e.target.value })}
               placeholder="HEAD~1"
+              disabled={!available}
+              onChange={(base) => setSpec({ ...spec, base })}
             />
             <span>→</span>
-            <input
-              aria-label="目标提交"
+            <RevisionPicker
+              repository={spec.repository}
+              label="目标分支或提交"
               value={spec.head ?? ""}
-              onChange={(e) => setSpec({ ...spec, head: e.target.value })}
               placeholder="HEAD"
+              disabled={!available}
+              onChange={(head) => setSpec({ ...spec, head })}
             />
           </div>
         ) : (
@@ -463,6 +502,19 @@ export function App({
               未跟踪文件
             </label>
           )
+        )}
+        {(spec.mode === "worktree" || spec.mode === "unstaged") && (
+          <label
+            className="check"
+            title="逐文件读取原文，适用于需要核对历史转换遗留内容的场景；大型仓库可能更慢。"
+          >
+            <input
+              type="checkbox"
+              checked={spec.verifyAll === true}
+              onChange={(event) => setSpec({ ...spec, verifyAll: event.target.checked })}
+            />
+            完整原文核验
+          </label>
         )}
         <button
           className="primary"
@@ -681,6 +733,20 @@ export function App({
                   analysis={data.analysis}
                   foldFormats={foldFormats}
                   onFoldChange={setFoldFormats}
+                  layout={view.layout}
+                  collapse={view.collapseUnchanged}
+                  onLayoutChange={(layout) =>
+                    settings.update((current) => ({
+                      ...current,
+                      view: { ...current.view, layout },
+                    }))
+                  }
+                  onCollapseChange={(collapseUnchanged) =>
+                    settings.update((current) => ({
+                      ...current,
+                      view: { ...current.view, collapseUnchanged },
+                    }))
+                  }
                 />
               ) : (
                 <div className="empty-state">

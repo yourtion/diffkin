@@ -78,6 +78,7 @@ impl Fixture {
                 base: None,
                 head: None,
                 include_untracked: false,
+                verify_all: false,
             },
         }
     }

@@ -15,6 +15,7 @@ fn main() {
         base: None,
         head: None,
         include_untracked: false,
+        verify_all: false,
     };
     let mut records = Vec::new();
     let mut changed = 0;

@@ -70,6 +70,7 @@ impl Repo {
             base: None,
             head: None,
             include_untracked: false,
+            verify_all: false,
         }
     }
     fn capture(&self, mode: CompareMode) -> diffkin_application::FrozenComparison {

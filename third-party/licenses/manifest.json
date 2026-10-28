@@ -445,5 +445,25 @@
         "url": "https://github.com/tree-sitter/tree-sitter-java/blob/94703d5a6bed02b98e438d7cad1136c01a60ba2c/LICENSE"
       }
     ]
+  },
+  "cargo/tauri-plugin@2.7.2": {
+    "revision": "59b63ab500da9859f12d8888c3298bc29bba0b92",
+    "sources": [
+      {
+        "file": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594.txt",
+        "path": "LICENSE-APACHE-2.0",
+        "url": "https://github.com/tauri-apps/tauri/blob/59b63ab500da9859f12d8888c3298bc29bba0b92/LICENSE-APACHE-2.0"
+      },
+      {
+        "file": "9dd42ea92cff2ede5cd477cbfcce051b2d0115c0ac7f368ee88cb545055dff1d.txt",
+        "path": "LICENSE-MIT",
+        "url": "https://github.com/tauri-apps/tauri/blob/59b63ab500da9859f12d8888c3298bc29bba0b92/LICENSE-MIT"
+      },
+      {
+        "file": "5e834fe9788c524210deda859c46a550ffa5aa0cba9ea0572f0d81120e97c008.txt",
+        "path": "LICENSE.spdx",
+        "url": "https://github.com/tauri-apps/tauri/blob/59b63ab500da9859f12d8888c3298bc29bba0b92/LICENSE.spdx"
+      }
+    ]
   }
 }
