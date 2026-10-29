@@ -103,6 +103,7 @@ impl Repository {
                 head: None,
                 include_untracked: false,
                 verify_all: false,
+                path_scope: None,
             },
             &AtomicBool::new(false),
         )
@@ -151,6 +152,7 @@ fn default_worktree_with_fifty_thousand_real_files_and_one_change() {
             head: None,
             include_untracked: true,
             verify_all: false,
+            path_scope: None,
         },
         &AtomicBool::new(false),
     )
@@ -179,6 +181,7 @@ fn snapshot(repo: &Repository, mode: CompareMode) -> diffkin_application::Frozen
             head: None,
             include_untracked: true,
             verify_all: false,
+            path_scope: None,
         },
         &AtomicBool::new(false),
     )
@@ -270,9 +273,19 @@ fn huge_commit_trees_are_compared_by_changed_paths() {
             head: Some(head),
             include_untracked: false,
             verify_all: false,
+            path_scope: None,
         },
         &AtomicBool::new(false),
     )
     .unwrap();
     assert_eq!(capture.manifest(0, 200).total_files, 1);
+}
+
+#[test]
+fn hundred_thousand_and_half_million_index_entries_keep_a_small_diff_bounded() {
+    for count in [100_000, 500_000] {
+        let repo = Repository::new();
+        repo.one_staged_change(count, false);
+        repo.assert_one_change();
+    }
 }

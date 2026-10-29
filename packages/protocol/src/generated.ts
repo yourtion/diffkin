@@ -15,7 +15,11 @@ export type ComparisonSpec = { repository: string, mode: CompareMode, base: stri
  * Full literal verification, including files accepted by the Git stat cache.
  * Omitted false values preserve existing workspace archive serialization.
  */
-verifyAll?: boolean, };
+verifyAll?: boolean,
+/**
+ * Literal repository-relative file or directory; omitted means the full repository.
+ */
+pathScope?: string, };
 export type FileStatus = "added" | "deleted" | "modified" | "renamed" | "type-changed" | "conflict";
 export type FileSummary = { id: string,
 /**

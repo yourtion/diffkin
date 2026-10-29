@@ -23,6 +23,10 @@ pub struct ComparisonSpec {
     /// Omitted false values preserve existing workspace archive serialization.
     #[serde(default, skip_serializing_if = "is_false")]
     pub verify_all: bool,
+    /// Literal repository-relative file or directory; omitted means the full repository.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub path_scope: Option<String>,
 }
 
 fn is_false(value: &bool) -> bool {

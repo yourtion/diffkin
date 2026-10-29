@@ -13,6 +13,7 @@ import { client, desktopAvailable, Generation, message, type DiffkinClient } fro
 import { usePreferences } from "./lib/use-preferences";
 import { PreferencesPanel } from "./components/PreferencesPanel";
 import { ChangeNavigator } from "./components/ChangeNavigator";
+import { LargeFileViewer, needsSegments } from "./components/LargeFileViewer";
 import { DiffViewer } from "./components/DiffViewer";
 import { ChangeInspector } from "./components/ChangeInspector";
 import { WorkspacePanel } from "./components/WorkspacePanel";
@@ -235,7 +236,8 @@ export function App({
       }
     } catch (cause) {
       if (captureGeneration.current.isCurrent(generation)) {
-        setError(message(cause));
+        setShowCompareSettings(true);
+        setError(message(cause) + "；可填写路径范围（如 packages/app）后重新捕获。");
         setTaskStatus(null);
         setPending(null);
       }
@@ -624,6 +626,16 @@ export function App({
             list="recent-repositories"
           />
         </label>
+        <label className="scope-path">
+          <span>路径范围</span>
+          <input
+            aria-label="捕获路径范围"
+            placeholder="全部；或 packages/app"
+            value={spec.pathScope ?? ""}
+            onChange={(e) => setSpec({ ...spec, pathScope: e.target.value || undefined })}
+            title="仓库内文件或目录的字面路径；不支持通配符，范围外内容不捕获"
+          />
+        </label>
         <RepositoryPicker
           buttonRef={pickerButton}
           value={spec.repository}
@@ -938,6 +950,8 @@ export function App({
                   <h2>内容未载入，请核对对象身份与元数据</h2>
                   <p>二进制、子模块或不可读取的内容不会被视为没有变化。</p>
                 </div>
+              ) : data && needsSegments(data.file) ? (
+                <LargeFileViewer key={`${manifest?.id}:${selectedFile.id}`} file={data.file} />
               ) : data ? (
                 <DiffViewer
                   viewKey={`${manifest?.repository}:${selectedFile.path}`}

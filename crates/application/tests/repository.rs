@@ -71,6 +71,7 @@ impl Repo {
             head: None,
             include_untracked: false,
             verify_all: false,
+            path_scope: None,
         }
     }
     fn capture(&self, mode: CompareMode) -> diffkin_application::FrozenComparison {
@@ -605,4 +606,112 @@ fn missing_promisor_blob_fails_without_fetching() {
     let result = capture(&repo.spec(CompareMode::Commits), &AtomicBool::new(false));
     assert!(matches!(result, Err(RepositoryError::IoFailure { .. })));
     assert!(!marker.exists());
+}
+
+#[test]
+fn literal_scope_is_frozen_mode_consistent_and_part_of_identity() {
+    let repo = Repo::new();
+    for path in ["packages/app/a.ts", "packages/apple/a.ts", "literal*/a.ts"] {
+        repo.write(path, "const x = 1;\n");
+    }
+    repo.commit();
+    for path in ["packages/app/a.ts", "packages/apple/a.ts", "literal*/a.ts"] {
+        repo.write(path, "const x = 2;\n");
+    }
+    repo.git(&["add", "--all"]);
+    for mode in [CompareMode::Staged, CompareMode::Worktree] {
+        let full = repo.capture(mode);
+        let mut spec = repo.spec(mode);
+        spec.path_scope = Some("packages/app".into());
+        let scoped = capture(&spec, &AtomicBool::new(false)).unwrap();
+        assert_eq!(one(&scoped).summary.path, "packages/app/a.ts");
+        assert_ne!(full.manifest(0, 0).id, scoped.manifest(0, 0).id);
+        spec.path_scope = Some("packages/app/a.ts".into());
+        let file_scope = capture(&spec, &AtomicBool::new(false)).unwrap();
+        assert_ne!(file_scope.manifest(0, 0).id, scoped.manifest(0, 0).id);
+        spec.path_scope = Some("literal*".into());
+        assert_eq!(
+            one(&capture(&spec, &AtomicBool::new(false)).unwrap())
+                .summary
+                .path,
+            "literal*/a.ts"
+        );
+    }
+    repo.commit();
+    let mut commits = repo.spec(CompareMode::Commits);
+    commits.path_scope = Some("packages/app".into());
+    assert_eq!(
+        one(&capture(&commits, &AtomicBool::new(false)).unwrap())
+            .summary
+            .path,
+        "packages/app/a.ts"
+    );
+    repo.write("packages/app/a.ts", "const x = 3;\n");
+    repo.write("packages/apple/a.ts", "const x = 4;\n");
+    let mut unstaged = repo.spec(CompareMode::Unstaged);
+    unstaged.path_scope = Some("packages/app".into());
+    let snapshot = capture(&unstaged, &AtomicBool::new(false)).unwrap();
+    repo.write("packages/app/a.ts", "const x = 5;\n");
+    assert_eq!(one(&snapshot).after.as_deref(), Some("const x = 3;\n"));
+    for path in [
+        "",
+        ".",
+        "..",
+        "../other",
+        "/absolute",
+        "app//a",
+        "app/./a",
+        "app/../a",
+        "app\\a",
+    ] {
+        unstaged.path_scope = Some(path.into());
+        assert!(
+            capture(&unstaged, &AtomicBool::new(false)).is_err(),
+            "{path}"
+        );
+    }
+}
+
+#[test]
+fn ten_thousand_changes_fail_honestly_and_recover_with_a_literal_scope() {
+    let repo = Repo::new();
+    repo.write("initial.ts", "const x = 1;\n");
+    repo.commit();
+    for i in 0..10_001 {
+        repo.write(&format!("bulk/{i}.ts"), "const bulk = 1;\n");
+    }
+    repo.write("focus/a.ts", "const focus = 1;\n");
+    let mut spec = repo.spec(CompareMode::Worktree);
+    spec.include_untracked = true;
+    assert!(matches!(
+        capture(&spec, &AtomicBool::new(false)),
+        Err(RepositoryError::BudgetExceeded { .. })
+    ));
+    spec.path_scope = Some("focus".into());
+    let snapshot = capture(&spec, &AtomicBool::new(false)).unwrap();
+    assert_eq!(one(&snapshot).summary.path, "focus/a.ts");
+    assert!(snapshot
+        .manifest(0, 0)
+        .warnings
+        .iter()
+        .any(|warning| warning.contains("outside this scope")));
+    repo.commit();
+    spec.mode = CompareMode::Commits;
+    spec.include_untracked = false;
+    spec.path_scope = None;
+    assert!(matches!(
+        capture(&spec, &AtomicBool::new(false)),
+        Err(RepositoryError::BudgetExceeded { .. })
+    ));
+    spec.path_scope = Some("focus".into());
+    assert_eq!(
+        one(&capture(&spec, &AtomicBool::new(false)).unwrap())
+            .summary
+            .path,
+        "focus/a.ts"
+    );
+    assert!(matches!(
+        capture(&spec, &AtomicBool::new(true)),
+        Err(RepositoryError::Cancelled { .. })
+    ));
 }

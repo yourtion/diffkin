@@ -1,7 +1,7 @@
 use diffkin_domain::{CompareMode, CompareRequest, ComparisonSpec};
 use std::{env, ffi::OsStr, fs::File, io::Read, process::ExitCode, sync::atomic::AtomicBool};
 
-const HELP: &str = "Diffkin — read-only code comparison\n\nUsage:\n  diffkin <before-file> <after-file>\n  diffkin --structure <before-file> <after-file>\n  diffkin --repo <directory> [--mode worktree|unstaged|staged|commits]\n          [--base <revision>] [--head <revision>] [--untracked] [--verify-all]\n\nRepository output includes immutable source identities, metadata and structural analysis.\nCommit mode defaults to HEAD~1 versus HEAD. Worktree mode defaults to HEAD versus raw files.\nUse --verify-all for complete raw verification of tracked worktree files.\nNo Git filters, checkout, hooks, external diffs or object fetching are performed.\nExit codes: 0 identical, 1 different, 2 error. JSON is written to stdout.\n";
+const HELP: &str = "Diffkin — read-only code comparison\n\nUsage:\n  diffkin <before-file> <after-file>\n  diffkin --structure <before-file> <after-file>\n  diffkin --repo <directory> [--mode worktree|unstaged|staged|commits]\n          [--base <revision>] [--head <revision>] [--untracked] [--verify-all] [--path-scope <relative-path>]\n\nRepository output includes immutable source identities, metadata and structural analysis.\nCommit mode defaults to HEAD~1 versus HEAD. Worktree mode defaults to HEAD versus raw files.\nUse --verify-all for complete raw verification of tracked files within the selected scope.\nUse --path-scope to capture one literal relative file/directory; outside paths are excluded.\nNo Git filters, checkout, hooks, external diffs or object fetching are performed.\nExit codes: 0 identical, 1 different, 2 error. JSON is written to stdout.\n";
 
 fn read_input(path: &OsStr) -> Result<String, String> {
     let mut bytes = Vec::new();
@@ -32,6 +32,7 @@ fn repository(args: &[std::ffi::OsString]) -> Result<ExitCode, String> {
         head: None,
         include_untracked: false,
         verify_all: false,
+        path_scope: None,
     };
     let mut seen = std::collections::BTreeSet::new();
     let mut index = 0;
@@ -50,7 +51,10 @@ fn repository(args: &[std::ffi::OsString]) -> Result<ExitCode, String> {
             index += 1;
             continue;
         }
-        if !matches!(flag, "--repo" | "--mode" | "--base" | "--head") {
+        if !matches!(
+            flag,
+            "--repo" | "--mode" | "--base" | "--head" | "--path-scope"
+        ) {
             return Err(format!("Unknown option: {flag}"));
         }
         let value = args
@@ -70,6 +74,7 @@ fn repository(args: &[std::ffi::OsString]) -> Result<ExitCode, String> {
             }
             "--base" => spec.base = Some(value.into()),
             "--head" => spec.head = Some(value.into()),
+            "--path-scope" => spec.path_scope = Some(value.into()),
             _ => unreachable!(),
         }
         index += 2;

@@ -117,6 +117,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 head: Some("HEAD".into()),
                 include_untracked: false,
                 verify_all: false,
+                path_scope: None,
             },
         });
     }

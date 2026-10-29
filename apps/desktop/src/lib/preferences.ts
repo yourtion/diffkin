@@ -35,10 +35,12 @@ export function parsePreferences(value: unknown): AppPreferences | null {
     saved.schemaVersion !== 1 ||
     !spec ||
     typeof spec !== "object" ||
-    !(
-      exactFields(spec, ["repository", "mode", "base", "head", "includeUntracked"]) ||
-      exactFields(spec, ["repository", "mode", "base", "head", "includeUntracked", "verifyAll"])
+    !Object.keys(spec).every((key) =>
+      ["repository", "mode", "base", "head", "includeUntracked", "verifyAll", "pathScope"].includes(
+        key,
+      ),
     ) ||
+    !(spec.pathScope === undefined || text(spec.pathScope, 4096)) ||
     !(spec.verifyAll === undefined || typeof spec.verifyAll === "boolean") ||
     !text(spec.repository, 4096) ||
     !["commits", "staged", "unstaged", "worktree"].includes(spec.mode) ||
@@ -65,6 +67,7 @@ export function parsePreferences(value: unknown): AppPreferences | null {
       head: spec.head,
       includeUntracked: spec.includeUntracked,
       ...(spec.verifyAll === true ? { verifyAll: true } : {}),
+      ...(spec.pathScope ? { pathScope: spec.pathScope } : {}),
     },
     recent: [...saved.recent],
     view: {

@@ -46,6 +46,7 @@ struct Context<'a> {
     root: PathBuf,
     cancel: &'a AtomicBool,
     deadline: Instant,
+    scope: Option<&'a [u8]>,
 }
 struct Output<T = Vec<u8>> {
     success: bool,
@@ -54,6 +55,11 @@ struct Output<T = Vec<u8>> {
 }
 
 impl Context<'_> {
+    fn includes(&self, path: &[u8]) -> bool {
+        self.scope.is_none_or(|prefix| {
+            path == prefix || (path.starts_with(prefix) && path.get(prefix.len()) == Some(&b'/'))
+        })
+    }
     fn check(&self) -> Result<(), RepositoryError> {
         if self.cancel.load(Ordering::Relaxed) {
             return Err(RepositoryError::Cancelled {
@@ -324,6 +330,9 @@ fn raw_diff(
         let path = header[1].to_vec();
         validate_path(&path)?;
         paths.insert(path.clone());
+        if !context.includes(&path) {
+            continue;
+        }
         for (mode, oid, target) in [
             (fields[0], fields[2], &mut before),
             (fields[1], fields[3], &mut after),
@@ -538,7 +547,9 @@ fn observe(
 fn index_observation(context: &Context<'_>) -> Result<String, RepositoryError> {
     let mut hash = Sha256::new();
     scan_index(context, |record| {
-        observe(context, &record.path, &mut hash)?;
+        if context.includes(&record.path) {
+            observe(context, &record.path, &mut hash)?;
+        }
         Ok(())
     })?;
     Ok(format!("{:x}", hash.finalize()))
@@ -788,7 +799,7 @@ impl WorkingCapture<'_, '_> {
         }
         if self.changed_count > MAX_CHANGES {
             return Err(budget(
-                "Comparison exceeds 2,000 changed paths; compare a smaller commit range",
+                "Comparison exceeds 2,000 changed paths; choose a literal path scope or a smaller commit range",
             ));
         }
         Ok(())
@@ -839,7 +850,7 @@ fn untracked(context: &Context<'_>) -> Result<Vec<Vec<u8>>, RepositoryError> {
     let bytes = context.required(&["ls-files", "--others", "--exclude-standard", "-z"], None)?;
     let paths: Vec<_> = bytes
         .split(|&byte| byte == 0)
-        .filter(|path| !path.is_empty())
+        .filter(|path| !path.is_empty() && context.includes(path))
         .map(<[u8]>::to_vec)
         .collect();
     if paths.len() > MAX_CHANGES {
@@ -1290,15 +1301,25 @@ impl FrozenComparison {
         Ok(())
     }
     pub fn manifest(&self, offset: usize, limit: usize) -> ComparisonManifest {
-        let mut manifest = self.manifest.clone();
-        manifest.files = manifest
-            .files
-            .into_iter()
-            .skip(offset)
-            .take(limit.min(MAX_CHANGES))
-            .collect();
-        manifest
+        ComparisonManifest {
+            id: self.manifest.id.clone(),
+            repository: self.manifest.repository.clone(),
+            mode: self.manifest.mode,
+            base_label: self.manifest.base_label.clone(),
+            head_label: self.manifest.head_label.clone(),
+            total_files: self.manifest.total_files,
+            warnings: self.manifest.warnings.clone(),
+            files: self
+                .manifest
+                .files
+                .iter()
+                .skip(offset)
+                .take(limit.min(MAX_CHANGES))
+                .cloned()
+                .collect(),
+        }
     }
+
     pub fn read_file(&self, id: &str) -> Result<FrozenFile, RepositoryError> {
         self.files
             .get(id)
@@ -1312,6 +1333,18 @@ pub fn capture(
     spec: &ComparisonSpec,
     cancel: &AtomicBool,
 ) -> Result<FrozenComparison, RepositoryError> {
+    if let Some(scope) = &spec.path_scope {
+        if scope.len() > 4096
+            || scope.contains('\0')
+            || scope.contains('\\')
+            || scope
+                .split('/')
+                .any(|part| part.is_empty() || part == "." || part == "..")
+        {
+            return Err(io_error("Path scope must be a literal relative file/directory without empty, . or .. components"));
+        }
+        validate_path(scope.as_bytes())?;
+    }
     let root =
         fs::canonicalize(&spec.repository).map_err(|error| RepositoryError::InvalidRepository {
             message: error.to_string(),
@@ -1320,6 +1353,7 @@ pub fn capture(
         root,
         cancel,
         deadline: Instant::now() + CAPTURE_BUDGET,
+        scope: spec.path_scope.as_deref().map(str::as_bytes),
     };
     let version = context.git(&["--version"], None)?;
     if !version.success {
@@ -1355,6 +1389,9 @@ pub fn capture(
         });
     }
     let mut warnings = Vec::new();
+    if let Some(scope) = &spec.path_scope {
+        warnings.push(format!("Path scope: {scope}. Only this literal file/directory is captured; paths outside this scope are excluded. Cross-boundary renames appear as additions/deletions. 范围外内容未捕获、未审查。"));
+    }
     let index_before = if spec.mode != CompareMode::Commits {
         Some(index_identity(&context)?)
     } else {
@@ -1392,7 +1429,7 @@ pub fn capture(
             before = staged_before;
             after = staged_after;
             scan_index(&context, |record| {
-                if staged_paths.contains(&record.path) {
+                if context.includes(&record.path) && staged_paths.contains(&record.path) {
                     if record.stat.flags & 0x2000_0000 != 0 {
                         intent_paths.insert(record.path.clone());
                         after.remove(&record.path);
@@ -1444,6 +1481,9 @@ pub fn capture(
             let mut possible_conversions = Vec::new();
             let mut batch_bytes = 0;
             scan_index(&context, |record| {
+                if !context.includes(&record.path) {
+                    return Ok(());
+                }
                 let metadata = observe(&context, &record.path, &mut observed)?;
                 // Sparse absence is context, not a deletion. Existing sparse files are checked.
                 if metadata.is_none() && record.stat.flags & 0x4000_0000 != 0 {
@@ -1495,7 +1535,7 @@ pub fn capture(
             warnings.push("Windows executable bits are inherited from the index. A symlink checked out as a regular file is shown as a literal file-type change.".into());
             warnings.push("Working-tree bytes are captured literally; clean/smudge filters and line-ending conversion are not executed. Capture is not a filesystem-wide atomic transaction.".into());
             warnings.push(if spec.verify_all {
-                "Full literal verification: all existing tracked file bytes were checked within the capture budget; absent sparse files retain index context."
+                "Full literal verification: all existing tracked file bytes within the selected path scope were checked within the capture budget; absent sparse files retain index context."
             } else {
                 "Fast capture uses Git index/stat metadata for unchanged tracked files. Changed, flagged, racy or known conversion-affected files are hashed literally. Historical conversion rules may no longer be discoverable; enable full literal verification to check all existing tracked bytes."
             }.into());
@@ -1527,7 +1567,7 @@ pub fn capture(
         .collect();
     if changed.len() > MAX_CHANGES {
         return Err(budget(
-            "Comparison exceeds 2,000 changed paths; compare a smaller commit range",
+            "Comparison exceeds 2,000 changed paths; choose a literal path scope or a smaller commit range",
         ));
     }
     let needed = changed.iter().flat_map(|path| {
@@ -1700,6 +1740,11 @@ pub fn capture(
     }
     let mut identity = Sha256::new();
     identity.update(context.root.as_os_str().to_string_lossy().as_bytes());
+    if let Some(scope) = &spec.path_scope {
+        identity.update(b"\0path-scope\0");
+        identity.update((scope.len() as u64).to_le_bytes());
+        identity.update(scope.as_bytes());
+    }
     identity.update(before_label.as_bytes());
     identity.update(after_label.as_bytes());
     for file in &summaries {

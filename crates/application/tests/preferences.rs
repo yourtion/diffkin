@@ -49,6 +49,7 @@ fn preferences() -> AppPreferences {
             head: Some("feature/视图".into()),
             include_untracked: false,
             verify_all: false,
+            path_scope: None,
         },
         recent: vec![
             "/nonexistent/观变 repository".into(),

@@ -16,6 +16,7 @@ fn main() {
         head: args.get(2).cloned(),
         include_untracked: false,
         verify_all: false,
+        path_scope: None,
     };
     let token = AtomicBool::new(false);
     let start = Instant::now();

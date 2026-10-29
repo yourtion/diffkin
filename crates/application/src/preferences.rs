@@ -44,6 +44,11 @@ fn validate(preferences: &AppPreferences) -> Result<()> {
     let text = |value: &str, limit: usize| value.len() <= limit && !value.contains('\0');
     if preferences.recent.len() > 8
         || !text(&preferences.spec.repository, 4096)
+        || preferences
+            .spec
+            .path_scope
+            .as_ref()
+            .is_some_and(|scope| !text(scope, 4096))
         || preferences.recent.iter().any(|path| !text(path, 4096))
         || [&preferences.spec.base, &preferences.spec.head]
             .into_iter()

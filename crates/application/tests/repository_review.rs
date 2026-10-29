@@ -73,6 +73,7 @@ impl Fixture {
                 head: None,
                 include_untracked: true,
                 verify_all,
+                path_scope: None,
             },
             &AtomicBool::new(false),
         )
