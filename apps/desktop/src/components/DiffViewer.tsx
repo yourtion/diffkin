@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { EditorState, type Extension } from "@codemirror/state";
+import { Compartment, EditorState, type Extension } from "@codemirror/state";
 import { EditorView, keymap, lineNumbers } from "@codemirror/view";
 import { languageExtensions } from "../lib/languages";
 import { bindMoveConnection } from "../lib/move-connection";
@@ -30,7 +30,10 @@ const reviewHighlight = HighlightStyle.define([
   { tag: tags.invalid, textDecoration: "underline wavy", color: "var(--syntax-error)" },
 ]);
 
+import { restoreEditor, saveEditor } from "../lib/editor-memory";
+
 type Props = {
+  viewKey: string;
   before: string;
   after: string;
   path: string;
@@ -49,6 +52,7 @@ export function editorOffset(source: string, offset: number) {
 }
 
 export function DiffViewer({
+  viewKey,
   before,
   after,
   path,
@@ -62,11 +66,13 @@ export function DiffViewer({
   onLayoutChange: setLayout,
   onCollapseChange: setCollapse,
 }: Props) {
+  const proofCompartment = useRef(new Compartment());
   const host = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const overlay = useRef<SVGSVGElement>(null);
   const views = useRef<{ a?: EditorView; b: EditorView } | null>(null);
   const [copied, setCopied] = useState("");
+  const unfoldedFormat = event && analysis && isProvenFormat(event, analysis) ? event.id : null;
   const focused = scope && event !== null;
   const move = event?.facets.includes("move") && event.before && event.after ? event : null;
   const old =
@@ -83,6 +89,8 @@ export function DiffViewer({
         : after;
   useEffect(() => {
     if (!host.current) return;
+    const scrollHost = host.current;
+    const memoryKey = `${viewKey}:${layout}`;
     const extensions = (label: string): Extension[] => [
       lineNumbers(),
       ...languageExtensions(path, focused && path.toLowerCase().endsWith(".vue")),
@@ -104,11 +112,55 @@ export function DiffViewer({
         ".cm-scroller": { overflowX: "auto" },
       }),
     ];
+    if (layout === "split") {
+      const merge = new MergeView({
+        parent: host.current,
+        a: { doc: old, extensions: extensions("修改前源码") },
+        b: { doc: next, extensions: extensions("修改后源码") },
+        collapseUnchanged: collapse ? { margin: 4, minSize: 8 } : undefined,
+        highlightChanges: true,
+        gutter: true,
+        diffConfig: { scanLimit: 2000, timeout: 100 },
+      });
+      views.current = { a: merge.a, b: merge.b };
+      if (!focused) restoreEditor(memoryKey, scrollHost, { a: merge.a, b: merge.b });
+      return () => {
+        if (!focused) saveEditor(memoryKey, scrollHost, { a: merge.a, b: merge.b });
+        views.current = null;
+        merge.destroy();
+      };
+    }
+    const unified = new EditorView({
+      parent: host.current,
+      doc: next,
+      extensions: [
+        ...extensions("统一差异源码"),
+        unifiedMergeView({
+          original: old,
+          mergeControls: false,
+          syntaxHighlightDeletions: false,
+          collapseUnchanged: collapse ? { margin: 4, minSize: 8 } : undefined,
+          diffConfig: { scanLimit: 2000, timeout: 100 },
+        }),
+        proofCompartment.current.of([]),
+      ],
+    });
+    views.current = { b: unified };
+    if (!focused) restoreEditor(memoryKey, scrollHost, { b: unified });
+    return () => {
+      if (!focused) saveEditor(memoryKey, scrollHost, { b: unified });
+      views.current = null;
+      unified.destroy();
+    };
+  }, [old, next, layout, collapse, path, focused, before, after, viewKey]);
+
+  useEffect(() => {
+    if (!views.current) return;
     const proven =
       !foldFormats || focused || !analysis
         ? []
         : analysis.events.filter(
-            (candidate) => candidate.id !== event?.id && isProvenFormat(candidate, analysis),
+            (candidate) => candidate.id !== unfoldedFormat && isProvenFormat(candidate, analysis),
           );
     const pairedProofs: FormatProof[] = proven.flatMap((candidate) =>
       candidate.before && candidate.after
@@ -143,74 +195,49 @@ export function DiffViewer({
         if (previous && range.from < previous.to) previous.to = Math.max(previous.to, range.to);
         else separate.push({ ...range });
       }
-      if (separate.length) view.dispatch({ effects: foldFormatEffect.of(separate) });
+      view.dispatch({ effects: foldFormatEffect.of(separate) });
     };
-    if (layout === "split") {
-      const merge = new MergeView({
-        parent: host.current,
-        a: { doc: old, extensions: extensions("修改前源码") },
-        b: { doc: next, extensions: extensions("修改后源码") },
-        collapseUnchanged: collapse ? { margin: 4, minSize: 8 } : undefined,
-        highlightChanges: true,
-        gutter: true,
-        diffConfig: { scanLimit: 2000, timeout: 100 },
+
+    if (views.current.a) fold(views.current.a, "before", before);
+    else
+      views.current.b.dispatch({
+        effects: proofCompartment.current.reconfigure(unifiedFormatFolding(pairedProofs)),
       });
-      views.current = { a: merge.a, b: merge.b };
-      fold(merge.a, "before", before);
-      fold(merge.b, "after", after);
-      const disconnect =
-        move && !focused && stage.current && overlay.current
-          ? bindMoveConnection(
-              stage.current,
-              overlay.current,
-              merge.a,
-              merge.b,
-              move,
-              editorOffset(before, move.before!.utf16Start),
-              editorOffset(after, move.after!.utf16Start),
-            )
-          : () => {};
-      return () => {
-        disconnect();
-        views.current = null;
-        merge.destroy();
-      };
-    }
-    const unified = new EditorView({
-      parent: host.current,
-      doc: next,
-      extensions: [
-        ...extensions("统一差异源码"),
-        unifiedMergeView({
-          original: old,
-          mergeControls: false,
-          syntaxHighlightDeletions: false,
-          collapseUnchanged: collapse ? { margin: 4, minSize: 8 } : undefined,
-          diffConfig: { scanLimit: 2000, timeout: 100 },
-        }),
-        unifiedFormatFolding(pairedProofs),
-      ],
-    });
-    views.current = { b: unified };
-    fold(unified, "after", after);
-    return () => {
-      views.current = null;
-      unified.destroy();
-    };
+    fold(views.current.b, "after", after);
   }, [
-    old,
-    next,
-    layout,
-    collapse,
-    path,
-    focused,
     analysis,
     foldFormats,
-    event,
-    move,
+    focused,
+    unfoldedFormat,
     before,
     after,
+    layout,
+    collapse,
+    old,
+    next,
+    path,
   ]);
+
+  useEffect(() => {
+    if (
+      !move ||
+      focused ||
+      layout !== "split" ||
+      !views.current?.a ||
+      !stage.current ||
+      !overlay.current
+    )
+      return;
+    return bindMoveConnection(
+      stage.current,
+      overlay.current,
+      views.current.a,
+      views.current.b,
+      move,
+      editorOffset(before, move.before!.utf16Start),
+      editorOffset(after, move.after!.utf16Start),
+    );
+  }, [move, focused, layout, collapse, before, after, path, old, next]);
 
   useEffect(() => {
     if (focused || !event || !views.current) return;

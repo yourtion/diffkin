@@ -32,7 +32,7 @@ async fn open_comparison(
         let snapshot = Arc::new(diffkin_application::capture(&spec, &token)?);
         check_cancel(&token)?;
         let manifest = snapshot.manifest(0, 200);
-        *worker.current.lock().unwrap() = Some(snapshot);
+        worker.install_comparison(snapshot);
         worker.cache.lock().unwrap().clear();
         Ok(manifest)
     })

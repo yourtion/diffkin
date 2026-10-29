@@ -12,6 +12,7 @@ use std::{
 pub struct Runtime {
     pub capture_gate: Mutex<()>,
     pub analysis_gate: Mutex<()>,
+    previous: Mutex<Option<Arc<FrozenComparison>>>,
     pub current: Mutex<Option<Arc<FrozenComparison>>>,
     pub cache: Mutex<VecDeque<(String, String, FileAnalysis)>>,
     jobs: Mutex<Jobs>,
@@ -24,6 +25,10 @@ struct Jobs {
     early_cancellations: VecDeque<String>,
 }
 impl Runtime {
+    pub fn install_comparison(&self, snapshot: Arc<FrozenComparison>) {
+        let mut current = self.current.lock().unwrap();
+        *self.previous.lock().unwrap() = current.replace(snapshot);
+    }
     pub fn begin(&self, id: &str) -> Result<Arc<AtomicBool>, RepositoryError> {
         let mut jobs = self.jobs.lock().unwrap();
         if jobs.shutting_down {
@@ -113,6 +118,16 @@ impl Runtime {
     pub fn snapshot(&self, id: &str) -> Result<Arc<FrozenComparison>, RepositoryError> {
         if let Some(snapshot) = self
             .current
+            .lock()
+            .unwrap()
+            .as_ref()
+            .filter(|snapshot| snapshot.manifest(0, 0).id == id)
+            .cloned()
+        {
+            return Ok(snapshot);
+        }
+        if let Some(snapshot) = self
+            .previous
             .lock()
             .unwrap()
             .as_ref()
@@ -255,6 +270,25 @@ mod tests {
         let comparison =
             serde_json::json!({"manifest":manifest.clone(),"files":{repository_id:file}});
         Arc::new(serde_json::from_value(serde_json::json!({"manifest":{"id":id,"workspaceId":"project","capturedAtMs":"1","repositories":[{"repositoryId":"repo","label":"Repository","manifest":manifest,"error":null}]},"repositories":{"repo":comparison}})).unwrap())
+    }
+    #[test]
+    fn refresh_retains_previous_frozen_snapshot_and_evicts_older_capture() {
+        let runtime = Runtime::default();
+        for id in ["first", "second", "third"] {
+            runtime.install_comparison(workspace_fixture(id, id, id).repository("repo").unwrap());
+        }
+        assert!(runtime.snapshot("first").is_err());
+        assert_eq!(
+            runtime
+                .snapshot("second")
+                .unwrap()
+                .read_file("second")
+                .unwrap()
+                .after
+                .as_deref(),
+            Some("second")
+        );
+        assert!(runtime.snapshot("third").is_ok());
     }
     #[test]
     fn workspace_snapshots_and_single_repository_cache_coexist_without_path_aliasing() {

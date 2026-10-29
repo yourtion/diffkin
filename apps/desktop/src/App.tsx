@@ -98,6 +98,7 @@ export function App({
   const [reviewBases, setReviewBases] = useState<Record<string, string>>({});
   const [pending, setPending] = useState<"capture" | "file" | null>(null);
   const [paging, setPaging] = useState(false);
+  const [taskStatus, setTaskStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const captureGeneration = useRef(new Generation());
   const fileGeneration = useRef(new Generation());
@@ -128,7 +129,7 @@ export function App({
     cancelOne(fileJob);
     setPending(null);
     setPaging(false);
-    setError("已取消。可以重新选择文件或刷新比较。");
+    setTaskStatus("已取消。可以继续阅读当前快照，或重新打开比较。");
   }
   async function selectFile(file: FileSummary, snapshot = manifest, fromHistory = false) {
     if (!snapshot) return;
@@ -178,32 +179,45 @@ export function App({
     const generation = captureGeneration.current.next();
     const job = jobId();
     captureJob.current = job;
-    setWorkspaceSession(null);
-    setRepositoryId(null);
-    setManifest(null);
-    setReviewBases({});
-    setData(null);
-    setSelectedFile(null);
-    setEvent(null);
-    setFilter("");
+    const previousPath = selectedFile?.path;
+    setTaskStatus("正在捕获新快照，当前内容仍属于上一次比较。");
     setError(null);
     setPending("capture");
     setPaging(false);
     const request = { ...spec, repository: spec.repository.trim() };
     try {
-      const result = await api.open(request, job);
+      let result = await api.open(request, job);
       if (!captureGeneration.current.isCurrent(generation)) return;
+      if (
+        previousPath &&
+        result.repository === manifest?.repository &&
+        result.files.length < result.totalFiles &&
+        !result.files.some((file) => file.path === previousPath)
+      )
+        result = await api.catalog(result.id);
+      if (!captureGeneration.current.isCurrent(generation)) return;
+      setWorkspaceSession(null);
+      setRepositoryId(null);
+      setReviewBases({});
+      setEvent(null);
+      setTaskStatus(null);
       setManifest(result);
       settings.update((current) => ({
         ...current,
         recent: [...new Set([request.repository, ...current.recent])].slice(0, 8),
       }));
       setShowCompareSettings(false);
-      if (result.files[0]) void selectFile(result.files[0], result);
-      else setPending(null);
+      const next = result.files.find((file) => file.path === previousPath) ?? result.files[0];
+      if (next) void selectFile(next, result);
+      else {
+        setData(null);
+        setSelectedFile(null);
+        setPending(null);
+      }
     } catch (cause) {
       if (captureGeneration.current.isCurrent(generation)) {
         setError(message(cause));
+        setTaskStatus(null);
         setPending(null);
       }
     } finally {
@@ -712,6 +726,11 @@ export function App({
       {!available && (
         <p className="notice">浏览器仅预览界面。请运行桌面应用以读取本地 Git 仓库。</p>
       )}
+      {taskStatus && (
+        <p className="notice compact" role="status">
+          {taskStatus}
+        </p>
+      )}
       {error && (
         <p className="error" role="alert">
           {error}
@@ -902,6 +921,7 @@ export function App({
                 </div>
               ) : data ? (
                 <DiffViewer
+                  viewKey={`${manifest?.repository}:${selectedFile.path}`}
                   before={data.file.before ?? ""}
                   after={data.file.after ?? ""}
                   path={selectedFile.path}

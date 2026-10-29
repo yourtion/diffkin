@@ -89,6 +89,7 @@ async function bridge(
     refreshRules?: boolean;
     delayPage?: number;
     count?: number;
+    failRefresh?: boolean;
   } = {},
   payload: FileAnalysis = result,
 ) {
@@ -117,6 +118,7 @@ async function bridge(
               captures++;
               if (options.delayCapture)
                 await new Promise((resolve) => setTimeout(resolve, options.delayCapture));
+              if (options.failRefresh && captures > 1) throw new Error("capture failed");
               return {
                 ...manifest,
                 id: options.refreshIdentity ? `frozen-${captures}` : manifest.id,
@@ -224,7 +226,7 @@ test("cancelled capture never publishes its late manifest", async ({ page }) => 
   await bridge(page, { delayCapture: 500 });
   await open(page, false);
   await page.getByRole("button", { name: "取消", exact: true }).click();
-  await expect(page.getByRole("alert")).toContainText("已取消");
+  await expect(page.getByRole("status")).toContainText("已取消");
   await page.waitForTimeout(650);
   await expect(page.locator(".file-item")).toHaveCount(0);
 });
@@ -497,6 +499,8 @@ test("moves connect original locations and retain grouped internal edits", async
   await expect.poll(() => curve.getAttribute("d")).not.toBe(scrolledPath);
   await expect(overlay).toHaveAttribute("data-after-clipped", "下方");
   await page.getByRole("button", { name: "完整原始视图", exact: true }).click();
+  await expect(overlay).toHaveAttribute("data-after-clipped", "下方");
+  await page.getByRole("button", { name: "终点 L51", exact: true }).click();
   await expect(overlay).toHaveAttribute("data-after-clipped", "");
   const firstPath = await curve.getAttribute("d");
   await page.setViewportSize({ width: 1280, height: 800 });
@@ -570,3 +574,31 @@ for (const count of [420, 2000])
     await expect(page.locator(".file-heading h2")).toContainText("file-0001.ts");
     expect(await page.locator(".file-item").count()).toBeLessThan(40);
   });
+
+test("relationship selection retains editors and file search survives navigation", async ({
+  page,
+}) => {
+  await bridge(page);
+  await open(page);
+  await expect(page.locator(".cm-content").first()).toBeVisible();
+  const content = await page.locator(".cm-content").first().elementHandle();
+  await page.getByRole("button", { name: /条件修改/ }).click();
+  expect(await content!.evaluate((node) => node.isConnected)).toBe(true);
+  await page.getByRole("button", { name: /搜索 ⌘/ }).click();
+  await page.locator(".cm-search input[name=search]").fill("balance");
+  await page.getByRole("button", { name: "src/other.ts", exact: true }).click();
+  await expect(page.locator(".merge-host")).toContainText("other = 2");
+  await page.getByRole("button", { name: "src/withdraw.ts", exact: true }).click();
+  await expect(page.locator(".cm-search input[name=search]")).toHaveValue("balance");
+});
+test("failed refresh preserves frozen content and current file", async ({ page }) => {
+  await bridge(page, { failRefresh: true, delayCapture: 250 });
+  await open(page);
+  await page.getByRole("button", { name: "src/other.ts", exact: true }).click();
+  await expect(page.locator(".merge-host")).toContainText("other = 2");
+  await page.getByRole("button", { name: "刷新比较", exact: true }).click();
+  await expect(page.locator(".merge-host")).toContainText("other = 2");
+  await expect(page.getByRole("alert")).toContainText("capture failed");
+  await expect(page.locator(".file-heading h2")).toHaveText("src/other.ts");
+  await expect(page.locator(".merge-host")).toContainText("other = 2");
+});
