@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Compartment, EditorState, type Extension } from "@codemirror/state";
 import { EditorView, keymap, lineNumbers } from "@codemirror/view";
 import { languageExtensions } from "../lib/languages";
@@ -8,7 +8,7 @@ import { defaultKeymap } from "@codemirror/commands";
 import { openSearchPanel, search, searchKeymap } from "@codemirror/search";
 import { MergeView, goToNextChunk, goToPreviousChunk, unifiedMergeView } from "@codemirror/merge";
 import type { AnalysisResult, ChangeEvent, SourceRange } from "@diffkin/protocol";
-import { isProvenFormat } from "../lib/presentation";
+import { createFormatProofChecker } from "../lib/presentation";
 import {
   formatFolding,
   foldFormats as foldFormatEffect,
@@ -30,6 +30,7 @@ const reviewHighlight = HighlightStyle.define([
   { tag: tags.invalid, textDecoration: "underline wavy", color: "var(--syntax-error)" },
 ]);
 
+import { editorCoordinates } from "../lib/editor-coordinates";
 import { restoreEditor, saveEditor } from "../lib/editor-memory";
 
 type Props = {
@@ -47,9 +48,6 @@ type Props = {
   onLayoutChange: (layout: "split" | "unified") => void;
   onCollapseChange: (collapse: boolean) => void;
 };
-export function editorOffset(source: string, offset: number) {
-  return source.slice(0, offset).replace(/\r\n?/g, "\n").length;
-}
 
 export function DiffViewer({
   viewKey,
@@ -66,13 +64,19 @@ export function DiffViewer({
   onLayoutChange: setLayout,
   onCollapseChange: setCollapse,
 }: Props) {
+  const beforeOffset = useMemo(() => editorCoordinates(before), [before]);
+  const afterOffset = useMemo(() => editorCoordinates(after), [after]);
+  const provenFormat = useMemo(
+    () => (analysis ? createFormatProofChecker(analysis) : () => false),
+    [analysis],
+  );
   const proofCompartment = useRef(new Compartment());
   const host = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const overlay = useRef<SVGSVGElement>(null);
   const views = useRef<{ a?: EditorView; b: EditorView } | null>(null);
   const [copied, setCopied] = useState("");
-  const unfoldedFormat = event && analysis && isProvenFormat(event, analysis) ? event.id : null;
+  const unfoldedFormat = event && analysis && provenFormat(event) ? event.id : null;
   const focused = scope && event !== null;
   const move = event?.facets.includes("move") && event.before && event.after ? event : null;
   const old =
@@ -160,19 +164,19 @@ export function DiffViewer({
       !foldFormats || focused || !analysis
         ? []
         : analysis.events.filter(
-            (candidate) => candidate.id !== unfoldedFormat && isProvenFormat(candidate, analysis),
+            (candidate) => candidate.id !== unfoldedFormat && provenFormat(candidate),
           );
     const pairedProofs: FormatProof[] = proven.flatMap((candidate) =>
       candidate.before && candidate.after
         ? [
             {
               before: {
-                from: editorOffset(before, candidate.before.utf16Start),
-                to: editorOffset(before, candidate.before.utf16End),
+                from: beforeOffset(candidate.before.utf16Start),
+                to: beforeOffset(candidate.before.utf16End),
               },
               after: {
-                from: editorOffset(after, candidate.after.utf16Start),
-                to: editorOffset(after, candidate.after.utf16End),
+                from: afterOffset(candidate.after.utf16Start),
+                to: afterOffset(candidate.after.utf16End),
               },
             },
           ]
@@ -183,8 +187,8 @@ export function DiffViewer({
         .map((candidate) => candidate[side])
         .filter((span): span is SourceRange => span !== null)
         .map((span) => ({
-          from: editorOffset(source, span.utf16Start),
-          to: editorOffset(source, span.utf16End),
+          from: (source === before ? beforeOffset : afterOffset)(span.utf16Start),
+          to: (source === before ? beforeOffset : afterOffset)(span.utf16End),
         }))
         .filter(({ from, to }) => from >= 0 && to > from && to <= view.state.doc.length)
         .sort((left, right) => left.from - right.from);
@@ -206,6 +210,9 @@ export function DiffViewer({
     fold(views.current.b, "after", after);
   }, [
     analysis,
+    provenFormat,
+    beforeOffset,
+    afterOffset,
     foldFormats,
     focused,
     unfoldedFormat,
@@ -234,10 +241,10 @@ export function DiffViewer({
       views.current.a,
       views.current.b,
       move,
-      editorOffset(before, move.before!.utf16Start),
-      editorOffset(after, move.after!.utf16Start),
+      beforeOffset(move.before!.utf16Start),
+      afterOffset(move.after!.utf16Start),
     );
-  }, [move, focused, layout, collapse, before, after, path, old, next]);
+  }, [move, focused, layout, collapse, before, after, beforeOffset, afterOffset, path, old, next]);
 
   useEffect(() => {
     if (focused || !event || !views.current) return;
@@ -246,22 +253,28 @@ export function DiffViewer({
       [views.current.b, event.after, after],
     ] as const) {
       if (view && span) {
-        const anchor = Math.min(editorOffset(source, span.utf16Start), view.state.doc.length);
-        const head = Math.min(editorOffset(source, span.utf16End), view.state.doc.length);
+        const anchor = Math.min(
+          (source === before ? beforeOffset : afterOffset)(span.utf16Start),
+          view.state.doc.length,
+        );
+        const head = Math.min(
+          (source === before ? beforeOffset : afterOffset)(span.utf16End),
+          view.state.doc.length,
+        );
         view.dispatch({
           selection: { anchor, head },
           effects: EditorView.scrollIntoView(anchor, { y: "center" }),
         });
       }
     }
-  }, [event, focused, before, after, layout, collapse, foldFormats]);
+  }, [event, focused, before, after, beforeOffset, afterOffset, layout, collapse, foldFormats]);
 
   function locate(side: "before" | "after") {
     const view = side === "before" ? views.current?.a : views.current?.b;
     const range = event?.[side];
     if (view && range && !focused) {
       const position = Math.min(
-        editorOffset(side === "before" ? before : after, range.utf16Start),
+        (side === "before" ? beforeOffset : afterOffset)(range.utf16Start),
         view.state.doc.length,
       );
       view.dispatch({

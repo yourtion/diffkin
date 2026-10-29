@@ -715,3 +715,39 @@ fn ten_thousand_changes_fail_honestly_and_recover_with_a_literal_scope() {
         Err(RepositoryError::Cancelled { .. })
     ));
 }
+
+#[test]
+fn streamed_commit_blobs_preserve_empty_shared_and_multibyte_sources() {
+    let repo = Repo::new();
+    let before = "中文😀\r\n".repeat(4000);
+    let after = format!("{before}changed\n");
+    for i in 0..40 {
+        repo.write(&format!("files/{i}.txt"), if i == 0 { "" } else { &before });
+    }
+    repo.commit();
+    for i in 0..40 {
+        repo.write(&format!("files/{i}.txt"), format!("{after}{i}"));
+    }
+    repo.commit();
+    let snapshot = repo.capture(CompareMode::Commits);
+    let manifest = snapshot.manifest(0, 200);
+    assert_eq!(manifest.total_files, 40);
+    for summary in manifest.files {
+        let file = snapshot.read_file(&summary.id).unwrap();
+        assert_eq!(
+            file.before.as_deref(),
+            Some(if summary.path == "files/0.txt" {
+                ""
+            } else {
+                &before
+            })
+        );
+        let suffix = summary
+            .path
+            .strip_prefix("files/")
+            .unwrap()
+            .strip_suffix(".txt")
+            .unwrap();
+        assert_eq!(file.after, Some(format!("{after}{suffix}")));
+    }
+}

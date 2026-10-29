@@ -1177,38 +1177,61 @@ fn blobs(
         .iter()
         .map(|oid| format!("{oid}\n"))
         .collect::<String>();
-    let output = context.required(&["cat-file", "--batch"], Some(request.as_bytes()))?;
-    let mut rest = output.as_slice();
-    for expected in readable {
-        let newline = rest
-            .iter()
-            .position(|&byte| byte == b'\n')
-            .ok_or_else(|| io_error("Truncated Git batch header"))?;
-        let fields: Vec<_> = std::str::from_utf8(&rest[..newline])
-            .map_err(io_error)?
-            .split_whitespace()
-            .collect();
-        if fields.len() != 3 || fields[0] != expected || fields[1] != "blob" {
-            return Err(io_error("Unexpected Git batch object"));
-        }
-        let length: usize = fields[2].parse().map_err(io_error)?;
-        rest = &rest[newline + 1..];
-        if length > MAX_FILE || rest.len() <= length || rest[length] != b'\n' {
-            return Err(io_error("Truncated Git batch contents"));
-        }
-        result.insert(
-            expected,
-            Content {
-                data: rest[..length].to_vec(),
-                truncated: false,
-            },
-        );
-        rest = &rest[length + 1..];
+    // Decode directly from the pipe. Materializing the entire batch first both
+    // duplicates all blobs and grows a large temporary allocation on every refresh.
+    let output = context.git_read(
+        &["cat-file", "--batch"],
+        Some(request.as_bytes()),
+        move |stdout| {
+            let mut reader = BufReader::new(stdout);
+            for expected in readable {
+                let mut header = Vec::new();
+                reader
+                    .by_ref()
+                    .take(256)
+                    .read_until(b'\n', &mut header)
+                    .map_err(io_error)?;
+                if header.pop() != Some(b'\n') {
+                    return Err(io_error("Truncated Git batch header"));
+                }
+                let fields: Vec<_> = std::str::from_utf8(&header)
+                    .map_err(io_error)?
+                    .split_whitespace()
+                    .collect();
+                if fields.len() != 3 || fields[0] != expected || fields[1] != "blob" {
+                    return Err(io_error("Unexpected Git batch object"));
+                }
+                let length: usize = fields[2].parse().map_err(io_error)?;
+                if length > MAX_FILE || length > total {
+                    return Err(io_error("Unexpected Git batch object size"));
+                }
+                total -= length;
+                let mut data = vec![0; length];
+                reader.read_exact(&mut data).map_err(io_error)?;
+                let mut newline = [0];
+                reader.read_exact(&mut newline).map_err(io_error)?;
+                if newline != *b"\n" {
+                    return Err(io_error("Truncated Git batch contents"));
+                }
+                result.insert(
+                    expected,
+                    Content {
+                        data,
+                        truncated: false,
+                    },
+                );
+            }
+            let mut trailing = [0];
+            if reader.read(&mut trailing).map_err(io_error)? != 0 || total != 0 {
+                return Err(io_error("Unexpected trailing Git batch data"));
+            }
+            Ok(result)
+        },
+    )?;
+    if !output.success {
+        return Err(io_error(format!("Git cat-file failed: {}", output.stderr)));
     }
-    if !rest.is_empty() {
-        return Err(io_error("Unexpected trailing Git batch data"));
-    }
-    Ok(result)
+    Ok(output.stdout)
 }
 
 /// A captured comparison contains only immutable, bounded data. No methods reread the repository.

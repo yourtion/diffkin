@@ -48,6 +48,55 @@ pub fn source_range(source: &str, start: usize, end: usize) -> SourceRange {
     }
 }
 
+// Reuse source coordinates across thousands of events. Only non-ASCII deltas and
+// line boundaries need indexing; ASCII byte offsets are already UTF-16 offsets.
+struct SourcePositions {
+    utf16_deltas: Vec<(usize, usize)>,
+    line_ends: Vec<usize>,
+}
+impl SourcePositions {
+    fn new(source: &str) -> Self {
+        let mut utf16_deltas = Vec::new();
+        let mut line_ends = Vec::new();
+        let mut delta = 0;
+        let mut previous = '\0';
+        for (offset, character) in source.char_indices() {
+            if !character.is_ascii() {
+                delta += character.len_utf8() - character.len_utf16();
+                utf16_deltas.push((offset + character.len_utf8(), delta));
+            }
+            if character == '\r' || character == '\n' && previous != '\r' {
+                line_ends.push(offset + 1);
+            }
+            previous = character;
+        }
+        Self {
+            utf16_deltas,
+            line_ends,
+        }
+    }
+    fn coordinate(&self, offset: usize) -> (u32, u32) {
+        let index = self.utf16_deltas.partition_point(|(end, _)| *end <= offset);
+        let delta = index.checked_sub(1).map_or(0, |i| self.utf16_deltas[i].1);
+        (
+            (offset - delta) as u32,
+            self.line_ends.partition_point(|end| *end <= offset) as u32 + 1,
+        )
+    }
+    fn range(&self, start: usize, end: usize) -> SourceRange {
+        let (utf16_start, start_line) = self.coordinate(start);
+        let (utf16_end, end_line) = self.coordinate(end);
+        SourceRange {
+            byte_start: start as u32,
+            byte_end: end as u32,
+            utf16_start,
+            utf16_end,
+            start_line,
+            end_line,
+        }
+    }
+}
+
 fn language(path: &str) -> Option<(&'static str, Language)> {
     match path
         .rsplit('.')
@@ -458,8 +507,8 @@ fn renames(
 fn event(
     title: String,
     facets: Vec<&str>,
-    before: &str,
-    after: &str,
+    before: &SourcePositions,
+    after: &SourcePositions,
     a: Option<(usize, usize)>,
     b: Option<(usize, usize)>,
     evidence: Vec<String>,
@@ -468,8 +517,8 @@ fn event(
         id: String::new(),
         title,
         facets: facets.into_iter().map(str::to_owned).collect(),
-        before: a.map(|(s, e)| source_range(before, s, e)),
-        after: b.map(|(s, e)| source_range(after, s, e)),
+        before: a.map(|(s, e)| before.range(s, e)),
+        after: b.map(|(s, e)| after.range(s, e)),
         evidence,
         raw_edit_ids: vec![],
         children: vec![],
@@ -507,6 +556,7 @@ fn format_regions(
     after: &str,
     language: &str,
     budget: &Budget<'_>,
+    positions: &(SourcePositions, SourcePositions),
 ) -> Result<Vec<ChangeEvent>, String> {
     if !language_syntax::indentation_safe(before, language)
         || !language_syntax::indentation_safe(after, language)
@@ -529,7 +579,7 @@ fn format_regions(
                 == signature(new, after, &names, budget, language)?
         {
             if let (Some(a), Some(b)) = (whole_lines(old, before), whole_lines(new, after)) {
-                result.push(event("局部排版变化".into(),vec!["format"],before,after,Some(a),Some(b),vec!["local-cst-trivia-v2: corresponding subtree has identical safe-normalized syntax/tokens; the entire covered original lines contain only this subtree and whitespace".into()]));
+                result.push(event("局部排版变化".into(),vec!["format"],&positions.0,&positions.1,Some(a),Some(b),vec!["local-cst-trivia-v2: corresponding subtree has identical safe-normalized syntax/tokens; the entire covered original lines contain only this subtree and whitespace".into()]));
                 continue;
             }
         }
@@ -569,6 +619,7 @@ fn compare_trees(
     fallbacks: &mut Vec<String>,
     language: &str,
 ) -> Result<Vec<ChangeEvent>, String> {
+    let positions = (SourcePositions::new(before), SourcePositions::new(after));
     let empty = HashMap::new();
     if before == after {
         return Ok(vec![]);
@@ -581,7 +632,7 @@ fn compare_trees(
         && language_syntax::indentation_safe(after, language)
         && before.starts_with('\u{feff}') == after.starts_with('\u{feff}')
     {
-        return Ok(vec![event("仅排版变化".into(),vec!["format"],before,after,Some((0,before.len())),Some((0,after.len())),vec!["cst-trivia-v2: complete syntax shape and tokens match after safe scalar grouping normalization; no sensitive region".into()])]);
+        return Ok(vec![event("仅排版变化".into(),vec!["format"],&positions.0,&positions.1,Some((0,before.len())),Some((0,after.len())),vec!["cst-trivia-v2: complete syntax shape and tokens match after safe scalar grouping normalization; no sensitive region".into()])]);
     }
     let mut events = Vec::new();
     for (name, old, new, moved) in language_syntax::pair(a, b, before, after, language, budget)? {
@@ -639,8 +690,8 @@ fn compare_trees(
         events.push(event(
             name.clone(),
             facets,
-            before,
-            after,
+            &positions.0,
+            &positions.1,
             Some(if format && !moved {
                 whole_lines(old, before).unwrap_or((old.start_byte(), old.end_byte()))
             } else {
@@ -654,8 +705,10 @@ fn compare_trees(
             evidence,
         ));
         if edit {
-            events.push(event(format!("{name} 内部修改"),vec!["edit"],before,after,Some((old.start_byte(),old.end_byte())),Some((new.start_byte(),new.end_byte())),vec!["Review the paired original function bodies; movement/rename does not prove behavioral equivalence".into()]));
-            events.extend(format_regions(old, new, before, after, language, budget)?);
+            events.push(event(format!("{name} 内部修改"),vec!["edit"],&positions.0,&positions.1,Some((old.start_byte(),old.end_byte())),Some((new.start_byte(),new.end_byte())),vec!["Review the paired original function bodies; movement/rename does not prove behavioral equivalence".into()]));
+            events.extend(format_regions(
+                old, new, before, after, language, budget, &positions,
+            )?);
         }
     }
     if a.named_child_count() == b.named_child_count() {
@@ -672,7 +725,9 @@ fn compare_trees(
                     | "let_declaration"
             ) && old.kind() == new.kind()
             {
-                events.extend(format_regions(old, new, before, after, language, budget)?);
+                events.extend(format_regions(
+                    old, new, before, after, language, budget, &positions,
+                )?);
             }
         }
     }
@@ -769,6 +824,7 @@ fn vue_events(
         return Err("Vue block set changed; text fallback".into());
     }
     let mut events = Vec::new();
+    let positions = (SourcePositions::new(before), SourcePositions::new(after));
     for (a, b) in a.iter().zip(&b) {
         if a.header != b.header {
             continue;
@@ -788,15 +844,13 @@ fn vue_events(
             name,
         )? {
             item.before = item.before.map(|r| {
-                source_range(
-                    before,
+                positions.0.range(
                     a.start + r.byte_start as usize,
                     a.start + r.byte_end as usize,
                 )
             });
             item.after = item.after.map(|r| {
-                source_range(
-                    after,
+                positions.1.range(
                     b.start + r.byte_start as usize,
                     b.start + r.byte_end as usize,
                 )
@@ -1021,4 +1075,22 @@ pub fn supports_detail(before: &str, after: &str) -> bool {
     [before, after]
         .iter()
         .all(|source| source.len() <= MAX_BYTES && source_line_count(source) <= MAX_LINES)
+}
+
+#[cfg(test)]
+mod position_tests {
+    use super::*;
+    #[test]
+    fn indexed_ranges_match_reference_at_every_unicode_and_newline_boundary() {
+        let source = "a\r\n中文😀e\u{301}\rb\nc\r\n";
+        let positions = SourcePositions::new(source);
+        for start in (0..=source.len()).filter(|offset| source.is_char_boundary(*offset)) {
+            for end in (start..=source.len()).filter(|offset| source.is_char_boundary(*offset)) {
+                assert_eq!(
+                    positions.range(start, end),
+                    source_range(source, start, end)
+                );
+            }
+        }
+    }
 }

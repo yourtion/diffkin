@@ -9,6 +9,7 @@ use std::{
 };
 
 const CACHE_BYTES: usize = 32 * 1024 * 1024;
+type CacheEntry = (String, String, Arc<FileAnalysis>, usize);
 
 #[derive(Default)]
 pub struct Runtime {
@@ -16,7 +17,7 @@ pub struct Runtime {
     pub analysis_gate: Mutex<()>,
     previous: Mutex<Option<Arc<FrozenComparison>>>,
     pub current: Mutex<Option<Arc<FrozenComparison>>>,
-    cache: Mutex<VecDeque<(String, String, FileAnalysis, usize)>>,
+    cache: Mutex<VecDeque<CacheEntry>>,
     jobs: Mutex<Jobs>,
     workspaces: Mutex<VecDeque<Arc<FrozenWorkspace>>>,
 }
@@ -155,7 +156,7 @@ impl Runtime {
         }
         Err(RepositoryError::Stale { message: "This comparison is no longer open. Restore its workspace or refresh the repository.".into() })
     }
-    pub fn cached(&self, id: &str, file_id: &str) -> Option<FileAnalysis> {
+    pub fn cached(&self, id: &str, file_id: &str) -> Option<Arc<FileAnalysis>> {
         let mut cache = self.cache.lock().unwrap();
         let index = cache
             .iter()
@@ -165,7 +166,8 @@ impl Runtime {
         cache.push_back(entry);
         Some(result)
     }
-    pub fn remember(&self, id: String, file_id: String, result: FileAnalysis) {
+    pub fn remember(&self, id: String, file_id: String, result: FileAnalysis) -> Arc<FileAnalysis> {
+        let result = Arc::new(result);
         // Charge twice serialized bytes to cover string/vector overhead. This is a cache
         // accounting bound, not a claim about allocator RSS or transient IPC clones.
         struct Counter(usize);
@@ -180,13 +182,13 @@ impl Runtime {
         }
         let mut counter = Counter(0);
         if serde_json::to_writer(&mut counter, &result).is_err() {
-            return;
+            return result;
         }
         let charge = counter.0.saturating_mul(2);
         let mut cache = self.cache.lock().unwrap();
         cache.retain(|(snapshot, file, _, _)| snapshot != &id || file != &file_id);
         if charge > CACHE_BYTES {
-            return;
+            return result;
         }
         let mut bytes: usize = cache.iter().map(|entry| entry.3).sum();
         while cache.len() >= 64 || bytes + charge > CACHE_BYTES {
@@ -196,7 +198,8 @@ impl Runtime {
                 break;
             }
         }
-        cache.push_back((id, file_id, result, charge));
+        cache.push_back((id, file_id, result.clone(), charge));
+        result
     }
 }
 pub fn permit<'a>(
@@ -319,7 +322,8 @@ mod tests {
             runtime.remember("a".into(), i.to_string(), small.clone());
         }
         assert!(runtime.cached("b", "0").is_none());
-        assert!(runtime.cached("a", "0").is_some());
+        let hit = runtime.cached("a", "0").unwrap();
+        assert!(Arc::ptr_eq(&hit, &runtime.cached("a", "0").unwrap()));
         runtime.remember("a".into(), "64".into(), small.clone());
         assert!(runtime.cached("a", "1").is_none());
         assert!(runtime.cached("a", "0").is_some());

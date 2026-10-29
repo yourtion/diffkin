@@ -81,7 +81,7 @@ async fn request_file(
     file_id: String,
     job_id: String,
     state: State<'_, Shared>,
-) -> Result<FileAnalysis, RepositoryError> {
+) -> Result<Arc<FileAnalysis>, RepositoryError> {
     let runtime = state.inner().clone();
     let snapshot = runtime.snapshot(&id)?;
     if let Some(result) = runtime.cached(&id, &file_id) {
@@ -95,8 +95,7 @@ async fn request_file(
         let file = snapshot.read_file(&file_id)?;
         let result = diffkin_application::analyze_file(file, &token)?;
         check_cancel(&token)?;
-        worker.remember(id, file_id, result.clone());
-        Ok(result)
+        Ok(worker.remember(id, file_id, result))
     })
     .await
     .map_err(internal);
