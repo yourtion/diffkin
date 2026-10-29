@@ -223,6 +223,7 @@ export function App({
       setReviewBases({});
       setEvent(null);
       setTaskStatus(null);
+      if (manifest && manifest.repository !== result.repository) setFilter("");
       setManifest(result);
       settings.update((current) => ({
         ...current,

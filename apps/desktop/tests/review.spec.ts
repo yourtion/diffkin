@@ -128,6 +128,7 @@ async function bridge(
               if (options.failRefresh && captures > 1) throw new Error("capture failed");
               return {
                 ...manifest,
+                repository: (args.spec as { repository: string }).repository,
                 id: options.refreshIdentity ? `frozen-${captures}` : manifest.id,
                 totalFiles: options.delayPage ? 3 : manifest.totalFiles,
                 files: options.count ? manifest.files.slice(0, 200) : manifest.files,
@@ -699,4 +700,20 @@ test("file navigation restores the reading scroll position", async ({ page }) =>
   await expect(page.locator(".merge-host")).toContainText("other = 2");
   await page.getByRole("button", { name: "src/withdraw.ts", exact: true }).click();
   await expect.poll(() => page.locator(".merge-host").evaluate((node) => node.scrollTop)).toBe(600);
+});
+
+test("changing repositories clears old filters while same-repository refresh preserves them", async ({
+  page,
+}) => {
+  await bridge(page);
+  await open(page);
+  await page.getByLabel("筛选文件").fill("withdraw");
+  await page.getByRole("button", { name: "刷新比较", exact: true }).click();
+  await expect(page.getByRole("button", { name: "标记已审查", exact: true })).toBeEnabled();
+  await expect(page.getByLabel("筛选文件")).toHaveValue("withdraw");
+  await page.getByRole("button", { name: "比较设置", exact: true }).click();
+  await page.getByLabel("Git 仓库路径").fill("/another-repo");
+  await page.getByRole("button", { name: "应用比较设置", exact: true }).click();
+  await expect(page.getByLabel("筛选文件")).toHaveValue("");
+  await expect(page.getByRole("button", { name: "src/other.ts", exact: true })).toBeVisible();
 });

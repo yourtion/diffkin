@@ -5,8 +5,8 @@
     "failed": false
   },
   "browser": {
-    "log": "/private/tmp/diffkin-final-ui.log",
-    "passed": 69,
+    "log": "/private/tmp/diffkin-native-ui.log",
+    "passed": 70,
     "failed": false
   },
   "scale": {
@@ -17,9 +17,9 @@
   "date": "2026-10-29",
   "p5Commit": "e4ab484",
   "nativeApp": "/Users/yourtionguo/codes/open/diffkin/target/release/bundle/macos/Diffkin Acceptance.app",
-  "binarySha256": "ed21621df9ddd42b649344515f3b3dc3bb87320d3056dc16c8fb8316f039a3d6",
-  "nativeUiStatus": "blocked: after user unlocked again, native app inventory succeeded; binding Diffkin timed out at 30s and 60s, and binding the already-running Finder also timed out. No native UI interaction was verified.",
-  "nativeEndToEndLatency": "not measured; worker timings exclude IPC and WebView",
+  "binarySha256": "49c271e7f843e46693fb2cb8be2c8af885617377e79ea679266cc6a9c5d08be5",
+  "nativeUiStatus": "passed: macOS core workflows verified through the real Tauri WebView and native IPC after permission was granted; cross-repository filter regression fixed and reverified in rebuilt app",
+  "nativeEndToEndLatency": "not measured as a controlled 30-sample IPC-to-visible benchmark; automation round-trip times are not application latency",
   "rustScaleNote": "100k and 500k index entries with one staged change; isolated acceptance. Concurrent run hit 20s capture budget; no budget was raised.",
   "nativeRetry": {
     "date": "2026-10-29",
@@ -27,5 +27,29 @@
     "diffkinBinding": "two timeouts; no running Diffkin process observed after those attempts",
     "finderBinding": "timeout while binding already-running Finder",
     "result": "native control connection remains unavailable; unlocking is no longer the observed blocker"
+  },
+  "nativeSmoke": {
+    "date": "2026-10-29",
+    "transport": "real Tauri IPC, native macOS WebView; no mocked bridge",
+    "checked": [
+      "VS Code fixed commits: 25 changes, source content and structure fallback details visible",
+      "Cmd+P path search, file selection, review marker, back/forward history and restored editor search query",
+      "React Native fixed commits: Java/Kotlin sources, unified diff and next-unreviewed after clearing a prior filter",
+      "2001-change comparison: explicit budget error preserves previous source; packages/group-9 scope recovers 100 changes with exclusion warning",
+      "VS Code full worktree capture: observed capture in progress, clicked Cancel, idle/cancelled state and previous frozen source remain",
+      "Synthetic 2000-change worktree: complete catalog search finds packages/file-1998.ts beyond initial page",
+      "2,200,044-byte source: 64 bounded segments, independent sides and explicit truncation warning",
+      "Editing synthetic file after capture does not change frozen preview when paging or switching files; only refresh shows MUTATED-AFTER-CAPTURE",
+      "Native directory picker returns chosen public repository; rebuilt app clears previous search filter after switching repositories",
+      "Native app quit/relaunch restores repository preferences without automatically capturing sources",
+      "Current Retina/dark appearance and reading focus visually inspected"
+    ],
+    "fixedRegression": "Old repository search persisted across repository changes, preventing next-unreviewed navigation; clear it only when successful capture changes repository identity.",
+    "notMeasured": [
+      "controlled 30-sample native end-to-end latency",
+      "whole-process peak memory",
+      "native minimum-window dimensions and OS scaling matrix"
+    ],
+    "syntheticRepository": "/private/tmp/diffkin-native-acceptance-20261029"
   }
 }
