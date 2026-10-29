@@ -1,10 +1,26 @@
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { invoke as nativeInvoke, isTauri } from "@tauri-apps/api/core";
 import type {
   ComparisonManifest,
   ComparisonSpec,
   FileAnalysis,
   FrozenFile,
 } from "@diffkin/protocol";
+
+// The opt-in native benchmark observes this boundary without replacing Tauri internals.
+async function invoke<T>(command: string, args: Record<string, unknown>): Promise<T> {
+  const samples = (
+    window as unknown as {
+      __diffkinBenchmarkIpc?: { command: string; ms: number }[];
+    }
+  ).__diffkinBenchmarkIpc;
+  if (!samples) return nativeInvoke<T>(command, args);
+  const start = performance.now();
+  try {
+    return await nativeInvoke<T>(command, args);
+  } finally {
+    samples.push({ command, ms: performance.now() - start });
+  }
+}
 
 export interface DiffkinClient {
   open(spec: ComparisonSpec, jobId: string): Promise<ComparisonManifest>;

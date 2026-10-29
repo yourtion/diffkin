@@ -1,4 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+#[cfg(feature = "native-benchmark")]
+mod benchmark;
 mod navigation_commands;
 mod runtime;
 mod settings_commands;
@@ -118,7 +120,18 @@ fn main() {
             validation_commands::recover(app.handle());
             Ok(())
         })
+        .on_page_load(|window, payload| {
+            #[cfg(feature = "native-benchmark")]
+            if payload.event() == tauri::webview::PageLoadEvent::Finished
+                && std::env::var_os("DIFFKIN_BENCH_CONFIG").is_some()
+            {
+                let _ = window.eval(include_str!("../../../../scripts/native-benchmark.js"));
+            }
+            let _ = (window, payload);
+        })
         .invoke_handler(tauri::generate_handler![
+            #[cfg(feature = "native-benchmark")]
+            benchmark::benchmark_control,
             settings_commands::preferences_load,
             settings_commands::preferences_save,
             navigation_commands::pick_repository_directory,

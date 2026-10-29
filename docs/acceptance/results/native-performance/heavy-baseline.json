@@ -1,0 +1,3578 @@
+{
+  "complete": true,
+  "config": {
+    "cancellation": true,
+    "iterations": 30,
+    "layout": true,
+    "spec": {
+      "base": "2582a6f2f2d8f2f2a057ca2a8e598f4d3de4a7c0",
+      "head": "08c2518874f992a357d2cbf6fe789c0d8daf1251",
+      "includeUntracked": false,
+      "mode": "commits",
+      "repository": "/private/tmp/diffkin-native-perf-heavy-20261029"
+    }
+  },
+  "environment": {
+    "height": 738,
+    "pixelRatio": 2,
+    "timeOrigin": 1793265549813,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko)",
+    "width": 1200
+  },
+  "ipc": [
+    {
+      "command": "open_comparison",
+      "ms": 129
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 42
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 49
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 46
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 41
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 4
+    },
+    {
+      "command": "cancel_job",
+      "ms": 2
+    },
+    {
+      "command": "open_comparison",
+      "ms": 8
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "request_file",
+      "ms": 12
+    },
+    {
+      "command": "open_comparison",
+      "ms": 128
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 43
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 39
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 38
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 38
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 5
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "open_comparison",
+      "ms": 9
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "request_file",
+      "ms": 12
+    },
+    {
+      "command": "open_comparison",
+      "ms": 121
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 40
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 35
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 5
+    },
+    {
+      "command": "cancel_job",
+      "ms": 2
+    },
+    {
+      "command": "open_comparison",
+      "ms": 10
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "request_file",
+      "ms": 11
+    },
+    {
+      "command": "open_comparison",
+      "ms": 107
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 34
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 35
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 35
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 5
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "open_comparison",
+      "ms": 7
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "request_file",
+      "ms": 10
+    },
+    {
+      "command": "open_comparison",
+      "ms": 116
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 42
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 4
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "open_comparison",
+      "ms": 8
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "request_file",
+      "ms": 9
+    },
+    {
+      "command": "open_comparison",
+      "ms": 107
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 37
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 64
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 4
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "open_comparison",
+      "ms": 8
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "cancel_job",
+      "ms": 0
+    },
+    {
+      "command": "request_file",
+      "ms": 10
+    },
+    {
+      "command": "open_comparison",
+      "ms": 114
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 35
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 37
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 4
+    },
+    {
+      "command": "cancel_job",
+      "ms": 2
+    },
+    {
+      "command": "open_comparison",
+      "ms": 8
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "cancel_job",
+      "ms": 0
+    },
+    {
+      "command": "request_file",
+      "ms": 11
+    },
+    {
+      "command": "open_comparison",
+      "ms": 112
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 34
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 38
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 32
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 3
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "open_comparison",
+      "ms": 7
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "request_file",
+      "ms": 13
+    },
+    {
+      "command": "open_comparison",
+      "ms": 109
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 32
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 42
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 43
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 5
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "open_comparison",
+      "ms": 7
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "request_file",
+      "ms": 10
+    },
+    {
+      "command": "open_comparison",
+      "ms": 115
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 32
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 47
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 4
+    },
+    {
+      "command": "cancel_job",
+      "ms": 2
+    },
+    {
+      "command": "open_comparison",
+      "ms": 8
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "request_file",
+      "ms": 10
+    },
+    {
+      "command": "open_comparison",
+      "ms": 121
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 35
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 5
+    },
+    {
+      "command": "cancel_job",
+      "ms": 0
+    },
+    {
+      "command": "open_comparison",
+      "ms": 7
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "cancel_job",
+      "ms": 0
+    },
+    {
+      "command": "request_file",
+      "ms": 9
+    },
+    {
+      "command": "open_comparison",
+      "ms": 117
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 35
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 35
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 46
+    },
+    {
+      "command": "request_file",
+      "ms": 4
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "cancel_job",
+      "ms": 2
+    },
+    {
+      "command": "open_comparison",
+      "ms": 8
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "request_file",
+      "ms": 11
+    },
+    {
+      "command": "open_comparison",
+      "ms": 113
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 38
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 38
+    },
+    {
+      "command": "preview_file",
+      "ms": 49
+    },
+    {
+      "command": "request_file",
+      "ms": 150
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 5
+    },
+    {
+      "command": "cancel_job",
+      "ms": 0
+    },
+    {
+      "command": "open_comparison",
+      "ms": 7
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "request_file",
+      "ms": 10
+    },
+    {
+      "command": "open_comparison",
+      "ms": 106
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 32
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 5
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "open_comparison",
+      "ms": 7
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "cancel_job",
+      "ms": 0
+    },
+    {
+      "command": "request_file",
+      "ms": 14
+    },
+    {
+      "command": "open_comparison",
+      "ms": 106
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 35
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 32
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 4
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "open_comparison",
+      "ms": 7
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "request_file",
+      "ms": 11
+    },
+    {
+      "command": "open_comparison",
+      "ms": 110
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 35
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 34
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 3
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "open_comparison",
+      "ms": 7
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "request_file",
+      "ms": 10
+    },
+    {
+      "command": "open_comparison",
+      "ms": 109
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 35
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 32
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 32
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 5
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "open_comparison",
+      "ms": 7
+    },
+    {
+      "command": "preview_file",
+      "ms": 1
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "request_file",
+      "ms": 10
+    },
+    {
+      "command": "open_comparison",
+      "ms": 108
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 32
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 4
+    },
+    {
+      "command": "cancel_job",
+      "ms": 0
+    },
+    {
+      "command": "open_comparison",
+      "ms": 8
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "request_file",
+      "ms": 13
+    },
+    {
+      "command": "open_comparison",
+      "ms": 106
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 32
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 4
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "open_comparison",
+      "ms": 7
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "cancel_job",
+      "ms": 0
+    },
+    {
+      "command": "request_file",
+      "ms": 11
+    },
+    {
+      "command": "open_comparison",
+      "ms": 118
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 34
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 32
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 37
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 4
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "open_comparison",
+      "ms": 8
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "cancel_job",
+      "ms": 0
+    },
+    {
+      "command": "request_file",
+      "ms": 11
+    },
+    {
+      "command": "open_comparison",
+      "ms": 112
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 34
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 4
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "open_comparison",
+      "ms": 7
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "cancel_job",
+      "ms": 0
+    },
+    {
+      "command": "request_file",
+      "ms": 10
+    },
+    {
+      "command": "open_comparison",
+      "ms": 106
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 37
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 3
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "open_comparison",
+      "ms": 8
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "request_file",
+      "ms": 10
+    },
+    {
+      "command": "open_comparison",
+      "ms": 109
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 32
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 35
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 4
+    },
+    {
+      "command": "cancel_job",
+      "ms": 3
+    },
+    {
+      "command": "open_comparison",
+      "ms": 10
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "cancel_job",
+      "ms": 0
+    },
+    {
+      "command": "request_file",
+      "ms": 11
+    },
+    {
+      "command": "open_comparison",
+      "ms": 119
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 35
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 37
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 5
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "open_comparison",
+      "ms": 8
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "request_file",
+      "ms": 13
+    },
+    {
+      "command": "open_comparison",
+      "ms": 120
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 34
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 4
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "open_comparison",
+      "ms": 7
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "request_file",
+      "ms": 14
+    },
+    {
+      "command": "open_comparison",
+      "ms": 117
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 37
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 4
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "open_comparison",
+      "ms": 8
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "cancel_job",
+      "ms": 0
+    },
+    {
+      "command": "request_file",
+      "ms": 13
+    },
+    {
+      "command": "open_comparison",
+      "ms": 118
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 37
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 4
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "open_comparison",
+      "ms": 8
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "request_file",
+      "ms": 13
+    },
+    {
+      "command": "open_comparison",
+      "ms": 116
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 35
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 35
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 5
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "open_comparison",
+      "ms": 7
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "cancel_job",
+      "ms": 0
+    },
+    {
+      "command": "request_file",
+      "ms": 11
+    },
+    {
+      "command": "open_comparison",
+      "ms": 121
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 35
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 39
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 4
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "open_comparison",
+      "ms": 8
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "request_file",
+      "ms": 11
+    },
+    {
+      "command": "open_comparison",
+      "ms": 117
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 35
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 33
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 37
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 36
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 4
+    },
+    {
+      "command": "cancel_job",
+      "ms": 1
+    },
+    {
+      "command": "open_comparison",
+      "ms": 7
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "cancel_job",
+      "ms": 0
+    },
+    {
+      "command": "request_file",
+      "ms": 12
+    }
+  ],
+  "layouts": [
+    {
+      "height": 508,
+      "overflow": false,
+      "width": 760
+    },
+    {
+      "height": 738,
+      "overflow": false,
+      "width": 1200
+    }
+  ],
+  "samples": [
+    {
+      "iteration": 0,
+      "ms": 180,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 0,
+      "ms": 35,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 0,
+      "ms": 83,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 0,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 0,
+      "ms": 82,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 0,
+      "ms": 34,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 0,
+      "ms": 25,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 0,
+      "ms": 25,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 0,
+      "ms": 38,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 0,
+      "ms": 38,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 1,
+      "ms": 166,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 1,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 1,
+      "ms": 65,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 1,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 1,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 1,
+      "ms": 36,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 1,
+      "ms": 24,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 1,
+      "ms": 24,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 1,
+      "ms": 39,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 1,
+      "ms": 40,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 2,
+      "ms": 149,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 2,
+      "ms": 33,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 2,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 2,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 2,
+      "ms": 65,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 2,
+      "ms": 35,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 2,
+      "ms": 25,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 2,
+      "ms": 25,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 2,
+      "ms": 38,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 2,
+      "ms": 39,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 3,
+      "ms": 118,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 3,
+      "ms": 33,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 3,
+      "ms": 65,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 3,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 3,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 3,
+      "ms": 34,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 3,
+      "ms": 24,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 3,
+      "ms": 25,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 3,
+      "ms": 24,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 3,
+      "ms": 25,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 4,
+      "ms": 129,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 4,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 4,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 4,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 4,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 4,
+      "ms": 34,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 4,
+      "ms": 25,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 4,
+      "ms": 26,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 4,
+      "ms": 24,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 4,
+      "ms": 26,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 5,
+      "ms": 130,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 5,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 5,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 5,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 5,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 5,
+      "ms": 34,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 5,
+      "ms": 24,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 5,
+      "ms": 25,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 5,
+      "ms": 24,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 5,
+      "ms": 25,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 6,
+      "ms": 146,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 6,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 6,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 6,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 6,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 6,
+      "ms": 35,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 6,
+      "ms": 24,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 6,
+      "ms": 25,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 6,
+      "ms": 24,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 6,
+      "ms": 25,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 7,
+      "ms": 148,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 7,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 7,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 7,
+      "ms": 33,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 7,
+      "ms": 65,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 7,
+      "ms": 35,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 7,
+      "ms": 25,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 7,
+      "ms": 26,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 7,
+      "ms": 37,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 7,
+      "ms": 38,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 8,
+      "ms": 131,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 8,
+      "ms": 33,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 8,
+      "ms": 65,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 8,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 8,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 8,
+      "ms": 34,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 8,
+      "ms": 25,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 8,
+      "ms": 25,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 8,
+      "ms": 24,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 8,
+      "ms": 25,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 9,
+      "ms": 129,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 9,
+      "ms": 37,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 9,
+      "ms": 70,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 9,
+      "ms": 33,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 9,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 9,
+      "ms": 35,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 9,
+      "ms": 25,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 9,
+      "ms": 26,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 9,
+      "ms": 25,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 9,
+      "ms": 26,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 10,
+      "ms": 145,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 10,
+      "ms": 35,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 10,
+      "ms": 67,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 10,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 10,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 10,
+      "ms": 35,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 10,
+      "ms": 26,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 10,
+      "ms": 26,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 10,
+      "ms": 25,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 10,
+      "ms": 26,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 11,
+      "ms": 147,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 11,
+      "ms": 33,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 11,
+      "ms": 65,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 11,
+      "ms": 35,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 11,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 11,
+      "ms": 35,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 11,
+      "ms": 23,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 11,
+      "ms": 24,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 11,
+      "ms": 38,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 11,
+      "ms": 39,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 12,
+      "ms": 149,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 12,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 12,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 12,
+      "ms": 33,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 12,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 12,
+      "ms": 35,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 12,
+      "ms": 24,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 12,
+      "ms": 24,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 12,
+      "ms": 24,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 12,
+      "ms": 26,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 13,
+      "ms": 128,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 13,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 13,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 13,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 13,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 13,
+      "ms": 34,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 13,
+      "ms": 25,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 13,
+      "ms": 25,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 13,
+      "ms": 36,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 13,
+      "ms": 36,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 14,
+      "ms": 132,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 14,
+      "ms": 33,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 14,
+      "ms": 65,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 14,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 14,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 14,
+      "ms": 34,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 14,
+      "ms": 25,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 14,
+      "ms": 26,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 14,
+      "ms": 24,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 14,
+      "ms": 25,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 15,
+      "ms": 148,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 15,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 15,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 15,
+      "ms": 33,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 15,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 15,
+      "ms": 35,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 15,
+      "ms": 25,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 15,
+      "ms": 26,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 15,
+      "ms": 23,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 15,
+      "ms": 25,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 16,
+      "ms": 145,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 16,
+      "ms": 33,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 16,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 16,
+      "ms": 35,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 16,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 16,
+      "ms": 34,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 16,
+      "ms": 25,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 16,
+      "ms": 25,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 16,
+      "ms": 24,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 16,
+      "ms": 26,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 17,
+      "ms": 145,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 17,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 17,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 17,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 17,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 17,
+      "ms": 34,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 17,
+      "ms": 25,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 17,
+      "ms": 26,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 17,
+      "ms": 37,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 17,
+      "ms": 38,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 18,
+      "ms": 116,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 18,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 18,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 18,
+      "ms": 33,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 18,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 18,
+      "ms": 34,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 18,
+      "ms": 25,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 18,
+      "ms": 26,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 18,
+      "ms": 23,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 18,
+      "ms": 25,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 19,
+      "ms": 145,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 19,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 19,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 19,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 19,
+      "ms": 65,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 19,
+      "ms": 34,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 19,
+      "ms": 24,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 19,
+      "ms": 24,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 19,
+      "ms": 23,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 19,
+      "ms": 24,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 20,
+      "ms": 148,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 20,
+      "ms": 33,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 20,
+      "ms": 65,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 20,
+      "ms": 35,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 20,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 20,
+      "ms": 34,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 20,
+      "ms": 25,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 20,
+      "ms": 26,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 20,
+      "ms": 24,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 20,
+      "ms": 25,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 21,
+      "ms": 130,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 21,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 21,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 21,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 21,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 21,
+      "ms": 35,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 21,
+      "ms": 24,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 21,
+      "ms": 25,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 21,
+      "ms": 22,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 21,
+      "ms": 24,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 22,
+      "ms": 146,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 22,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 22,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 22,
+      "ms": 35,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 22,
+      "ms": 67,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 22,
+      "ms": 35,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 22,
+      "ms": 23,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 22,
+      "ms": 24,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 22,
+      "ms": 23,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 22,
+      "ms": 25,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 23,
+      "ms": 146,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 23,
+      "ms": 33,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 23,
+      "ms": 65,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 23,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 23,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 23,
+      "ms": 34,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 23,
+      "ms": 24,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 23,
+      "ms": 25,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 23,
+      "ms": 36,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 23,
+      "ms": 37,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 24,
+      "ms": 149,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 24,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 24,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 24,
+      "ms": 33,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 24,
+      "ms": 65,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 24,
+      "ms": 35,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 24,
+      "ms": 24,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 24,
+      "ms": 25,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 24,
+      "ms": 36,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 24,
+      "ms": 36,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 25,
+      "ms": 149,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 25,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 25,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 25,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 25,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 25,
+      "ms": 34,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 25,
+      "ms": 24,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 25,
+      "ms": 25,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 25,
+      "ms": 37,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 25,
+      "ms": 38,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 26,
+      "ms": 149,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 26,
+      "ms": 33,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 26,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 26,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 26,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 26,
+      "ms": 34,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 26,
+      "ms": 25,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 26,
+      "ms": 25,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 26,
+      "ms": 37,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 26,
+      "ms": 38,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 27,
+      "ms": 148,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 27,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 27,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 27,
+      "ms": 33,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 27,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 27,
+      "ms": 35,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 27,
+      "ms": 25,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 27,
+      "ms": 25,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 27,
+      "ms": 38,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 27,
+      "ms": 39,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 28,
+      "ms": 148,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 28,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 28,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 28,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 28,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 28,
+      "ms": 34,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 28,
+      "ms": 25,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 28,
+      "ms": 26,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 28,
+      "ms": 38,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 28,
+      "ms": 39,
+      "name": "analysis-cancel-release"
+    },
+    {
+      "iteration": 29,
+      "ms": 147,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 29,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 29,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 29,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 29,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 29,
+      "ms": 34,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 29,
+      "ms": 25,
+      "name": "capture-cancel-feedback"
+    },
+    {
+      "iteration": 29,
+      "ms": 25,
+      "name": "capture-cancel-release"
+    },
+    {
+      "iteration": 29,
+      "ms": 38,
+      "name": "analysis-cancel-feedback"
+    },
+    {
+      "iteration": 29,
+      "ms": 38,
+      "name": "analysis-cancel-release"
+    }
+  ]
+}

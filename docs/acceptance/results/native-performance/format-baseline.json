@@ -1,0 +1,2364 @@
+{
+  "complete": true,
+  "config": {
+    "iterations": 30,
+    "spec": {
+      "base": "a11b21fac7470dafa39c6cbb04fb8a00f1d66c26",
+      "head": "8985f77fba723e594c09c87aede17bb396ff6928",
+      "includeUntracked": false,
+      "mode": "commits",
+      "repository": "/private/tmp/diffkin-native-perf-format-20261029"
+    }
+  },
+  "environment": {
+    "height": 738,
+    "pixelRatio": 2,
+    "timeOrigin": 1793265595042,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko)",
+    "width": 1200
+  },
+  "ipc": [
+    {
+      "command": "open_comparison",
+      "ms": 121
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 504
+    },
+    {
+      "command": "preview_file",
+      "ms": 9
+    },
+    {
+      "command": "request_file",
+      "ms": 502
+    },
+    {
+      "command": "preview_file",
+      "ms": 7
+    },
+    {
+      "command": "request_file",
+      "ms": 496
+    },
+    {
+      "command": "preview_file",
+      "ms": 12
+    },
+    {
+      "command": "request_file",
+      "ms": 510
+    },
+    {
+      "command": "preview_file",
+      "ms": 39
+    },
+    {
+      "command": "request_file",
+      "ms": 39
+    },
+    {
+      "command": "open_comparison",
+      "ms": 117
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 478
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 481
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 477
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 480
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 8
+    },
+    {
+      "command": "open_comparison",
+      "ms": 122
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 478
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 474
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 479
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 481
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 8
+    },
+    {
+      "command": "open_comparison",
+      "ms": 115
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 475
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 474
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 473
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 478
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 8
+    },
+    {
+      "command": "open_comparison",
+      "ms": 116
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 475
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 495
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 485
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 487
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 8
+    },
+    {
+      "command": "open_comparison",
+      "ms": 121
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 681
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 1060
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 1058
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 1036
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 24
+    },
+    {
+      "command": "open_comparison",
+      "ms": 247
+    },
+    {
+      "command": "preview_file",
+      "ms": 13
+    },
+    {
+      "command": "request_file",
+      "ms": 1050
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 1035
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 969
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 1054
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 7
+    },
+    {
+      "command": "open_comparison",
+      "ms": 266
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 1038
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 1036
+    },
+    {
+      "command": "preview_file",
+      "ms": 7
+    },
+    {
+      "command": "request_file",
+      "ms": 1041
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 906
+    },
+    {
+      "command": "request_file",
+      "ms": 12
+    },
+    {
+      "command": "preview_file",
+      "ms": 55
+    },
+    {
+      "command": "open_comparison",
+      "ms": 219
+    },
+    {
+      "command": "preview_file",
+      "ms": 7
+    },
+    {
+      "command": "request_file",
+      "ms": 890
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 906
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 952
+    },
+    {
+      "command": "preview_file",
+      "ms": 11
+    },
+    {
+      "command": "request_file",
+      "ms": 1045
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 22
+    },
+    {
+      "command": "open_comparison",
+      "ms": 227
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 1006
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 1070
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 941
+    },
+    {
+      "command": "preview_file",
+      "ms": 11
+    },
+    {
+      "command": "request_file",
+      "ms": 815
+    },
+    {
+      "command": "preview_file",
+      "ms": 7
+    },
+    {
+      "command": "request_file",
+      "ms": 9
+    },
+    {
+      "command": "open_comparison",
+      "ms": 290
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 848
+    },
+    {
+      "command": "preview_file",
+      "ms": 12
+    },
+    {
+      "command": "request_file",
+      "ms": 771
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 1036
+    },
+    {
+      "command": "preview_file",
+      "ms": 10
+    },
+    {
+      "command": "request_file",
+      "ms": 914
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 7
+    },
+    {
+      "command": "open_comparison",
+      "ms": 258
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 1035
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 851
+    },
+    {
+      "command": "preview_file",
+      "ms": 7
+    },
+    {
+      "command": "request_file",
+      "ms": 764
+    },
+    {
+      "command": "preview_file",
+      "ms": 9
+    },
+    {
+      "command": "request_file",
+      "ms": 1005
+    },
+    {
+      "command": "request_file",
+      "ms": 11
+    },
+    {
+      "command": "preview_file",
+      "ms": 11
+    },
+    {
+      "command": "open_comparison",
+      "ms": 243
+    },
+    {
+      "command": "preview_file",
+      "ms": 8
+    },
+    {
+      "command": "request_file",
+      "ms": 905
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 1037
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 1046
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 973
+    },
+    {
+      "command": "preview_file",
+      "ms": 8
+    },
+    {
+      "command": "request_file",
+      "ms": 11
+    },
+    {
+      "command": "open_comparison",
+      "ms": 241
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 909
+    },
+    {
+      "command": "preview_file",
+      "ms": 7
+    },
+    {
+      "command": "request_file",
+      "ms": 784
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 892
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 1040
+    },
+    {
+      "command": "request_file",
+      "ms": 11
+    },
+    {
+      "command": "preview_file",
+      "ms": 11
+    },
+    {
+      "command": "open_comparison",
+      "ms": 271
+    },
+    {
+      "command": "preview_file",
+      "ms": 7
+    },
+    {
+      "command": "request_file",
+      "ms": 1040
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 1039
+    },
+    {
+      "command": "preview_file",
+      "ms": 8
+    },
+    {
+      "command": "request_file",
+      "ms": 959
+    },
+    {
+      "command": "preview_file",
+      "ms": 20
+    },
+    {
+      "command": "request_file",
+      "ms": 1051
+    },
+    {
+      "command": "preview_file",
+      "ms": 10
+    },
+    {
+      "command": "request_file",
+      "ms": 10
+    },
+    {
+      "command": "open_comparison",
+      "ms": 242
+    },
+    {
+      "command": "preview_file",
+      "ms": 7
+    },
+    {
+      "command": "request_file",
+      "ms": 1047
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 1101
+    },
+    {
+      "command": "preview_file",
+      "ms": 9
+    },
+    {
+      "command": "request_file",
+      "ms": 843
+    },
+    {
+      "command": "preview_file",
+      "ms": 11
+    },
+    {
+      "command": "request_file",
+      "ms": 1045
+    },
+    {
+      "command": "request_file",
+      "ms": 11
+    },
+    {
+      "command": "preview_file",
+      "ms": 13
+    },
+    {
+      "command": "open_comparison",
+      "ms": 221
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 843
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 888
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 1040
+    },
+    {
+      "command": "preview_file",
+      "ms": 8
+    },
+    {
+      "command": "request_file",
+      "ms": 1041
+    },
+    {
+      "command": "preview_file",
+      "ms": 8
+    },
+    {
+      "command": "request_file",
+      "ms": 7
+    },
+    {
+      "command": "open_comparison",
+      "ms": 201
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 1050
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 934
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 662
+    },
+    {
+      "command": "preview_file",
+      "ms": 11
+    },
+    {
+      "command": "request_file",
+      "ms": 767
+    },
+    {
+      "command": "request_file",
+      "ms": 12
+    },
+    {
+      "command": "preview_file",
+      "ms": 12
+    },
+    {
+      "command": "open_comparison",
+      "ms": 274
+    },
+    {
+      "command": "preview_file",
+      "ms": 8
+    },
+    {
+      "command": "request_file",
+      "ms": 953
+    },
+    {
+      "command": "preview_file",
+      "ms": 9
+    },
+    {
+      "command": "request_file",
+      "ms": 1045
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 1054
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 1044
+    },
+    {
+      "command": "request_file",
+      "ms": 5
+    },
+    {
+      "command": "preview_file",
+      "ms": 22
+    },
+    {
+      "command": "open_comparison",
+      "ms": 252
+    },
+    {
+      "command": "preview_file",
+      "ms": 9
+    },
+    {
+      "command": "request_file",
+      "ms": 899
+    },
+    {
+      "command": "preview_file",
+      "ms": 7
+    },
+    {
+      "command": "request_file",
+      "ms": 951
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 1039
+    },
+    {
+      "command": "preview_file",
+      "ms": 7
+    },
+    {
+      "command": "request_file",
+      "ms": 665
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 7
+    },
+    {
+      "command": "open_comparison",
+      "ms": 123
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 520
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 509
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 514
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 519
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 9
+    },
+    {
+      "command": "open_comparison",
+      "ms": 139
+    },
+    {
+      "command": "preview_file",
+      "ms": 13
+    },
+    {
+      "command": "request_file",
+      "ms": 510
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 519
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 509
+    },
+    {
+      "command": "preview_file",
+      "ms": 8
+    },
+    {
+      "command": "request_file",
+      "ms": 509
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 9
+    },
+    {
+      "command": "open_comparison",
+      "ms": 119
+    },
+    {
+      "command": "preview_file",
+      "ms": 7
+    },
+    {
+      "command": "request_file",
+      "ms": 494
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 483
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 473
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 479
+    },
+    {
+      "command": "preview_file",
+      "ms": 8
+    },
+    {
+      "command": "request_file",
+      "ms": 10
+    },
+    {
+      "command": "open_comparison",
+      "ms": 109
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 474
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 470
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 474
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 471
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 8
+    },
+    {
+      "command": "open_comparison",
+      "ms": 116
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 471
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 470
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 472
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 474
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 8
+    },
+    {
+      "command": "open_comparison",
+      "ms": 116
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 470
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 475
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 473
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 470
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 9
+    },
+    {
+      "command": "open_comparison",
+      "ms": 116
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 470
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 473
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 472
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 476
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 8
+    },
+    {
+      "command": "open_comparison",
+      "ms": 111
+    },
+    {
+      "command": "preview_file",
+      "ms": 7
+    },
+    {
+      "command": "request_file",
+      "ms": 473
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 469
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 469
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 474
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 8
+    },
+    {
+      "command": "open_comparison",
+      "ms": 114
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 473
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 470
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 471
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 471
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 8
+    },
+    {
+      "command": "open_comparison",
+      "ms": 115
+    },
+    {
+      "command": "preview_file",
+      "ms": 6
+    },
+    {
+      "command": "request_file",
+      "ms": 477
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 470
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 470
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 471
+    },
+    {
+      "command": "preview_file",
+      "ms": 7
+    },
+    {
+      "command": "request_file",
+      "ms": 9
+    }
+  ],
+  "samples": [
+    {
+      "iteration": 0,
+      "ms": 199,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 0,
+      "ms": 52,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 0,
+      "ms": 566,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 0,
+      "ms": 43,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 0,
+      "ms": 584,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 0,
+      "ms": 103,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 1,
+      "ms": 157,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 1,
+      "ms": 40,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 1,
+      "ms": 519,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 1,
+      "ms": 39,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 1,
+      "ms": 527,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 1,
+      "ms": 66,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 2,
+      "ms": 144,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 2,
+      "ms": 38,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 2,
+      "ms": 532,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 2,
+      "ms": 36,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 2,
+      "ms": 547,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 2,
+      "ms": 69,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 3,
+      "ms": 154,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 3,
+      "ms": 39,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 3,
+      "ms": 519,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 3,
+      "ms": 37,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 3,
+      "ms": 526,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 3,
+      "ms": 67,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 4,
+      "ms": 157,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 4,
+      "ms": 40,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 4,
+      "ms": 549,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 4,
+      "ms": 39,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 4,
+      "ms": 532,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 4,
+      "ms": 69,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 5,
+      "ms": 142,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 5,
+      "ms": 61,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 5,
+      "ms": 1094,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 5,
+      "ms": 42,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 5,
+      "ms": 1093,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 5,
+      "ms": 56,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 6,
+      "ms": 277,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 6,
+      "ms": 43,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 6,
+      "ms": 1081,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 6,
+      "ms": 40,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 6,
+      "ms": 1036,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 6,
+      "ms": 83,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 7,
+      "ms": 286,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 7,
+      "ms": 49,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 7,
+      "ms": 1082,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 7,
+      "ms": 49,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 7,
+      "ms": 1099,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 7,
+      "ms": 83,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 8,
+      "ms": 242,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 8,
+      "ms": 48,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 8,
+      "ms": 948,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 8,
+      "ms": 51,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 8,
+      "ms": 999,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 8,
+      "ms": 83,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 9,
+      "ms": 268,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 9,
+      "ms": 42,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 9,
+      "ms": 1099,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 9,
+      "ms": 41,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 9,
+      "ms": 1033,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 9,
+      "ms": 84,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 10,
+      "ms": 333,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 10,
+      "ms": 48,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 10,
+      "ms": 816,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 10,
+      "ms": 38,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 10,
+      "ms": 1081,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 10,
+      "ms": 41,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 11,
+      "ms": 296,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 11,
+      "ms": 44,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 11,
+      "ms": 897,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 11,
+      "ms": 46,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 11,
+      "ms": 810,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 11,
+      "ms": 78,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 12,
+      "ms": 265,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 12,
+      "ms": 40,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 12,
+      "ms": 1082,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 12,
+      "ms": 47,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 12,
+      "ms": 1099,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 12,
+      "ms": 91,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 13,
+      "ms": 262,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 13,
+      "ms": 46,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 13,
+      "ms": 829,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 13,
+      "ms": 63,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 13,
+      "ms": 945,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 13,
+      "ms": 70,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 14,
+      "ms": 293,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 14,
+      "ms": 46,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 14,
+      "ms": 1080,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 14,
+      "ms": 50,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 14,
+      "ms": 1041,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 14,
+      "ms": 77,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 15,
+      "ms": 291,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 15,
+      "ms": 40,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 15,
+      "ms": 1149,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 15,
+      "ms": 48,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 15,
+      "ms": 895,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 15,
+      "ms": 76,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 16,
+      "ms": 242,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 16,
+      "ms": 39,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 16,
+      "ms": 949,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 16,
+      "ms": 41,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 16,
+      "ms": 1082,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 16,
+      "ms": 59,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 17,
+      "ms": 221,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 17,
+      "ms": 41,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 17,
+      "ms": 998,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 17,
+      "ms": 42,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 17,
+      "ms": 703,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 17,
+      "ms": 79,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 18,
+      "ms": 334,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 18,
+      "ms": 51,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 18,
+      "ms": 1085,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 18,
+      "ms": 39,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 18,
+      "ms": 1098,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 18,
+      "ms": 48,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 19,
+      "ms": 300,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 19,
+      "ms": 49,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 19,
+      "ms": 999,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 19,
+      "ms": 39,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 19,
+      "ms": 1082,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 19,
+      "ms": 41,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 20,
+      "ms": 141,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 20,
+      "ms": 41,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 20,
+      "ms": 583,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 20,
+      "ms": 40,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 20,
+      "ms": 561,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 20,
+      "ms": 73,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 21,
+      "ms": 166,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 21,
+      "ms": 39,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 21,
+      "ms": 559,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 21,
+      "ms": 38,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 21,
+      "ms": 590,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 21,
+      "ms": 72,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 22,
+      "ms": 143,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 22,
+      "ms": 40,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 22,
+      "ms": 549,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 22,
+      "ms": 36,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 22,
+      "ms": 515,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 22,
+      "ms": 74,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 23,
+      "ms": 146,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 23,
+      "ms": 37,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 23,
+      "ms": 516,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 23,
+      "ms": 42,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 23,
+      "ms": 514,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 23,
+      "ms": 68,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 24,
+      "ms": 156,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 24,
+      "ms": 38,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 24,
+      "ms": 516,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 24,
+      "ms": 36,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 24,
+      "ms": 530,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 24,
+      "ms": 73,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 25,
+      "ms": 155,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 25,
+      "ms": 40,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 25,
+      "ms": 531,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 25,
+      "ms": 38,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 25,
+      "ms": 531,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 25,
+      "ms": 70,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 26,
+      "ms": 134,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 26,
+      "ms": 40,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 26,
+      "ms": 517,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 26,
+      "ms": 40,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 26,
+      "ms": 530,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 26,
+      "ms": 69,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 27,
+      "ms": 151,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 27,
+      "ms": 40,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 27,
+      "ms": 516,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 27,
+      "ms": 39,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 27,
+      "ms": 532,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 27,
+      "ms": 68,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 28,
+      "ms": 135,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 28,
+      "ms": 38,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 28,
+      "ms": 515,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 28,
+      "ms": 39,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 28,
+      "ms": 530,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 28,
+      "ms": 68,
+      "name": "cached-switch"
+    },
+    {
+      "iteration": 29,
+      "ms": 157,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 29,
+      "ms": 37,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 29,
+      "ms": 515,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 29,
+      "ms": 37,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 29,
+      "ms": 531,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 29,
+      "ms": 70,
+      "name": "cached-switch"
+    }
+  ]
+}

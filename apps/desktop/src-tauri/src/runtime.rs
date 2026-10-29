@@ -27,6 +27,10 @@ struct Jobs {
     early_cancellations: VecDeque<String>,
 }
 impl Runtime {
+    #[cfg(feature = "native-benchmark")]
+    pub fn clear_benchmark_cache(&self) {
+        self.cache.lock().unwrap().clear();
+    }
     pub fn install_comparison(&self, snapshot: Arc<FrozenComparison>) {
         let mut current = self.current.lock().unwrap();
         *self.previous.lock().unwrap() = current.replace(snapshot);
