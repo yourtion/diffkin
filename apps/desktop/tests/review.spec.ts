@@ -137,6 +137,16 @@ async function bridge(
               }
               return { ...manifest, files: [] };
             }
+            if (command === "preview_file") {
+              return args.fileId === "first"
+                ? result.file
+                : {
+                    ...result.file,
+                    summary: manifest.files[1],
+                    before: "const other = 1;\n",
+                    after: "const other = 2;\n",
+                  };
+            }
             if (command === "request_file") {
               if (options.count)
                 return {
@@ -601,4 +611,16 @@ test("failed refresh preserves frozen content and current file", async ({ page }
   await expect(page.getByRole("alert")).toContainText("capture failed");
   await expect(page.locator(".file-heading h2")).toHaveText("src/other.ts");
   await expect(page.locator(".merge-host")).toContainText("other = 2");
+});
+
+test("frozen text precedes analysis and cannot be marked reviewed prematurely", async ({
+  page,
+}) => {
+  await bridge(page, { delayFirst: 1800 });
+  await open(page, false);
+  await expect(page.locator(".merge-host")).toContainText("balance");
+  await expect(page.getByRole("button", { name: "标记已审查", exact: true })).toBeDisabled();
+  const content = await page.locator(".cm-content").first().elementHandle();
+  await expect(page.getByRole("button", { name: "标记已审查", exact: true })).toBeEnabled();
+  expect(await content!.evaluate((node) => node.isConnected)).toBe(true);
 });

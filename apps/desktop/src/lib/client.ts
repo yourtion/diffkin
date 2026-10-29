@@ -1,10 +1,16 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
-import type { ComparisonManifest, ComparisonSpec, FileAnalysis } from "@diffkin/protocol";
+import type {
+  ComparisonManifest,
+  ComparisonSpec,
+  FileAnalysis,
+  FrozenFile,
+} from "@diffkin/protocol";
 
 export interface DiffkinClient {
   open(spec: ComparisonSpec, jobId: string): Promise<ComparisonManifest>;
   page(id: string, offset: number): Promise<ComparisonManifest>;
   catalog(id: string): Promise<ComparisonManifest>;
+  preview(id: string, fileId: string): Promise<FrozenFile>;
   file(id: string, fileId: string, jobId: string): Promise<FileAnalysis>;
   cancel(jobId: string): Promise<void>;
 }
@@ -14,6 +20,7 @@ export const client: DiffkinClient = {
   open: (spec, jobId) => invoke("open_comparison", { spec, jobId }),
   page: (id, offset) => invoke("list_changes", { id, offset, limit: 200 }),
   catalog: (id) => invoke("list_change_catalog", { id }),
+  preview: (id, fileId) => invoke("preview_file", { id, fileId }),
   file: (id, fileId, jobId) => invoke("request_file", { id, fileId, jobId }),
   cancel: (jobId) => invoke("cancel_job", { jobId }),
 };

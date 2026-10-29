@@ -1,0 +1,175 @@
+{
+  "captureMs": 137.190166,
+  "file": "src/vs/sessions/common/devContainerAgentHostService.ts",
+  "manifest": "1b46cb32889f6dd758278d8f489739cfad37320ded92fd2db7ee4054af1ce011",
+  "samples": [
+    {
+      "analysisMs": 1.639459,
+      "cacheMs": 0.007917,
+      "previewMs": 0.0006670000000000001
+    },
+    {
+      "analysisMs": 0.7936249999999999,
+      "cacheMs": 0.006959,
+      "previewMs": 0.00075
+    },
+    {
+      "analysisMs": 0.775083,
+      "cacheMs": 0.0050409999999999995,
+      "previewMs": 0.000541
+    },
+    {
+      "analysisMs": 0.767083,
+      "cacheMs": 0.004958,
+      "previewMs": 0.00041600000000000003
+    },
+    {
+      "analysisMs": 0.7635,
+      "cacheMs": 0.007167,
+      "previewMs": 0.000458
+    },
+    {
+      "analysisMs": 0.746167,
+      "cacheMs": 0.0045000000000000005,
+      "previewMs": 0.0005
+    },
+    {
+      "analysisMs": 0.732792,
+      "cacheMs": 0.004542,
+      "previewMs": 0.000417
+    },
+    {
+      "analysisMs": 0.73375,
+      "cacheMs": 0.0045000000000000005,
+      "previewMs": 0.000417
+    },
+    {
+      "analysisMs": 0.736833,
+      "cacheMs": 0.004583,
+      "previewMs": 0.000417
+    },
+    {
+      "analysisMs": 0.734,
+      "cacheMs": 0.005666,
+      "previewMs": 0.00045900000000000004
+    },
+    {
+      "analysisMs": 0.732375,
+      "cacheMs": 0.0045000000000000005,
+      "previewMs": 0.00041600000000000003
+    },
+    {
+      "analysisMs": 0.7333339999999999,
+      "cacheMs": 0.004542,
+      "previewMs": 0.000417
+    },
+    {
+      "analysisMs": 0.731584,
+      "cacheMs": 0.004417,
+      "previewMs": 0.00045900000000000004
+    },
+    {
+      "analysisMs": 0.7299169999999999,
+      "cacheMs": 0.0043749999999999995,
+      "previewMs": 0.00041600000000000003
+    },
+    {
+      "analysisMs": 0.729167,
+      "cacheMs": 0.004417,
+      "previewMs": 0.00045900000000000004
+    },
+    {
+      "analysisMs": 0.7463339999999999,
+      "cacheMs": 0.004541,
+      "previewMs": 0.000417
+    },
+    {
+      "analysisMs": 0.734042,
+      "cacheMs": 0.004459,
+      "previewMs": 0.00041600000000000003
+    },
+    {
+      "analysisMs": 0.7274579999999999,
+      "cacheMs": 0.004458,
+      "previewMs": 0.00041600000000000003
+    },
+    {
+      "analysisMs": 0.730416,
+      "cacheMs": 0.0045000000000000005,
+      "previewMs": 0.000417
+    },
+    {
+      "analysisMs": 0.728666,
+      "cacheMs": 0.004458,
+      "previewMs": 0.000417
+    },
+    {
+      "analysisMs": 0.729042,
+      "cacheMs": 0.004417,
+      "previewMs": 0.000417
+    },
+    {
+      "analysisMs": 0.729916,
+      "cacheMs": 0.004458,
+      "previewMs": 0.00041600000000000003
+    },
+    {
+      "analysisMs": 0.727916,
+      "cacheMs": 0.004417,
+      "previewMs": 0.000417
+    },
+    {
+      "analysisMs": 0.729375,
+      "cacheMs": 0.004333,
+      "previewMs": 0.000417
+    },
+    {
+      "analysisMs": 0.733208,
+      "cacheMs": 0.004458,
+      "previewMs": 0.000458
+    },
+    {
+      "analysisMs": 0.729334,
+      "cacheMs": 0.004333,
+      "previewMs": 0.000417
+    },
+    {
+      "analysisMs": 0.725584,
+      "cacheMs": 0.004333,
+      "previewMs": 0.000417
+    },
+    {
+      "analysisMs": 0.726667,
+      "cacheMs": 0.004416,
+      "previewMs": 0.000417
+    },
+    {
+      "analysisMs": 0.728,
+      "cacheMs": 0.004333,
+      "previewMs": 0.000417
+    },
+    {
+      "analysisMs": 0.727917,
+      "cacheMs": 0.0043749999999999995,
+      "previewMs": 0.000417
+    }
+  ],
+  "scope": "Native workers only; warm filesystem; excludes IPC, WebView and RSS",
+  "percentiles": {
+    "previewMs": {
+      "p50": 0.000417,
+      "p95": 0.0006670000000000001,
+      "max": 0.00075
+    },
+    "analysisMs": {
+      "p50": 0.731584,
+      "p95": 0.7936249999999999,
+      "max": 1.639459
+    },
+    "cacheMs": {
+      "p50": 0.004458,
+      "p95": 0.007167,
+      "max": 0.007917
+    }
+  }
+}

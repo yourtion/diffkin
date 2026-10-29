@@ -80,6 +80,7 @@ export function App({
   const [savingReview, setSavingReview] = useState(false);
   const [manifest, setManifest] = useState<ComparisonManifest | null>(null);
   const [selectedFile, setSelectedFile] = useState<FileSummary | null>(null);
+  const [analysisReady, setAnalysisReady] = useState(false);
   const [data, setData] = useState<FileAnalysis | null>(null);
   const [event, setEvent] = useState<ChangeEvent | null>(null);
   const [scope, setScope] = useState(false);
@@ -148,22 +149,40 @@ export function App({
     fileJob.current = job;
     setSelectedFile(file);
     setData(null);
+    setAnalysisReady(false);
     setEvent(null);
     setScope(false);
     setPending("file");
     setError(null);
+    let settled = false;
+    void api
+      .preview(snapshot.id, file.id)
+      .then((preview) => {
+        if (
+          !settled &&
+          fileGeneration.current.isCurrent(generation) &&
+          preview.summary.id === file.id
+        )
+          setData({ file: preview, analysis: null, notice: "冻结文本已就绪，正在分析结构…" });
+      })
+      .catch(() => {
+        /* The authoritative analysis request reports any failure. */
+      });
     try {
       const result = await api.file(snapshot.id, file.id, job);
+      settled = true;
       if (!fileGeneration.current.isCurrent(generation)) return;
       if (result.file.summary.id !== file.id) throw new Error("收到不属于当前文件的结果");
       if (result.analysis && result.analysis.schemaVersion !== 1)
         throw new Error("不支持的比较协议版本");
       setData(result);
+      setAnalysisReady(true);
       setEvent(result.analysis?.events.find((item) => item.facets.includes("move")) ?? null);
       setReviewBases((current) => ({ ...current, [file.id]: analysisBasis(result) }));
     } catch (cause) {
       if (fileGeneration.current.isCurrent(generation)) setError(message(cause));
     } finally {
+      settled = true;
       if (fileGeneration.current.isCurrent(generation)) {
         fileJob.current = null;
         setPending(null);
@@ -847,7 +866,7 @@ export function App({
                   </p>
                 </div>
                 <button
-                  disabled={!data || savingReview}
+                  disabled={!data || !analysisReady || savingReview}
                   className={reviewed ? "reviewed" : ""}
                   aria-pressed={reviewed}
                   onClick={() => void markReviewed()}

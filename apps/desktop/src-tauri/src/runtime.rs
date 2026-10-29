@@ -8,13 +8,15 @@ use std::{
     },
 };
 
+const CACHE_BYTES: usize = 32 * 1024 * 1024;
+
 #[derive(Default)]
 pub struct Runtime {
     pub capture_gate: Mutex<()>,
     pub analysis_gate: Mutex<()>,
     previous: Mutex<Option<Arc<FrozenComparison>>>,
     pub current: Mutex<Option<Arc<FrozenComparison>>>,
-    pub cache: Mutex<VecDeque<(String, String, FileAnalysis)>>,
+    cache: Mutex<VecDeque<(String, String, FileAnalysis, usize)>>,
     jobs: Mutex<Jobs>,
     workspaces: Mutex<VecDeque<Arc<FrozenWorkspace>>>,
 }
@@ -150,22 +152,47 @@ impl Runtime {
         Err(RepositoryError::Stale { message: "This comparison is no longer open. Restore its workspace or refresh the repository.".into() })
     }
     pub fn cached(&self, id: &str, file_id: &str) -> Option<FileAnalysis> {
-        self.cache
-            .lock()
-            .unwrap()
+        let mut cache = self.cache.lock().unwrap();
+        let index = cache
             .iter()
-            .find(|(snapshot, file, _)| snapshot == id && file == file_id)
-            .map(|(_, _, result)| result.clone())
+            .position(|(snapshot, file, _, _)| snapshot == id && file == file_id)?;
+        let entry = cache.remove(index)?;
+        let result = entry.2.clone();
+        cache.push_back(entry);
+        Some(result)
     }
     pub fn remember(&self, id: String, file_id: String, result: FileAnalysis) {
+        // Charge twice serialized bytes to cover string/vector overhead. This is a cache
+        // accounting bound, not a claim about allocator RSS or transient IPC clones.
+        struct Counter(usize);
+        impl std::io::Write for Counter {
+            fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+                self.0 = self.0.saturating_add(bytes.len());
+                Ok(bytes.len())
+            }
+            fn flush(&mut self) -> std::io::Result<()> {
+                Ok(())
+            }
+        }
+        let mut counter = Counter(0);
+        if serde_json::to_writer(&mut counter, &result).is_err() {
+            return;
+        }
+        let charge = counter.0.saturating_mul(2);
         let mut cache = self.cache.lock().unwrap();
-        // Each analyzed pair is bounded by 200 KB per side. Retain at most 8 results.
-        if cache.len() >= 8 {
-            cache.pop_front();
+        cache.retain(|(snapshot, file, _, _)| snapshot != &id || file != &file_id);
+        if charge > CACHE_BYTES {
+            return;
         }
-        if result.analysis.is_some() {
-            cache.push_back((id, file_id, result));
+        let mut bytes: usize = cache.iter().map(|entry| entry.3).sum();
+        while cache.len() >= 64 || bytes + charge > CACHE_BYTES {
+            if let Some(entry) = cache.pop_front() {
+                bytes -= entry.3;
+            } else {
+                break;
+            }
         }
+        cache.push_back((id, file_id, result, charge));
     }
 }
 pub fn permit<'a>(
@@ -271,6 +298,52 @@ mod tests {
             serde_json::json!({"manifest":manifest.clone(),"files":{repository_id:file}});
         Arc::new(serde_json::from_value(serde_json::json!({"manifest":{"id":id,"workspaceId":"project","capturedAtMs":"1","repositories":[{"repositoryId":"repo","label":"Repository","manifest":manifest,"error":null}]},"repositories":{"repo":comparison}})).unwrap())
     }
+    #[test]
+    fn cache_is_lru_byte_bounded_and_snapshot_scoped() {
+        let runtime = Runtime::default();
+        let file = workspace_fixture("a", "file", "text")
+            .repository("repo")
+            .unwrap()
+            .read_file("file")
+            .unwrap();
+        let small = FileAnalysis {
+            file,
+            analysis: None,
+            notice: None,
+        };
+        for i in 0..64 {
+            runtime.remember("a".into(), i.to_string(), small.clone());
+        }
+        assert!(runtime.cached("b", "0").is_none());
+        assert!(runtime.cached("a", "0").is_some());
+        runtime.remember("a".into(), "64".into(), small.clone());
+        assert!(runtime.cached("a", "1").is_none());
+        assert!(runtime.cached("a", "0").is_some());
+        let mut large = small.clone();
+        large.file.after = Some("x".repeat(1024 * 1024));
+        for i in 0..30 {
+            runtime.remember("b".into(), i.to_string(), large.clone());
+        }
+        let cache = runtime.cache.lock().unwrap();
+        assert!(cache.iter().map(|entry| entry.3).sum::<usize>() <= CACHE_BYTES);
+        assert!(cache.len() < 30);
+        drop(cache);
+        runtime.remember("b".into(), "29".into(), small);
+        assert_eq!(
+            runtime
+                .cache
+                .lock()
+                .unwrap()
+                .iter()
+                .filter(|entry| entry.0 == "b" && entry.1 == "29")
+                .count(),
+            1
+        );
+        large.file.after = Some("x".repeat(CACHE_BYTES));
+        runtime.remember("huge".into(), "0".into(), large);
+        assert!(runtime.cached("huge", "0").is_none());
+    }
+
     #[test]
     fn refresh_retains_previous_frozen_snapshot_and_evicts_older_capture() {
         let runtime = Runtime::default();

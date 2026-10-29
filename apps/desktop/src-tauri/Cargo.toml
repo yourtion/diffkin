@@ -10,6 +10,7 @@ license.workspace = true
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+serde_json.workspace = true
 diffkin-application.workspace = true
 diffkin-validation.workspace = true
 diffkin-domain.workspace = true
@@ -19,5 +20,3 @@ tauri-plugin-dialog = "2"
 [lints]
 workspace = true
 
-[dev-dependencies]
-serde_json.workspace = true

@@ -5,7 +5,9 @@ mod settings_commands;
 mod validation_commands;
 mod workspace_commands;
 
-use diffkin_domain::{ComparisonManifest, ComparisonSpec, FileAnalysis, RepositoryError};
+use diffkin_domain::{
+    ComparisonManifest, ComparisonSpec, FileAnalysis, FrozenFile, RepositoryError,
+};
 use runtime::{check_cancel, permit, Runtime};
 use std::sync::Arc;
 use tauri::{Manager, State};
@@ -33,7 +35,6 @@ async fn open_comparison(
         check_cancel(&token)?;
         let manifest = snapshot.manifest(0, 200);
         worker.install_comparison(snapshot);
-        worker.cache.lock().unwrap().clear();
         Ok(manifest)
     })
     .await
@@ -58,6 +59,18 @@ fn list_change_catalog(
     state: State<'_, Shared>,
 ) -> Result<ComparisonManifest, RepositoryError> {
     Ok(state.snapshot(&id)?.manifest(0, usize::MAX))
+}
+
+#[tauri::command]
+async fn preview_file(
+    id: String,
+    file_id: String,
+    state: State<'_, Shared>,
+) -> Result<FrozenFile, RepositoryError> {
+    let snapshot = state.snapshot(&id)?;
+    tauri::async_runtime::spawn_blocking(move || snapshot.read_file(&file_id))
+        .await
+        .map_err(internal)?
 }
 
 #[tauri::command]
@@ -113,6 +126,7 @@ fn main() {
             open_comparison,
             list_changes,
             list_change_catalog,
+            preview_file,
             request_file,
             cancel_job,
             workspace_commands::workspace_list,
