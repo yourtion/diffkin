@@ -149,9 +149,13 @@ async function bridge(
   );
   await page.goto("/");
 }
-async function open(page: Page) {
+async function open(page: Page, panels = true) {
   await page.getByLabel("Git 仓库路径").fill("/repo");
   await page.getByRole("button", { name: "打开比较", exact: true }).click();
+  if (panels) {
+    await page.getByRole("button", { name: /变更文件 ·/ }).click();
+    await page.getByRole("button", { name: "变更详情", exact: true }).click();
+  }
 }
 
 test("repository review supports raw diff, evidence, search, layout and bound review state", async ({
@@ -197,7 +201,7 @@ test("late responses cannot replace the newly selected file", async ({ page }) =
 
 test("cancelled capture never publishes its late manifest", async ({ page }) => {
   await bridge(page, { delayCapture: 500 });
-  await open(page);
+  await open(page, false);
   await page.getByRole("button", { name: "取消", exact: true }).click();
   await expect(page.getByRole("alert")).toContainText("已取消");
   await page.waitForTimeout(650);
@@ -491,4 +495,37 @@ test("moves connect original locations and retain grouped internal edits", async
   await expect(overlay).toBeVisible();
   await page.getByRole("button", { name: "返回完整文件", exact: true }).click();
   await expect(overlay).toHaveCount(0);
+});
+
+test("reading focus preserves code space and exposes navigation and details on demand", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 800 });
+  await bridge(page);
+  await open(page, false);
+  await expect(page.locator(".cm-content").first()).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "变更文件" })).toBeHidden();
+  await expect(page.locator(".inspector")).toBeHidden();
+  await expect(page.getByLabel("Git 仓库路径")).toBeHidden();
+  const code = await page.locator(".merge-host").boundingBox();
+  expect(code!.width).toBeGreaterThanOrEqual(900);
+  expect(code!.height).toBeGreaterThanOrEqual(560);
+  await page.getByRole("button", { name: /变更文件 ·/ }).click();
+  const separator = page.getByRole("separator", { name: "文件导航宽度" });
+  await separator.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(separator).toHaveAttribute("aria-valuenow", "280");
+  await page.getByRole("button", { name: "变更详情", exact: true }).click();
+  await expect(page.locator(".inspector")).toBeVisible();
+  await page.getByRole("button", { name: "收起详情", exact: true }).click();
+  await page.getByRole("button", { name: /变更文件 ·/ }).click();
+  await page.screenshot({ path: "test-results/reading-focus-1200.png", fullPage: true });
+  await page.setViewportSize({ width: 760, height: 540 });
+  await page.emulateMedia({ colorScheme: "dark" });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await expect(page.getByRole("button", { name: "比较设置", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "比较设置", exact: true }).click();
+  await expect(page.getByLabel("Git 仓库路径")).toBeVisible();
+  await page.getByRole("button", { name: "比较设置", exact: true }).click();
+  await page.screenshot({ path: "test-results/reading-focus-760-dark.png", fullPage: true });
 });

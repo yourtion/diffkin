@@ -24,6 +24,7 @@
     "@codemirror/state": "6.7.6",
     "@codemirror/view": "6.43.15",
     "@diffkin/protocol": "workspace:*",
+    "@lezer/highlight": "1.2.5",
     "@tauri-apps/api": "2.12.4",
     "react": "19.3.1",
     "react-dom": "19.3.1"

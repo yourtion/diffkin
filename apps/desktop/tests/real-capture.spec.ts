@@ -30,6 +30,8 @@ for (const input of inputs) {
     await page.goto("/");
     await page.getByLabel("Git 仓库路径").fill(capture.manifest.repository);
     await page.getByRole("button", { name: "打开比较", exact: true }).click();
+    await page.getByRole("button", { name: /变更文件 ·/ }).click();
+    await page.getByRole("button", { name: "变更详情", exact: true }).click();
     for (const file of capture.manifest.files) {
       const button = page
         .locator(".file-item")

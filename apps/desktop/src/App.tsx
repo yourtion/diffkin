@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+/* oxlint-disable jsx-a11y/prefer-tag-over-role -- A focusable window splitter uses the ARIA separator widget, not a thematic hr. */
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import type {
   ChangeEvent,
   ComparisonManifest,
@@ -70,6 +71,12 @@ export function App({
   const foldFormats = view.foldFormats;
   const setFoldFormats = (foldFormats: boolean) =>
     settings.update((current) => ({ ...current, view: { ...current.view, foldFormats } }));
+  const [showFiles, setShowFiles] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  const [showCompareSettings, setShowCompareSettings] = useState(false);
+  const [navigationWidth, setNavigationWidth] = useState(260);
+  const resizeNavigation = (value: number) =>
+    setNavigationWidth(Math.max(200, Math.min(420, value)));
   const [showPreferences, setShowPreferences] = useState(false);
   const [workspaceSession, setWorkspaceSession] = useState<WorkspaceSession | null>(null);
   const [repositoryId, setRepositoryId] = useState<string | null>(null);
@@ -179,6 +186,7 @@ export function App({
         ...current,
         recent: [...new Set([request.repository, ...current.recent])].slice(0, 8),
       }));
+      setShowCompareSettings(false);
       if (result.files[0]) void selectFile(result.files[0], result);
       else setPending(null);
     } catch (cause) {
@@ -326,6 +334,7 @@ export function App({
     function keyboard(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "o") {
         e.preventDefault();
+        setShowCompareSettings(true);
         if (available) pickerButton.current?.click();
         else pathInput.current?.focus();
         return;
@@ -374,7 +383,10 @@ export function App({
   );
   const reviewed = selectedFile ? isReviewed(selectedFile) : false;
   return (
-    <main className="app-shell">
+    <main
+      className="app-shell review-shell"
+      style={{ "--navigation-width": `${navigationWidth}px` } as CSSProperties}
+    >
       <header className="app-header">
         <div className="brand">
           <span className="mark">↔</span>
@@ -429,7 +441,45 @@ export function App({
           available={available}
         />
       )}
+      {manifest && !validationOpen && (
+        <div className="review-context" aria-label="当前比较">
+          <button
+            aria-expanded={showFiles}
+            aria-controls="review-files"
+            onClick={() => setShowFiles(!showFiles)}
+          >
+            变更文件 · {manifest.totalFiles}
+          </button>
+          <strong title={manifest.repository}>
+            {manifest.repository.split(/[\\/]/).filter(Boolean).at(-1)}
+          </strong>
+          <span>{modeNames[manifest.mode]}</span>
+          <code title={`${manifest.baseLabel} → ${manifest.headLabel}`}>
+            {manifest.baseLabel} → {manifest.headLabel}
+          </code>
+          <button
+            aria-expanded={showCompareSettings}
+            aria-controls="comparison-settings"
+            onClick={() => setShowCompareSettings(!showCompareSettings)}
+          >
+            比较设置
+          </button>
+          <button disabled={pending === "capture" || workspaceBusy} onClick={() => void open()}>
+            刷新比较
+          </button>
+          {pending && <button onClick={cancel}>取消</button>}
+          <button
+            aria-expanded={showDetails}
+            aria-controls="review-details"
+            onClick={() => setShowDetails(!showDetails)}
+          >
+            变更详情
+          </button>
+        </div>
+      )}
       <form
+        id="comparison-settings"
+        hidden={!!manifest && !showCompareSettings}
         className="repository-bar"
         onSubmit={(e) => {
           e.preventDefault();
@@ -521,9 +571,9 @@ export function App({
           type="submit"
           disabled={!available || !spec.repository.trim() || pending === "capture" || workspaceBusy}
         >
-          {pending === "capture" ? "捕获中…" : manifest ? "刷新比较" : "打开比较"}
+          {pending === "capture" ? "捕获中…" : manifest ? "应用比较设置" : "打开比较"}
         </button>
-        {pending && (
+        {pending && !manifest && (
           <button className="cancel" type="button" onClick={cancel}>
             取消
           </button>
@@ -573,17 +623,6 @@ export function App({
           {error}
         </p>
       )}
-      {manifest && (
-        <div className="snapshot-bar" hidden={validationOpen}>
-          <span>{modeNames[manifest.mode]}</span>
-          <code title={manifest.baseLabel}>{manifest.baseLabel}</code>
-          <span>→</span>
-          <code title={manifest.headLabel}>{manifest.headLabel}</code>
-          <span className="snapshot-tag" title={manifest.id}>
-            已冻结快照 · 刷新后读取新改动
-          </span>
-        </div>
-      )}
       {manifest?.warnings.map((warning, index) => (
         <p className="notice compact" key={index}>
           {warning}
@@ -594,7 +633,12 @@ export function App({
         aria-busy={pending !== null}
         hidden={validationOpen}
       >
-        <nav className="files-panel" aria-label="变更文件">
+        <nav
+          id="review-files"
+          hidden={!showFiles && !!manifest}
+          className="files-panel"
+          aria-label="变更文件"
+        >
           <div className="panel-heading">
             <h2>变更文件</h2>
             <span>{manifest?.totalFiles ?? 0}</span>
@@ -602,14 +646,24 @@ export function App({
           <input
             className="file-search"
             aria-label="筛选文件"
-            placeholder="筛选路径…"
+            placeholder={
+              manifest && manifest.files.length < manifest.totalFiles
+                ? "筛选已加载路径…"
+                : "筛选路径…"
+            }
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           />
+          {manifest && manifest.files.length < manifest.totalFiles && (
+            <p className="navigation-scope">
+              仅筛选已加载的 {manifest.files.length} / {manifest.totalFiles} 个文件
+            </p>
+          )}
           <div className="file-list">
             {visibleFiles.map((file) => (
               <button
                 key={file.id}
+                aria-label={file.path}
                 className={`file-item ${file.id === selectedFile?.id ? "selected" : ""}`}
                 aria-current={file.id === selectedFile?.id ? "true" : undefined}
                 onClick={() => void selectFile(file)}
@@ -617,7 +671,12 @@ export function App({
               >
                 <span className={`file-status ${file.status}`}>{status[file.status] ?? "?"}</span>
                 <span className="file-name">
-                  {file.path}
+                  <span className="path-directory">
+                    {file.path.slice(0, file.path.lastIndexOf("/") + 1)}
+                  </span>
+                  <span className="path-basename">
+                    {file.path.slice(file.path.lastIndexOf("/") + 1)}
+                  </span>
                   <small>{file.oldPath ? `← ${file.oldPath}` : (file.notices[0] ?? "")}</small>
                 </span>
                 {isReviewed(file) && (
@@ -638,12 +697,54 @@ export function App({
           </div>
           <div className="file-help">J / K 切换文件 · ⌘/Ctrl O 打开</div>
         </nav>
+        {showFiles && (
+          <div
+            role="separator"
+            className="navigation-resizer"
+            aria-label="文件导航宽度"
+            aria-orientation="vertical"
+            aria-valuemin={200}
+            aria-valuemax={420}
+            aria-valuenow={navigationWidth}
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+                event.preventDefault();
+                resizeNavigation(
+                  event.key === "Home"
+                    ? 200
+                    : event.key === "End"
+                      ? 420
+                      : navigationWidth + (event.key === "ArrowRight" ? 20 : -20),
+                );
+              }
+            }}
+            onPointerDown={(event) => {
+              event.currentTarget.setPointerCapture(event.pointerId);
+            }}
+            onPointerMove={(event) => {
+              if (event.currentTarget.hasPointerCapture(event.pointerId))
+                resizeNavigation(event.clientX);
+            }}
+            onPointerUp={(event) => {
+              if (event.currentTarget.hasPointerCapture(event.pointerId))
+                event.currentTarget.releasePointerCapture(event.pointerId);
+            }}
+          />
+        )}
         <section className="comparison-panel">
           {selectedFile ? (
             <>
               <div className="file-heading">
                 <div>
-                  <h2>{selectedFile.path}</h2>
+                  <h2 title={selectedFile.path}>
+                    <span className="heading-parent">
+                      {selectedFile.path.slice(0, selectedFile.path.lastIndexOf("/") + 1)}
+                    </span>
+                    <span className="heading-leaf">
+                      {selectedFile.path.slice(selectedFile.path.lastIndexOf("/") + 1)}
+                    </span>
+                  </h2>
                   <p>
                     {selectedFile.oldMode ?? "∅"} → {selectedFile.newMode ?? "∅"}
                     {data?.analysis
@@ -667,6 +768,7 @@ export function App({
               ))}
               <details
                 className="source-identities"
+                hidden={!showDetails && !(data?.file.before === null && data?.file.after === null)}
                 open={data?.file.before === null && data?.file.after === null}
               >
                 <summary>来源身份与文件元数据</summary>
@@ -779,20 +881,25 @@ export function App({
           )}
         </section>
         {data?.analysis && (
-          <ChangeInspector
-            key={`${manifest?.id}:${selectedFile?.id}`}
-            result={data.analysis}
-            selected={event}
-            fold={foldFormats}
-            onFoldChange={setFoldFormats}
-            onSelect={(selected) => {
-              setEvent(selected);
-              setScope(
-                !!selected &&
-                  !!data.analysis?.events.some((parent) => parent.children.includes(selected.id)),
-              );
-            }}
-          />
+          <div id="review-details" className="review-details" hidden={!showDetails}>
+            <button className="close-details" onClick={() => setShowDetails(false)}>
+              收起详情
+            </button>
+            <ChangeInspector
+              key={`${manifest?.id}:${selectedFile?.id}`}
+              result={data.analysis}
+              selected={event}
+              fold={foldFormats}
+              onFoldChange={setFoldFormats}
+              onSelect={(selected) => {
+                setEvent(selected);
+                setScope(
+                  !!selected &&
+                    !!data.analysis?.events.some((parent) => parent.children.includes(selected.id)),
+                );
+              }}
+            />
+          </div>
         )}
       </div>
       {validationMounted && (

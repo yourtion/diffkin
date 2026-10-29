@@ -1,0 +1,415 @@
+{
+  "sourceCommit": "a80937f8b2c69d5f2c207594fc4f87650c6107d8",
+  "environment": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "build": "release thin LTO / one codegen unit; rustc 1.97.0",
+  "gitVersion": "git version 2.54.0 (Apple Git-157)",
+  "scope": "30 sequential capture-only samples per mode; shallow public clones, warm filesystem; excludes IPC, UI, native WebView and memory; clean worktree not edited",
+  "repositories": [
+    {
+      "name": "vscode",
+      "url": "https://github.com/microsoft/vscode",
+      "head": "b6bfa95ebee8b183d65dee4997c0527eadfe5384",
+      "base": "656556c1b964c9625e8b540ad0e0bcd715d85276",
+      "tracked": 21145,
+      "changed": [
+        "build/lib/i18n.resources.json",
+        "src/vs/sessions/common/devContainerAgentHostService.ts",
+        "src/vs/sessions/contrib/chat/browser/newChatComposerInput.ts",
+        "src/vs/sessions/contrib/chat/browser/newChatWidget.ts",
+        "src/vs/sessions/contrib/chat/browser/sessionsChatAccessibilityHelp.ts",
+        "src/vs/sessions/contrib/chat/browser/sharedChatInputComposer.ts",
+        "src/vs/sessions/contrib/chat/test/browser/newChatUserInteraction.test.ts",
+        "src/vs/sessions/contrib/chat/test/browser/newChatWidget.fixture.ts",
+        "src/vs/sessions/contrib/chat/test/browser/sharedChatInputComposer.test.ts",
+        "src/vs/sessions/contrib/onboardingTours/browser/tours/worktreeSuggestionTour.ts",
+        "src/vs/sessions/contrib/providers/agentHost/browser/agentHostSessionConfigPicker.ts",
+        "src/vs/sessions/contrib/providers/agentHost/browser/media/agentHostSessionConfigPicker.css",
+        "src/vs/sessions/contrib/providers/agentHost/test/browser/agentHost/agentHostSessionConfigPicker.test.ts",
+        "src/vs/sessions/contrib/providers/agentHost/test/browser/agentHostSessionConfigPicker.fixture.ts",
+        "src/vs/sessions/contrib/worktreeSuggestion/browser/media/worktreeSuggestion.css",
+        "src/vs/sessions/contrib/worktreeSuggestion/browser/worktreeSuggestion.contribution.ts",
+        "src/vs/sessions/contrib/worktreeSuggestion/browser/worktreeSuggestionController.ts",
+        "src/vs/sessions/contrib/worktreeSuggestion/browser/worktreeSuggestionPresentation.ts",
+        "src/vs/sessions/contrib/worktreeSuggestion/browser/worktreeSuggestionService.ts",
+        "src/vs/sessions/contrib/worktreeSuggestion/common/worktreeSuggestion.ts",
+        "src/vs/sessions/contrib/worktreeSuggestion/test/browser/worktreeSuggestionController.test.ts",
+        "src/vs/sessions/contrib/worktreeSuggestion/test/browser/worktreeSuggestionService.test.ts",
+        "src/vs/sessions/contrib/worktreeSuggestion/test/browser/worktreeSuggestionTestUtils.ts",
+        "src/vs/sessions/services/sessions/common/sessionPickerVisibility.ts",
+        "src/vs/sessions/sessions.common.main.ts"
+      ],
+      "longestPath": "src/vs/workbench/contrib/notebook/test/browser/__snapshots__/NotebookEditorStickyScroll_test2__should_render_0____visible_range_6-_9_so_collapsing_next_2_against_following_section.0.snap",
+      "indexSha256": "efe041ca733722aec2dae5d261a0ad2eed3ade26d5e5a66a191e45ee7ba0bac4",
+      "capture": {
+        "commits": {
+          "changedFiles": 25,
+          "maxMs": 137.16833400000002,
+          "mode": "commits",
+          "p50Ms": 92.84316600000001,
+          "p95Ms": 112.074084,
+          "samplesMs": [
+            137.16833400000002, 92.99041700000001, 92.80874999999999, 92.78033300000001,
+            92.84762500000001, 92.674, 95.68283299999999, 89.851208, 92.789334, 92.794208,
+            92.672583, 92.77916599999999, 92.77541599999999, 92.84316600000001, 92.799834,
+            89.467625, 89.483334, 92.521917, 89.528542, 98.73424999999999, 96.111416, 97.936709,
+            112.074084, 95.893583, 96.216625, 101.228542, 95.802375, 96.086125, 92.94775, 94.948458
+          ],
+          "scope": "Rust snapshot capture only; warm filesystem cache, no result cache; excludes IPC/UI"
+        },
+        "worktree": {
+          "changedFiles": 29,
+          "maxMs": 6484.145875,
+          "mode": "worktree",
+          "p50Ms": 3669.8979170000002,
+          "p95Ms": 3713.877333,
+          "samplesMs": [
+            6484.145875, 3680.803833, 3691.843333, 3703.1720410000003, 3663.258125, 3634.482417,
+            3713.877333, 3708.58625, 3686.75675, 3668.506084, 3610.612416, 3693.172791, 3630.006166,
+            3626.294042, 3697.799, 3656.275333, 3685.061625, 3685.3527910000003, 3606.8811250000003,
+            3669.8979170000002, 3649.827333, 3611.634541, 3687.308625, 3701.841042,
+            3684.8447499999997, 3699.797708, 3612.08625, 3645.830208, 3666.4348750000004,
+            3624.8502089999997
+          ],
+          "scope": "Rust snapshot capture only; warm filesystem cache, no result cache; excludes IPC/UI"
+        }
+      },
+      "cliCaptureAndAllAnalysisMs": 780.43750001234,
+      "cliExitCode": 1,
+      "indexUnchanged": true,
+      "worktreeClean": true
+    },
+    {
+      "name": "react-native",
+      "url": "https://github.com/react/react-native",
+      "head": "25b05acd736249e2c0750034af8618a35461d085",
+      "base": "c12d0b3e74586d3daa60d0104b1baefef11e39e6",
+      "tracked": 8264,
+      "changed": [
+        "packages/react-native/ReactAndroid/src/main/java/com/facebook/react/uimanager/BaseViewManager.java",
+        "packages/react-native/ReactAndroid/src/test/java/com/facebook/react/uimanager/BaseViewManagerTest.kt"
+      ],
+      "longestPath": "packages/react-native/ReactCommon/react/renderer/components/legacyviewmanagerinterop/platform/ios/react/renderer/components/legacyviewmanagerinterop/LegacyViewManagerInteropComponentDescriptor.mm",
+      "indexSha256": "bf3638901a53e4c1fa11988eeef3d1bafae0fccc46d1cc0680d6c65de647e7c5",
+      "capture": {
+        "commits": {
+          "changedFiles": 2,
+          "maxMs": 92.85383399999999,
+          "mode": "commits",
+          "p50Ms": 89.459,
+          "p95Ms": 89.584958,
+          "samplesMs": [
+            92.85383399999999, 89.402833, 89.543625, 89.346291, 89.57025, 89.380334, 89.500875,
+            89.539584, 89.410166, 89.40883299999999, 89.53825, 89.584958, 89.4845,
+            89.45441699999999, 89.38062500000001, 88.697417, 89.21620800000001, 89.511041, 89.36225,
+            89.3885, 89.499958, 89.49391700000001, 89.444125, 89.510167, 89.459, 89.443334,
+            89.461625, 89.401667, 89.50820800000001, 89.535875
+          ],
+          "scope": "Rust snapshot capture only; warm filesystem cache, no result cache; excludes IPC/UI"
+        },
+        "worktree": {
+          "changedFiles": 0,
+          "maxMs": 829.7255,
+          "mode": "worktree",
+          "p50Ms": 823.785791,
+          "p95Ms": 829.123375,
+          "samplesMs": [
+            829.7255, 824.182792, 828.7090000000001, 825.122333, 823.9926250000001, 821.872583,
+            827.3687910000001, 821.718084, 820.03475, 827.6098750000001, 829.123375, 827.462917,
+            824.568708, 822.4367080000001, 822.95625, 822.5445, 821.553875, 823.785791, 823.090292,
+            824.0229999999999, 820.025542, 824.1660830000001, 823.6335, 823.2352080000001,
+            823.7831249999999, 825.501625, 826.580792, 821.397917, 823.9070419999999, 821.103708
+          ],
+          "scope": "Rust snapshot capture only; warm filesystem cache, no result cache; excludes IPC/UI"
+        }
+      },
+      "cliCaptureAndAllAnalysisMs": 105.77808300149627,
+      "cliExitCode": 1,
+      "indexUnchanged": true,
+      "worktreeClean": true
+    }
+  ],
+  "date": "2026-10-29",
+  "status": "assessment baseline; no optimization applied",
+  "binarySha256": {
+    "target/release/diffkin": "b48891ac0ac1b4f1a7f43aa92f44fd2f2a2d7e19bbfab7ff020631e0af6f9072",
+    "target/release/examples/snapshot_bench": "b0f3665228fa852608edef672824fa578469a5b56be91146013a53ddff553fc9"
+  },
+  "layout": [
+    {
+      "windowWidth": 1440,
+      "windowHeight": 800,
+      "files": {
+        "x": 0,
+        "y": 155,
+        "width": 238,
+        "height": 616
+      },
+      "comparison": {
+        "x": 238,
+        "y": 155,
+        "width": 936,
+        "height": 616
+      },
+      "inspector": {
+        "x": 1174,
+        "y": 155,
+        "width": 266,
+        "height": 616
+      },
+      "code": {
+        "x": 238,
+        "y": 326,
+        "width": 936,
+        "height": 416
+      },
+      "renderedRows": 200
+    },
+    {
+      "windowWidth": 1200,
+      "windowHeight": 800,
+      "files": {
+        "x": 0,
+        "y": 155,
+        "width": 238,
+        "height": 616
+      },
+      "comparison": {
+        "x": 238,
+        "y": 155,
+        "width": 696,
+        "height": 616
+      },
+      "inspector": {
+        "x": 934,
+        "y": 155,
+        "width": 266,
+        "height": 616
+      },
+      "code": {
+        "x": 238,
+        "y": 326,
+        "width": 696,
+        "height": 416
+      },
+      "renderedRows": 200
+    },
+    {
+      "windowWidth": 850,
+      "windowHeight": 800,
+      "files": {
+        "x": 0,
+        "y": 147,
+        "width": 170,
+        "height": 624
+      },
+      "comparison": {
+        "x": 170,
+        "y": 147,
+        "width": 480,
+        "height": 624
+      },
+      "inspector": {
+        "x": 650,
+        "y": 147,
+        "width": 200,
+        "height": 624
+      },
+      "code": {
+        "x": 170,
+        "y": 305,
+        "width": 480,
+        "height": 437
+      },
+      "renderedRows": 200
+    },
+    {
+      "windowWidth": 760,
+      "windowHeight": 800,
+      "files": {
+        "x": 0,
+        "y": 147,
+        "width": 170,
+        "height": 624
+      },
+      "comparison": {
+        "x": 170,
+        "y": 147,
+        "width": 390,
+        "height": 624
+      },
+      "inspector": {
+        "x": 560,
+        "y": 147,
+        "width": 200,
+        "height": 624
+      },
+      "code": {
+        "x": 170,
+        "y": 322,
+        "width": 390,
+        "height": 420
+      },
+      "renderedRows": 200
+    }
+  ],
+  "layoutScope": "Chrome, current React UI, mocked IPC, 420 real VS Code paths with synthetic source/analysis; default split view, no warning banners; not native WebView",
+  "uiProbes": [
+    {
+      "scenario": "search full path of file 400 while first 200 of 420 are loaded",
+      "expectedMatchedRows": 1,
+      "observedMatchedRows": 0,
+      "verdict": "reproduced gap"
+    },
+    {
+      "scenario": "select an edit relationship without changing files",
+      "expectedEditorRetained": true,
+      "observedEditorRetained": false,
+      "verdict": "editor rebuilt; latency contribution not measured"
+    }
+  ],
+  "changedPathLimit": {
+    "changedPaths": 2001,
+    "base": "bebd882b636208a0411d9334e93e30f70efb54b2",
+    "head": "96647a193f45d15db374af7434817c24b887871c",
+    "exitCode": 2,
+    "elapsedMs": 72.09133301512338,
+    "stderr": "Comparison exceeds 2,000 changed paths; compare a smaller commit range",
+    "scope": "synthetic real Git commit comparison; no UI"
+  },
+  "vscodeLiteralWorktreeContext": {
+    "count": 29,
+    "onlyCRLFCount": 29,
+    "files": [
+      {
+        "path": "LICENSE.txt",
+        "onlyCRLF": true
+      },
+      {
+        "path": "ThirdPartyNotices.txt",
+        "onlyCRLF": true
+      },
+      {
+        "path": "cli/ThirdPartyNotices.txt",
+        "onlyCRLF": true
+      },
+      {
+        "path": "copilot_shim/tests/fixtures/legacy/npm-wrapper.cmd",
+        "onlyCRLF": true
+      },
+      {
+        "path": "copilot_shim/tests/fixtures/legacy/windows-wrapper.cmd",
+        "onlyCRLF": true
+      },
+      {
+        "path": "extensions/mermaid-markdown-features/ThirdPartyNotices.txt",
+        "onlyCRLF": true
+      },
+      {
+        "path": "extensions/terminal-suggest/ThirdPartyNotices.txt",
+        "onlyCRLF": true
+      },
+      {
+        "path": "extensions/theme-seti/ThirdPartyNotices.txt",
+        "onlyCRLF": true
+      },
+      {
+        "path": "extensions/vscode-colorize-tests/test/colorize-fixtures/test.bat",
+        "onlyCRLF": true
+      },
+      {
+        "path": "resources/server/bin-dev/helpers/browser.cmd",
+        "onlyCRLF": true
+      },
+      {
+        "path": "resources/server/bin-dev/remote-cli/code.cmd",
+        "onlyCRLF": true
+      },
+      {
+        "path": "resources/server/bin/code-server.cmd",
+        "onlyCRLF": true
+      },
+      {
+        "path": "resources/server/bin/helpers/browser.cmd",
+        "onlyCRLF": true
+      },
+      {
+        "path": "resources/server/bin/remote-cli/code.cmd",
+        "onlyCRLF": true
+      },
+      {
+        "path": "resources/win32/bin/code.cmd",
+        "onlyCRLF": true
+      },
+      {
+        "path": "resources/win32/versioned/bin/code.cmd",
+        "onlyCRLF": true
+      },
+      {
+        "path": "scripts/code-cli.bat",
+        "onlyCRLF": true
+      },
+      {
+        "path": "scripts/code-server.bat",
+        "onlyCRLF": true
+      },
+      {
+        "path": "scripts/code-web.bat",
+        "onlyCRLF": true
+      },
+      {
+        "path": "scripts/code.bat",
+        "onlyCRLF": true
+      },
+      {
+        "path": "scripts/node-electron.bat",
+        "onlyCRLF": true
+      },
+      {
+        "path": "scripts/test-agent-host-e2e.bat",
+        "onlyCRLF": true
+      },
+      {
+        "path": "scripts/test-documentation.bat",
+        "onlyCRLF": true
+      },
+      {
+        "path": "scripts/test-integration.bat",
+        "onlyCRLF": true
+      },
+      {
+        "path": "scripts/test-remote-integration.bat",
+        "onlyCRLF": true
+      },
+      {
+        "path": "scripts/test-web-integration.bat",
+        "onlyCRLF": true
+      },
+      {
+        "path": "scripts/test.bat",
+        "onlyCRLF": true
+      },
+      {
+        "path": "test/sanity/scripts/run-docker.cmd",
+        "onlyCRLF": true
+      },
+      {
+        "path": "test/sanity/scripts/run-win32.cmd",
+        "onlyCRLF": true
+      }
+    ]
+  },
+  "checks": {
+    "existingReviewTest": "1 passed",
+    "publicCaptureBrowserTests": "2 passed, all 27 files reviewed; real CLI output with mocked IPC",
+    "auditProbes": "layout passed; two desired-behavior assertions failed as recorded",
+    "nativeWebView": "not measured",
+    "peakProcessMemory": "not measured"
+  },
+  "limitations": [
+    "Two shallow public clones are representative frontend/client inputs, not giant repositories.",
+    "Working trees were not edited. VS Code has 29 literal LF/CRLF differences although git status is clean.",
+    "Single developer machine; early capture samples overlapped browser audit activity. Results are exploratory, not release acceptance.",
+    "CLI capture+all analysis timing is one sample per repository, and is not desktop first-file latency.",
+    "No 100k/500k tracked-file or 10k-change performance claim."
+  ]
+}

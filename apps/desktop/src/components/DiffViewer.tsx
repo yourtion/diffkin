@@ -3,7 +3,7 @@ import { EditorState, type Extension } from "@codemirror/state";
 import { EditorView, keymap, lineNumbers } from "@codemirror/view";
 import { languageExtensions } from "../lib/languages";
 import { bindMoveConnection } from "../lib/move-connection";
-import { defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language";
+import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { defaultKeymap } from "@codemirror/commands";
 import { openSearchPanel, search, searchKeymap } from "@codemirror/search";
 import { MergeView, goToNextChunk, goToPreviousChunk, unifiedMergeView } from "@codemirror/merge";
@@ -15,6 +15,20 @@ import {
   unifiedFormatFolding,
   type FormatProof,
 } from "../lib/format-folding";
+
+import { tags } from "@lezer/highlight";
+const reviewHighlight = HighlightStyle.define([
+  { tag: tags.keyword, color: "var(--syntax-keyword)" },
+  { tag: [tags.string, tags.regexp], color: "var(--syntax-string)" },
+  { tag: [tags.number, tags.bool, tags.atom], color: "var(--syntax-literal)" },
+  { tag: [tags.typeName, tags.className, tags.namespace], color: "var(--syntax-type)" },
+  {
+    tag: [tags.definition(tags.variableName), tags.function(tags.variableName)],
+    color: "var(--syntax-function)",
+  },
+  { tag: [tags.comment, tags.meta], color: "var(--muted)" },
+  { tag: tags.invalid, textDecoration: "underline wavy", color: "var(--syntax-error)" },
+]);
 
 type Props = {
   before: string;
@@ -72,7 +86,7 @@ export function DiffViewer({
     const extensions = (label: string): Extension[] => [
       lineNumbers(),
       ...languageExtensions(path, focused && path.toLowerCase().endsWith(".vue")),
-      syntaxHighlighting(defaultHighlightStyle),
+      syntaxHighlighting(reviewHighlight),
       EditorState.readOnly.of(true),
       EditorView.editable.of(false),
       EditorView.contentAttributes.of({ "aria-label": label, tabindex: "0" }),
@@ -85,7 +99,7 @@ export function DiffViewer({
       search({ top: true }),
       formatFolding,
       EditorView.theme({
-        "&": { fontSize: "12px" },
+        "&": { fontSize: "13px" },
         ".cm-content": { fontFamily: "'SFMono-Regular', Consolas, monospace" },
         ".cm-scroller": { overflowX: "auto" },
       }),

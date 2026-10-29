@@ -62,6 +62,9 @@ importers:
       '@diffkin/protocol':
         specifier: workspace:*
         version: link:../../packages/protocol
+      '@lezer/highlight':
+        specifier: 1.2.5
+        version: 1.2.5
       '@tauri-apps/api':
         specifier: 2.12.4
         version: 2.12.4

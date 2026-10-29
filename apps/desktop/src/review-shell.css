@@ -1,0 +1,293 @@
+/* Review workspace: keep source space stable and put secondary detail on demand. */
+.review-shell {
+  --navigation-width: 260px;
+  --muted: #65716b;
+  font-size: 13px;
+}
+.review-shell [hidden] {
+  display: none !important;
+}
+.review-shell .app-header {
+  padding: 7px 16px;
+}
+.review-shell .app-header h1 {
+  font-size: 16px;
+}
+.review-context {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  flex-shrink: 0;
+}
+.review-context strong {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.review-context > span {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.review-context code {
+  flex: 1;
+  min-width: 30px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--muted);
+}
+.review-context button {
+  white-space: nowrap;
+}
+.review-shell .workspace {
+  position: relative;
+}
+.review-shell .files-panel {
+  width: var(--navigation-width);
+  border: 0;
+}
+.review-shell .file-name {
+  display: flex;
+  flex-direction: column;
+  white-space: normal;
+  overflow: hidden;
+  font-size: 13px;
+}
+.review-shell .path-basename {
+  order: -1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.review-shell .path-directory {
+  color: var(--muted);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.review-shell .file-name small:empty {
+  display: none;
+}
+.review-shell .file-item {
+  padding: 6px 10px;
+  align-items: center;
+}
+.review-shell .file-item.selected {
+  background: var(--tint);
+}
+.review-shell .file-status {
+  font-size: 11px;
+}
+.review-shell .file-search {
+  font-size: 12px;
+}
+.navigation-scope {
+  padding: 0 12px 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.navigation-resizer {
+  flex: 0 0 5px;
+  cursor: col-resize;
+  touch-action: none;
+  border-left: 1px solid var(--line);
+}
+.navigation-resizer:hover,
+.navigation-resizer:focus-visible {
+  background: var(--accent);
+  outline: 2px solid var(--accent);
+}
+.review-shell .file-heading {
+  padding: 9px 14px;
+}
+.review-shell .file-heading > div {
+  min-width: 0;
+}
+.review-shell .file-heading h2 {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.review-shell .file-heading p,
+.review-shell .file-heading button {
+  font-size: 11px;
+}
+.review-shell .diff-toolbar {
+  padding: 5px 10px;
+}
+.review-shell .diff-toolbar button,
+.review-shell .diff-toolbar .check {
+  font-size: 11px;
+}
+.review-shell .source-headings,
+.review-shell .source-headings button,
+.review-shell .source-meta,
+.review-shell .file-help,
+.review-shell footer {
+  font-size: 11px;
+}
+.review-shell .source-headings > span {
+  padding: 3px 12px;
+}
+.review-details {
+  position: relative;
+  flex: 0 0 300px;
+  z-index: 5;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 300px;
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+  box-shadow: -8px 0 24px #0001;
+  overflow: auto;
+}
+.review-shell .inspector {
+  width: 100%;
+  border: 0;
+  overflow: visible;
+}
+.close-details {
+  display: block;
+  margin: 10px 12px 0 auto;
+}
+.review-shell .analysis-info,
+.review-shell .event-location,
+.review-shell .coverage,
+.review-shell .facet {
+  font-size: 11px;
+}
+.review-shell .event strong {
+  font-size: 12px;
+}
+@media (max-width: 1000px) {
+  .review-context {
+    flex-wrap: wrap;
+  }
+  .review-context code {
+    min-width: 100px;
+  }
+  .review-shell .files-panel {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 4;
+    box-shadow: 8px 0 24px #0001;
+    border-right: 1px solid var(--line);
+    max-width: 80%;
+  }
+  .navigation-resizer {
+    display: none;
+  }
+  .review-shell .local-badge {
+    display: none;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  .review-shell {
+    --muted: #a7b5ad;
+    --surface: #1c2220;
+    --panel: #222a26;
+    --line: #3a463f;
+    --tint: #2b4035;
+  }
+}
+
+.review-shell .navigation-resizer {
+  margin: 0;
+  padding: 0;
+  border-top: 0;
+  border-bottom: 0;
+  border-right: 0;
+}
+@media (max-width: 1000px) {
+  .review-details {
+    position: absolute;
+    top: 60px;
+    width: min(340px, 90%);
+  }
+}
+.review-shell .app-header {
+  min-height: 40px;
+  padding: 5px 16px;
+}
+.review-shell .app-header button,
+.review-context button {
+  padding: 4px 9px;
+  line-height: 18px;
+}
+.review-context {
+  padding: 5px 12px;
+}
+.review-shell .file-heading {
+  padding: 6px 14px;
+}
+.review-shell .file-heading h2 {
+  line-height: 18px;
+}
+.review-shell .file-heading p {
+  line-height: 16px;
+  margin-top: 2px;
+}
+.review-shell .diff-toolbar {
+  padding: 3px 10px;
+}
+.review-shell .diff-toolbar button {
+  padding: 3px 6px;
+}
+.review-shell .source-headings > span {
+  padding: 2px 12px;
+}
+.review-shell .source-meta {
+  padding: 4px 12px;
+  line-height: 15px;
+}
+.review-shell footer {
+  padding: 4px 16px;
+  line-height: 15px;
+}
+
+.review-shell {
+  --syntax-keyword: #7943a0;
+  --syntax-string: #9b3427;
+  --syntax-literal: #256240;
+  --syntax-type: #176979;
+  --syntax-function: #285eb0;
+  --syntax-error: #ad3030;
+}
+@media (prefers-color-scheme: dark) {
+  .review-shell {
+    --syntax-keyword: #d6a7ed;
+    --syntax-string: #f1b2a2;
+    --syntax-literal: #a5d9aa;
+    --syntax-type: #8bd2da;
+    --syntax-function: #9fc9ff;
+    --syntax-error: #ffa5a5;
+  }
+}
+
+.review-shell .file-heading h2 {
+  display: flex;
+}
+.heading-parent {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  color: var(--muted);
+  font-weight: 400;
+}
+.heading-leaf {
+  flex-shrink: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
