@@ -4,6 +4,7 @@ import type { ComparisonManifest, ComparisonSpec, FileAnalysis } from "@diffkin/
 export interface DiffkinClient {
   open(spec: ComparisonSpec, jobId: string): Promise<ComparisonManifest>;
   page(id: string, offset: number): Promise<ComparisonManifest>;
+  catalog(id: string): Promise<ComparisonManifest>;
   file(id: string, fileId: string, jobId: string): Promise<FileAnalysis>;
   cancel(jobId: string): Promise<void>;
 }
@@ -12,6 +13,7 @@ export const desktopAvailable = isTauri();
 export const client: DiffkinClient = {
   open: (spec, jobId) => invoke("open_comparison", { spec, jobId }),
   page: (id, offset) => invoke("list_changes", { id, offset, limit: 200 }),
+  catalog: (id) => invoke("list_change_catalog", { id }),
   file: (id, fileId, jobId) => invoke("request_file", { id, fileId, jobId }),
   cancel: (jobId) => invoke("cancel_job", { jobId }),
 };
@@ -24,6 +26,9 @@ export function message(error: unknown): string {
 // Only the latest generation may publish a result or clear the loading indicator.
 export class Generation {
   private value = 0;
+  ticket() {
+    return this.value;
+  }
   next() {
     return ++this.value;
   }

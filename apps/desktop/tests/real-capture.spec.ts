@@ -33,6 +33,7 @@ for (const input of inputs) {
     await page.getByRole("button", { name: /变更文件 ·/ }).click();
     await page.getByRole("button", { name: "变更详情", exact: true }).click();
     for (const file of capture.manifest.files) {
+      await page.getByLabel("筛选文件").fill(file.path);
       const button = page
         .locator(".file-item")
         .filter({ has: page.locator(".file-name", { hasText: file.path }) })

@@ -12,6 +12,7 @@ import type {
 import { client, desktopAvailable, Generation, message, type DiffkinClient } from "./lib/client";
 import { usePreferences } from "./lib/use-preferences";
 import { PreferencesPanel } from "./components/PreferencesPanel";
+import { ChangeNavigator } from "./components/ChangeNavigator";
 import { DiffViewer } from "./components/DiffViewer";
 import { ChangeInspector } from "./components/ChangeInspector";
 import { WorkspacePanel } from "./components/WorkspacePanel";
@@ -20,14 +21,6 @@ import { RepositoryPicker } from "./components/RepositoryPicker";
 import { RevisionPicker } from "./components/RevisionPicker";
 import { workspaceClient, sameBasis } from "./lib/workspace-client";
 
-const status: Record<string, string> = {
-  added: "A",
-  deleted: "D",
-  modified: "M",
-  renamed: "R",
-  "type-changed": "T",
-  conflict: "!",
-};
 const modeNames = {
   worktree: "全部本地改动",
   staged: "已暂存",
@@ -90,6 +83,16 @@ export function App({
   const [data, setData] = useState<FileAnalysis | null>(null);
   const [event, setEvent] = useState<ChangeEvent | null>(null);
   const [scope, setScope] = useState(false);
+  const searchInput = useRef<HTMLInputElement>(null);
+  const [catalogBusy, setCatalogBusy] = useState(false);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
+  const [history, setHistory] = useState<{ snapshot: string; files: FileSummary[]; index: number }>(
+    {
+      snapshot: "",
+      files: [],
+      index: -1,
+    },
+  );
   const [filter, setFilter] = useState("");
   const [reviews, setReviews] = useState(readReviews);
   const [reviewBases, setReviewBases] = useState<Record<string, string>>({});
@@ -127,8 +130,17 @@ export function App({
     setPaging(false);
     setError("已取消。可以重新选择文件或刷新比较。");
   }
-  async function selectFile(file: FileSummary, snapshot = manifest) {
+  async function selectFile(file: FileSummary, snapshot = manifest, fromHistory = false) {
     if (!snapshot) return;
+    if (history.snapshot !== snapshot.id)
+      setHistory({ snapshot: snapshot.id, files: [], index: -1 });
+    if (
+      !fromHistory &&
+      (history.snapshot !== snapshot.id || history.files[history.index]?.id !== file.id)
+    ) {
+      const files = [...history.files.slice(0, history.index + 1), file].slice(-100);
+      setHistory({ snapshot: snapshot.id, files, index: files.length - 1 });
+    }
     cancelOne(fileJob);
     const generation = fileGeneration.current.next();
     const job = jobId();
@@ -223,6 +235,67 @@ export function App({
       if (pageGeneration.current.isCurrent(generation)) setError(message(cause));
     } finally {
       if (pageGeneration.current.isCurrent(generation)) setPaging(false);
+    }
+  }
+  const needsCatalog = !!filter && !!manifest && manifest.files.length < manifest.totalFiles;
+  const catalogId = needsCatalog ? manifest?.id : null;
+  useEffect(() => {
+    if (!catalogId) return;
+    let active = true;
+    const id = catalogId;
+    queueMicrotask(() => {
+      if (active) {
+        setCatalogBusy(true);
+        setCatalogError(null);
+      }
+    });
+    void api
+      .catalog(id)
+      .then((result) => {
+        if (!active) return;
+        if (result.id !== id || result.files.length !== result.totalFiles)
+          throw new Error("完整变更清单尚未就绪");
+        setManifest((current) => (current?.id === id ? result : current));
+      })
+      .catch((cause) => {
+        if (active) setCatalogError(message(cause));
+      })
+      .finally(() => {
+        if (active) setCatalogBusy(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [catalogId, api]);
+  async function nextUnreviewed() {
+    if (!manifest) return;
+    const id = manifest.id;
+    const ticket = fileGeneration.current.ticket();
+    try {
+      const complete =
+        manifest.files.length < manifest.totalFiles ? await api.catalog(id) : manifest;
+      if (!fileGeneration.current.isCurrent(ticket)) return;
+      if (complete.id !== id || complete.files.length !== complete.totalFiles)
+        throw new Error("完整变更清单尚未就绪");
+      setManifest(complete);
+      const files = complete.files.filter((file) =>
+        file.path.toLocaleLowerCase().includes(filter.toLocaleLowerCase()),
+      );
+      const index = files.findIndex((file) => file.id === selectedFile?.id);
+      const next = [...files.slice(index + 1), ...files.slice(0, index)].find(
+        (file) => !isReviewed(file),
+      );
+      if (next) void selectFile(next, complete);
+    } catch (cause) {
+      if (fileGeneration.current.isCurrent(ticket)) setError(message(cause));
+    }
+  }
+  function browseHistory(direction: number) {
+    const next = history.index + direction;
+    const file = history.files[next];
+    if (file) {
+      setHistory({ ...history, index: next });
+      void selectFile(file, manifest, true);
     }
   }
   function beginWorkspaceOperation() {
@@ -332,6 +405,12 @@ export function App({
   }
   useEffect(() => {
     function keyboard(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "p") {
+        e.preventDefault();
+        setShowFiles(true);
+        requestAnimationFrame(() => searchInput.current?.focus());
+        return;
+      }
       if ((e.metaKey || e.ctrlKey) && e.key === "o") {
         e.preventDefault();
         setShowCompareSettings(true);
@@ -468,6 +547,21 @@ export function App({
             刷新比较
           </button>
           {pending && <button onClick={cancel}>取消</button>}
+          <button
+            disabled={history.index <= 0}
+            onClick={() => browseHistory(-1)}
+            aria-label="浏览历史后退"
+          >
+            ←
+          </button>
+          <button
+            disabled={history.index >= history.files.length - 1}
+            onClick={() => browseHistory(1)}
+            aria-label="浏览历史前进"
+          >
+            →
+          </button>
+          <button onClick={() => void nextUnreviewed()}>下个未审查</button>
           <button
             aria-expanded={showDetails}
             aria-controls="review-details"
@@ -644,57 +738,38 @@ export function App({
             <span>{manifest?.totalFiles ?? 0}</span>
           </div>
           <input
+            ref={searchInput}
             className="file-search"
             aria-label="筛选文件"
-            placeholder={
-              manifest && manifest.files.length < manifest.totalFiles
-                ? "筛选已加载路径…"
-                : "筛选路径…"
-            }
+            placeholder="搜索全部变更路径… ⌘/Ctrl P"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           />
-          {manifest && manifest.files.length < manifest.totalFiles && (
-            <p className="navigation-scope">
-              仅筛选已加载的 {manifest.files.length} / {manifest.totalFiles} 个文件
+          {catalogBusy && needsCatalog && (
+            <p className="navigation-scope" role="status">
+              正在搜索完整变更清单…
             </p>
           )}
-          <div className="file-list">
-            {visibleFiles.map((file) => (
-              <button
-                key={file.id}
-                aria-label={file.path}
-                className={`file-item ${file.id === selectedFile?.id ? "selected" : ""}`}
-                aria-current={file.id === selectedFile?.id ? "true" : undefined}
-                onClick={() => void selectFile(file)}
-                title={file.oldPath ? `${file.oldPath} → ${file.path}` : file.path}
-              >
-                <span className={`file-status ${file.status}`}>{status[file.status] ?? "?"}</span>
-                <span className="file-name">
-                  <span className="path-directory">
-                    {file.path.slice(0, file.path.lastIndexOf("/") + 1)}
-                  </span>
-                  <span className="path-basename">
-                    {file.path.slice(file.path.lastIndexOf("/") + 1)}
-                  </span>
-                  <small>{file.oldPath ? `← ${file.oldPath}` : (file.notices[0] ?? "")}</small>
-                </span>
-                {isReviewed(file) && (
-                  <span className="review-dot" aria-label="已审查">
-                    ✓
-                  </span>
-                )}
-              </button>
-            ))}
-            {manifest && visibleFiles.length === 0 && (
-              <p className="muted">{manifest.totalFiles ? "没有匹配的路径" : "没有变化"}</p>
-            )}
-            {manifest && manifest.files.length < manifest.totalFiles && (
-              <button className="load-more" disabled={paging} onClick={() => void more()}>
-                {paging ? "加载中…" : `加载更多（${manifest.files.length}/${manifest.totalFiles}）`}
-              </button>
-            )}
-          </div>
+          {catalogError && needsCatalog && (
+            <p className="navigation-scope" role="alert">
+              完整搜索失败：{catalogError}。清空搜索后可继续分页浏览。
+            </p>
+          )}
+          <ChangeNavigator
+            files={visibleFiles}
+            selected={selectedFile?.id}
+            query={filter}
+            onSelect={(file) => void selectFile(file)}
+            reviewed={isReviewed}
+          />
+          {manifest && visibleFiles.length === 0 && !needsCatalog && (
+            <p className="muted">{manifest.totalFiles ? "没有匹配的路径" : "没有变化"}</p>
+          )}
+          {manifest && manifest.files.length < manifest.totalFiles && (
+            <button className="load-more" disabled={paging} onClick={() => void more()}>
+              {paging ? "加载中…" : `加载更多（${manifest.files.length}/${manifest.totalFiles}）`}
+            </button>
+          )}
           <div className="file-help">J / K 切换文件 · ⌘/Ctrl O 打开</div>
         </nav>
         {showFiles && (

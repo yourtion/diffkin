@@ -88,11 +88,22 @@ async function bridge(
     refreshIdentity?: boolean;
     refreshRules?: boolean;
     delayPage?: number;
+    count?: number;
   } = {},
   payload: FileAnalysis = result,
 ) {
   await page.addInitScript(
     ({ manifest, result, options }) => {
+      if (options.count)
+        manifest = {
+          ...manifest,
+          totalFiles: options.count,
+          files: Array.from({ length: options.count }, (_, i) => ({
+            ...manifest.files[0],
+            id: `file-${i}`,
+            path: `packages/p${Math.floor(i / 100)}/file-${String(i).padStart(4, "0")}.ts`,
+          })),
+        };
       const calls: string[] = [];
       let captures = 0;
       Object.defineProperty(window, "isTauri", { value: true });
@@ -110,8 +121,10 @@ async function bridge(
                 ...manifest,
                 id: options.refreshIdentity ? `frozen-${captures}` : manifest.id,
                 totalFiles: options.delayPage ? 3 : manifest.totalFiles,
+                files: options.count ? manifest.files.slice(0, 200) : manifest.files,
               };
             }
+            if (command === "list_change_catalog") return manifest;
             if (command === "list_changes") {
               if (options.delayPage) {
                 const generation = captures;
@@ -123,6 +136,14 @@ async function bridge(
               return { ...manifest, files: [] };
             }
             if (command === "request_file") {
+              if (options.count)
+                return {
+                  ...result,
+                  file: {
+                    ...result.file,
+                    summary: manifest.files.find((file) => file.id === args.fileId),
+                  },
+                };
               if (args.fileId === "first" && options.delayFirst)
                 await new Promise((resolve) => setTimeout(resolve, options.delayFirst));
               if (args.fileId === "second")
@@ -529,3 +550,23 @@ test("reading focus preserves code space and exposes navigation and details on d
   await page.getByRole("button", { name: "比较设置", exact: true }).click();
   await page.screenshot({ path: "test-results/reading-focus-760-dark.png", fullPage: true });
 });
+
+for (const count of [420, 2000])
+  test(`complete search and virtual navigation cover ${count} changes`, async ({ page }) => {
+    await bridge(page, { count });
+    await open(page);
+    expect(await page.locator(".file-item").count()).toBeLessThan(40);
+    const last = `file-${String(count - 1).padStart(4, "0")}.ts`;
+    await page.getByLabel("筛选文件").fill(last);
+    await expect(page.locator(".file-item")).toHaveCount(1);
+    await page.locator(".file-item").click();
+    await expect(page.locator(".file-heading h2")).toContainText(last);
+    await page.getByLabel("筛选文件").fill("");
+    await page.getByRole("button", { name: "目录树", exact: true }).click();
+    await expect(page.locator(".file-item.selected")).toBeVisible();
+    await page.getByRole("button", { name: "浏览历史后退" }).click();
+    await expect(page.locator(".file-heading h2")).toContainText("file-0000.ts");
+    await page.getByRole("button", { name: "下个未审查", exact: true }).click();
+    await expect(page.locator(".file-heading h2")).toContainText("file-0001.ts");
+    expect(await page.locator(".file-item").count()).toBeLessThan(40);
+  });

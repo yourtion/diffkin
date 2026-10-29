@@ -53,6 +53,14 @@ fn list_changes(
 }
 
 #[tauri::command]
+fn list_change_catalog(
+    id: String,
+    state: State<'_, Shared>,
+) -> Result<ComparisonManifest, RepositoryError> {
+    Ok(state.snapshot(&id)?.manifest(0, usize::MAX))
+}
+
+#[tauri::command]
 async fn request_file(
     id: String,
     file_id: String,
@@ -104,6 +112,7 @@ fn main() {
             navigation_commands::list_repository_refs,
             open_comparison,
             list_changes,
+            list_change_catalog,
             request_file,
             cancel_job,
             workspace_commands::workspace_list,
