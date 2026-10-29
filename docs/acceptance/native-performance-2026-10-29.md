@@ -8,6 +8,8 @@
 
 起点为程序触发实际按钮事件，终点为内容条件满足后的两次 requestAnimationFrame，保守覆盖一次绘制机会。它包含 React/编辑器布局与实际 IPC，但不是像素传感器测出的物理显示时刻，也不包括 OS 输入设备到点击事件的延迟。每个场景 30 轮；两份未缓存文件共 60 个样本。p95 使用 nearest-rank。首次文本可以是先行冻结文本，结构完成以可审查状态为准。捕获统计截止新 manifest 和导航内容就绪。此机器仍运行用户的日常应用，属于本机基线；不冒充独占性能实验室或跨机器发布认证。
 
+macOS 验收脚本会为原生进程创建临时 `caffeinate` 断言，运行期间防止空闲休眠和熄屏，退出或失败后释放；不使用固定时长，不改变手动锁屏或系统强制策略。系统断言与进程结束后的释放已核验。
+
 必须将窗口置前后再采样；后台窗口的 rAF 暂停不能算入应用交互时延。驱动输入阶段的绘制等待使实际采样在窗口激活后开始。通过桌面工具对窗口执行 Raise；不修改系统锁屏策略。
 
 ## 基线
@@ -87,6 +89,8 @@ python3 scripts/native-benchmark-summary.py /tmp/diffkin-native-results.json
 - Rust fmt、workspace/all-targets Clippy（含 benchmark feature）与生成协议一致性通过；没有协议 DTO 变更。
 - 不含测试入口的最终 `Diffkin Acceptance.app` 已构建并打包；二进制摘要、检查日志见 [`final-checks.json`](results/native-performance/final-checks.json)。
 
-追加的前台内存复测被桌面控制工具报告的锁定状态阻挡，没有纳入有效结果。资源清理改由测试构建通过真实 IPC 入口启动，由原生端独立完成两次万文件捕获、末页冻结读取、报告与正常退出；它不依赖后台 WebView 回调，也不用于可见延迟测量。最终两次捕获与读取均通过，正常退出后快照目录数为 0，原始记录为 [`giant-lifecycle.json`](results/native-performance/giant-lifecycle.json)。
+追加的前台内存复测最初被桌面控制工具报告的锁定状态阻挡，该失败尝试没有纳入有效结果。资源清理改由测试构建通过真实 IPC 入口启动，由原生端独立完成两次万文件捕获、末页冻结读取、报告与正常退出；它不依赖后台 WebView 回调，也不用于可见延迟测量。最终两次捕获与读取均通过，正常退出后快照目录数为 0，原始记录为 [`giant-lifecycle.json`](results/native-performance/giant-lifecycle.json)。
+
+用户解锁后，最终代码的万文件前台复验已补齐：完整搜索与末尾文件实际源码、760×508 / 1200×738 内容区布局均通过；单轮独立内存运行共 16 个样本，进程集合 physical footprint 采样峰值 **290.1 MiB**，无采样错误，新增 WebKit 辅助进程退出核对通过，退出后快照目录为 0。该输入仍为每文件一个函数；不能与第二阶段约 187 KiB 文件的 30 轮结果直接比较，也不是长期稳定内存或延迟 p95。原始记录见 [`giant-foreground.json`](results/native-performance/giant-foreground.json) 和 [`giant-foreground.memory.json`](results/native-performance/giant-foreground.memory.json)。
 
 此轮仍没有完成冷启动、滚动帧率、长期稳定内存和跨系统/缩放组合的发布认证；本机 30 轮交互与采样峰值仅支持前文所列场景结论。

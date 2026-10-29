@@ -9,6 +9,7 @@ import json
 import os
 import pathlib
 import subprocess
+import sys
 import time
 
 parser = argparse.ArgumentParser()
@@ -26,10 +27,15 @@ before = processes() if args.memory else {}
 env = dict(os.environ, DIFFKIN_BENCH_CONFIG=pathlib.Path(args.config).read_text(), DIFFKIN_BENCH_OUTPUT=str(output))
 with open(str(output) + ".log", "w") as log:
     process = subprocess.Popen([str(pathlib.Path(args.binary).resolve())], env=env, stdout=log, stderr=log)
+    wake = None
     samples = []
     helpers = set()
     started = time.monotonic()
     try:
+        # Match the assertion lifetime to this run instead of a fixed timeout.
+        # This prevents idle sleep/display sleep, not manual or managed locking.
+        if sys.platform == "darwin":
+            wake = subprocess.Popen(["/usr/bin/caffeinate", "-d", "-i", "-u", "-w", str(process.pid)])
         while process.poll() is None:
             if time.monotonic() - started > 600:
                 raise TimeoutError("Native benchmark exceeded 10 minutes")
@@ -46,9 +52,15 @@ with open(str(output) + ".log", "w") as log:
                 samples.append({"seconds": time.monotonic() - started, "rssKiB": sum(rows[pid][1] for pid in live), "processes": [{"pid": pid, "rssKiB": rows[pid][1], "name": pathlib.Path(rows[pid][2]).name} for pid in live], "footprintBytes": footprint.get("total footprint"), "footprintProcesses": footprint.get("processes"), "errors": footprint.get("errors")})
             time.sleep(.1 if not args.memory else 1)
     finally:
-        if process.poll() is None:
-            process.terminate()
-            process.wait(timeout=10)
+        try:
+            if process.poll() is None:
+                process.terminate()
+                process.wait(timeout=10)
+        finally:
+            if wake is not None:
+                if wake.poll() is None:
+                    wake.terminate()
+                wake.wait(timeout=10)
     if args.memory:
         time.sleep(3)
         surviving = sorted(helpers & processes().keys())

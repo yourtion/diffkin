@@ -1,0 +1,1163 @@
+{
+  "method": "physical footprint and RSS sum; new WebKit PID lifecycle plus host descendants; RSS may double-count shared pages; 1s sampling can miss short peaks",
+  "helpers": [40868, 40869, 40870],
+  "survivingHelpers": [],
+  "samples": [
+    {
+      "seconds": 0.058434583,
+      "rssKiB": 352,
+      "processes": [
+        {
+          "pid": 40864,
+          "rssKiB": 352,
+          "name": "diffkin-desktop"
+        }
+      ],
+      "footprintBytes": 3408448,
+      "footprintProcesses": [
+        {
+          "name": "diffkin-desktop",
+          "pid": 40864,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 3408448,
+          "auxiliary": {
+            "phys_footprint_peak": 3408448,
+            "phys_footprint": 3408448
+          }
+        }
+      ],
+      "errors": []
+    },
+    {
+      "seconds": 1.1710144580000001,
+      "rssKiB": 230704,
+      "processes": [
+        {
+          "pid": 40864,
+          "rssKiB": 112304,
+          "name": "diffkin-desktop"
+        },
+        {
+          "pid": 40868,
+          "rssKiB": 32048,
+          "name": "com.apple.WebKit.GPU"
+        },
+        {
+          "pid": 40869,
+          "rssKiB": 75472,
+          "name": "com.apple.WebKit.WebContent"
+        },
+        {
+          "pid": 40870,
+          "rssKiB": 10880,
+          "name": "com.apple.WebKit.Networking"
+        }
+      ],
+      "footprintBytes": 131894560,
+      "footprintProcesses": [
+        {
+          "name": "com.apple.WebKit.WebContent",
+          "pid": 40869,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 69796824,
+          "auxiliary": {
+            "phys_footprint_peak": 73696216,
+            "phys_footprint": 69796824
+          }
+        },
+        {
+          "name": "diffkin-desktop",
+          "pid": 40864,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 34440368,
+          "auxiliary": {
+            "phys_footprint_peak": 35030216,
+            "phys_footprint": 34440368
+          }
+        },
+        {
+          "name": "com.apple.WebKit.GPU",
+          "pid": 40868,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 20464336,
+          "auxiliary": {
+            "phys_footprint_peak": 20890320,
+            "phys_footprint": 20464336
+          }
+        },
+        {
+          "name": "com.apple.WebKit.Networking",
+          "pid": 40870,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 7455176,
+          "auxiliary": {
+            "phys_footprint_peak": 7864776,
+            "phys_footprint": 7455176
+          }
+        }
+      ],
+      "errors": []
+    },
+    {
+      "seconds": 2.295572833,
+      "rssKiB": 231152,
+      "processes": [
+        {
+          "pid": 40864,
+          "rssKiB": 112304,
+          "name": "diffkin-desktop"
+        },
+        {
+          "pid": 40868,
+          "rssKiB": 32048,
+          "name": "com.apple.WebKit.GPU"
+        },
+        {
+          "pid": 40869,
+          "rssKiB": 75920,
+          "name": "com.apple.WebKit.WebContent"
+        },
+        {
+          "pid": 40870,
+          "rssKiB": 10880,
+          "name": "com.apple.WebKit.Networking"
+        }
+      ],
+      "footprintBytes": 101879096,
+      "footprintProcesses": [
+        {
+          "name": "com.apple.WebKit.WebContent",
+          "pid": 40869,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 50512856,
+          "auxiliary": {
+            "phys_footprint_peak": 73696216,
+            "phys_footprint": 50512856
+          }
+        },
+        {
+          "name": "diffkin-desktop",
+          "pid": 40864,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 33096904,
+          "auxiliary": {
+            "phys_footprint_peak": 35030216,
+            "phys_footprint": 33096904
+          }
+        },
+        {
+          "name": "com.apple.WebKit.GPU",
+          "pid": 40868,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 12354256,
+          "auxiliary": {
+            "phys_footprint_peak": 20890320,
+            "phys_footprint": 12354256
+          }
+        },
+        {
+          "name": "com.apple.WebKit.Networking",
+          "pid": 40870,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 6177224,
+          "auxiliary": {
+            "phys_footprint_peak": 7864776,
+            "phys_footprint": 6177224
+          }
+        }
+      ],
+      "errors": []
+    },
+    {
+      "seconds": 3.414616083,
+      "rssKiB": 231152,
+      "processes": [
+        {
+          "pid": 40864,
+          "rssKiB": 112304,
+          "name": "diffkin-desktop"
+        },
+        {
+          "pid": 40868,
+          "rssKiB": 32048,
+          "name": "com.apple.WebKit.GPU"
+        },
+        {
+          "pid": 40869,
+          "rssKiB": 75920,
+          "name": "com.apple.WebKit.WebContent"
+        },
+        {
+          "pid": 40870,
+          "rssKiB": 10880,
+          "name": "com.apple.WebKit.Networking"
+        }
+      ],
+      "footprintBytes": 101256504,
+      "footprintProcesses": [
+        {
+          "name": "com.apple.WebKit.WebContent",
+          "pid": 40869,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 50054104,
+          "auxiliary": {
+            "phys_footprint_peak": 73696216,
+            "phys_footprint": 50054104
+          }
+        },
+        {
+          "name": "diffkin-desktop",
+          "pid": 40864,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 32982216,
+          "auxiliary": {
+            "phys_footprint_peak": 35030216,
+            "phys_footprint": 32982216
+          }
+        },
+        {
+          "name": "com.apple.WebKit.GPU",
+          "pid": 40868,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 12305104,
+          "auxiliary": {
+            "phys_footprint_peak": 20890320,
+            "phys_footprint": 12305104
+          }
+        },
+        {
+          "name": "com.apple.WebKit.Networking",
+          "pid": 40870,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 6177224,
+          "auxiliary": {
+            "phys_footprint_peak": 7864776,
+            "phys_footprint": 6177224
+          }
+        }
+      ],
+      "errors": []
+    },
+    {
+      "seconds": 4.5323537080000005,
+      "rssKiB": 231152,
+      "processes": [
+        {
+          "pid": 40864,
+          "rssKiB": 112304,
+          "name": "diffkin-desktop"
+        },
+        {
+          "pid": 40868,
+          "rssKiB": 32048,
+          "name": "com.apple.WebKit.GPU"
+        },
+        {
+          "pid": 40869,
+          "rssKiB": 75920,
+          "name": "com.apple.WebKit.WebContent"
+        },
+        {
+          "pid": 40870,
+          "rssKiB": 10880,
+          "name": "com.apple.WebKit.Networking"
+        }
+      ],
+      "footprintBytes": 101256504,
+      "footprintProcesses": [
+        {
+          "name": "com.apple.WebKit.WebContent",
+          "pid": 40869,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 50054104,
+          "auxiliary": {
+            "phys_footprint_peak": 73696216,
+            "phys_footprint": 50054104
+          }
+        },
+        {
+          "name": "diffkin-desktop",
+          "pid": 40864,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 32982216,
+          "auxiliary": {
+            "phys_footprint_peak": 35030216,
+            "phys_footprint": 32982216
+          }
+        },
+        {
+          "name": "com.apple.WebKit.GPU",
+          "pid": 40868,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 12305104,
+          "auxiliary": {
+            "phys_footprint_peak": 20890320,
+            "phys_footprint": 12305104
+          }
+        },
+        {
+          "name": "com.apple.WebKit.Networking",
+          "pid": 40870,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 6177224,
+          "auxiliary": {
+            "phys_footprint_peak": 7864776,
+            "phys_footprint": 6177224
+          }
+        }
+      ],
+      "errors": []
+    },
+    {
+      "seconds": 5.653131416,
+      "rssKiB": 230960,
+      "processes": [
+        {
+          "pid": 40864,
+          "rssKiB": 112160,
+          "name": "diffkin-desktop"
+        },
+        {
+          "pid": 40868,
+          "rssKiB": 32016,
+          "name": "com.apple.WebKit.GPU"
+        },
+        {
+          "pid": 40869,
+          "rssKiB": 75920,
+          "name": "com.apple.WebKit.WebContent"
+        },
+        {
+          "pid": 40870,
+          "rssKiB": 10864,
+          "name": "com.apple.WebKit.Networking"
+        }
+      ],
+      "footprintBytes": 101010744,
+      "footprintProcesses": [
+        {
+          "name": "com.apple.WebKit.WebContent",
+          "pid": 40869,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 50004952,
+          "auxiliary": {
+            "phys_footprint_peak": 73696216,
+            "phys_footprint": 50004952
+          }
+        },
+        {
+          "name": "diffkin-desktop",
+          "pid": 40864,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 32851144,
+          "auxiliary": {
+            "phys_footprint_peak": 35030216,
+            "phys_footprint": 32851144
+          }
+        },
+        {
+          "name": "com.apple.WebKit.GPU",
+          "pid": 40868,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 12288720,
+          "auxiliary": {
+            "phys_footprint_peak": 20890320,
+            "phys_footprint": 12288720
+          }
+        },
+        {
+          "name": "com.apple.WebKit.Networking",
+          "pid": 40870,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 6128072,
+          "auxiliary": {
+            "phys_footprint_peak": 7864776,
+            "phys_footprint": 6128072
+          }
+        }
+      ],
+      "errors": []
+    },
+    {
+      "seconds": 6.793691291,
+      "rssKiB": 230768,
+      "processes": [
+        {
+          "pid": 40864,
+          "rssKiB": 112112,
+          "name": "diffkin-desktop"
+        },
+        {
+          "pid": 40868,
+          "rssKiB": 31920,
+          "name": "com.apple.WebKit.GPU"
+        },
+        {
+          "pid": 40869,
+          "rssKiB": 75872,
+          "name": "com.apple.WebKit.WebContent"
+        },
+        {
+          "pid": 40870,
+          "rssKiB": 10864,
+          "name": "com.apple.WebKit.Networking"
+        }
+      ],
+      "footprintBytes": 100732216,
+      "footprintProcesses": [
+        {
+          "name": "com.apple.WebKit.WebContent",
+          "pid": 40869,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 49906648,
+          "auxiliary": {
+            "phys_footprint_peak": 73696216,
+            "phys_footprint": 49906648
+          }
+        },
+        {
+          "name": "diffkin-desktop",
+          "pid": 40864,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 32801992,
+          "auxiliary": {
+            "phys_footprint_peak": 35030216,
+            "phys_footprint": 32801992
+          }
+        },
+        {
+          "name": "com.apple.WebKit.GPU",
+          "pid": 40868,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 12239568,
+          "auxiliary": {
+            "phys_footprint_peak": 20890320,
+            "phys_footprint": 12239568
+          }
+        },
+        {
+          "name": "com.apple.WebKit.Networking",
+          "pid": 40870,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 6046152,
+          "auxiliary": {
+            "phys_footprint_peak": 7864776,
+            "phys_footprint": 6046152
+          }
+        }
+      ],
+      "errors": []
+    },
+    {
+      "seconds": 7.9270137080000005,
+      "rssKiB": 232416,
+      "processes": [
+        {
+          "pid": 40864,
+          "rssKiB": 113440,
+          "name": "diffkin-desktop"
+        },
+        {
+          "pid": 40868,
+          "rssKiB": 31872,
+          "name": "com.apple.WebKit.GPU"
+        },
+        {
+          "pid": 40869,
+          "rssKiB": 76240,
+          "name": "com.apple.WebKit.WebContent"
+        },
+        {
+          "pid": 40870,
+          "rssKiB": 10864,
+          "name": "com.apple.WebKit.Networking"
+        }
+      ],
+      "footprintBytes": 101403960,
+      "footprintProcesses": [
+        {
+          "name": "com.apple.WebKit.WebContent",
+          "pid": 40869,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 49972184,
+          "auxiliary": {
+            "phys_footprint_peak": 73696216,
+            "phys_footprint": 49972184
+          }
+        },
+        {
+          "name": "diffkin-desktop",
+          "pid": 40864,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 33424584,
+          "auxiliary": {
+            "phys_footprint_peak": 35030216,
+            "phys_footprint": 33424584
+          }
+        },
+        {
+          "name": "com.apple.WebKit.GPU",
+          "pid": 40868,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 12223184,
+          "auxiliary": {
+            "phys_footprint_peak": 20890320,
+            "phys_footprint": 12223184
+          }
+        },
+        {
+          "name": "com.apple.WebKit.Networking",
+          "pid": 40870,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 6046152,
+          "auxiliary": {
+            "phys_footprint_peak": 7864776,
+            "phys_footprint": 6046152
+          }
+        }
+      ],
+      "errors": []
+    },
+    {
+      "seconds": 9.055686166,
+      "rssKiB": 232272,
+      "processes": [
+        {
+          "pid": 40864,
+          "rssKiB": 113472,
+          "name": "diffkin-desktop"
+        },
+        {
+          "pid": 40868,
+          "rssKiB": 31824,
+          "name": "com.apple.WebKit.GPU"
+        },
+        {
+          "pid": 40869,
+          "rssKiB": 76192,
+          "name": "com.apple.WebKit.WebContent"
+        },
+        {
+          "pid": 40870,
+          "rssKiB": 10784,
+          "name": "com.apple.WebKit.Networking"
+        }
+      ],
+      "footprintBytes": 101403960,
+      "footprintProcesses": [
+        {
+          "name": "com.apple.WebKit.WebContent",
+          "pid": 40869,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 49972184,
+          "auxiliary": {
+            "phys_footprint_peak": 73696216,
+            "phys_footprint": 49972184
+          }
+        },
+        {
+          "name": "diffkin-desktop",
+          "pid": 40864,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 33424584,
+          "auxiliary": {
+            "phys_footprint_peak": 35030216,
+            "phys_footprint": 33424584
+          }
+        },
+        {
+          "name": "com.apple.WebKit.GPU",
+          "pid": 40868,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 12223184,
+          "auxiliary": {
+            "phys_footprint_peak": 20890320,
+            "phys_footprint": 12223184
+          }
+        },
+        {
+          "name": "com.apple.WebKit.Networking",
+          "pid": 40870,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 6046152,
+          "auxiliary": {
+            "phys_footprint_peak": 7864776,
+            "phys_footprint": 6046152
+          }
+        }
+      ],
+      "errors": []
+    },
+    {
+      "seconds": 10.184319833,
+      "rssKiB": 232272,
+      "processes": [
+        {
+          "pid": 40864,
+          "rssKiB": 113472,
+          "name": "diffkin-desktop"
+        },
+        {
+          "pid": 40868,
+          "rssKiB": 31824,
+          "name": "com.apple.WebKit.GPU"
+        },
+        {
+          "pid": 40869,
+          "rssKiB": 76192,
+          "name": "com.apple.WebKit.WebContent"
+        },
+        {
+          "pid": 40870,
+          "rssKiB": 10784,
+          "name": "com.apple.WebKit.Networking"
+        }
+      ],
+      "footprintBytes": 101403960,
+      "footprintProcesses": [
+        {
+          "name": "com.apple.WebKit.WebContent",
+          "pid": 40869,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 49972184,
+          "auxiliary": {
+            "phys_footprint_peak": 73696216,
+            "phys_footprint": 49972184
+          }
+        },
+        {
+          "name": "diffkin-desktop",
+          "pid": 40864,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 33424584,
+          "auxiliary": {
+            "phys_footprint_peak": 35030216,
+            "phys_footprint": 33424584
+          }
+        },
+        {
+          "name": "com.apple.WebKit.GPU",
+          "pid": 40868,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 12223184,
+          "auxiliary": {
+            "phys_footprint_peak": 20890320,
+            "phys_footprint": 12223184
+          }
+        },
+        {
+          "name": "com.apple.WebKit.Networking",
+          "pid": 40870,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 6046152,
+          "auxiliary": {
+            "phys_footprint_peak": 7864776,
+            "phys_footprint": 6046152
+          }
+        }
+      ],
+      "errors": []
+    },
+    {
+      "seconds": 11.327975333,
+      "rssKiB": 255952,
+      "processes": [
+        {
+          "pid": 40864,
+          "rssKiB": 134560,
+          "name": "diffkin-desktop"
+        },
+        {
+          "pid": 40868,
+          "rssKiB": 33056,
+          "name": "com.apple.WebKit.GPU"
+        },
+        {
+          "pid": 40869,
+          "rssKiB": 76800,
+          "name": "com.apple.WebKit.WebContent"
+        },
+        {
+          "pid": 40870,
+          "rssKiB": 10736,
+          "name": "com.apple.WebKit.Networking"
+        },
+        {
+          "pid": 41419,
+          "rssKiB": 800,
+          "name": "(git)"
+        }
+      ],
+      "footprintBytes": 145034576,
+      "footprintProcesses": [
+        {
+          "name": "com.apple.WebKit.WebContent",
+          "pid": 40869,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 63161304,
+          "auxiliary": {
+            "phys_footprint_peak": 73696216,
+            "phys_footprint": 63161304
+          }
+        },
+        {
+          "name": "diffkin-desktop",
+          "pid": 40864,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 54822112,
+          "auxiliary": {
+            "phys_footprint_peak": 54838496,
+            "phys_footprint": 54822112
+          }
+        },
+        {
+          "name": "com.apple.WebKit.GPU",
+          "pid": 40868,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 21316304,
+          "auxiliary": {
+            "phys_footprint_peak": 21332688,
+            "phys_footprint": 21316304
+          }
+        },
+        {
+          "name": "com.apple.WebKit.Networking",
+          "pid": 40870,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 5997000,
+          "auxiliary": {
+            "phys_footprint_peak": 7864776,
+            "phys_footprint": 5997000
+          }
+        }
+      ],
+      "errors": []
+    },
+    {
+      "seconds": 12.444701540999999,
+      "rssKiB": 256080,
+      "processes": [
+        {
+          "pid": 40864,
+          "rssKiB": 135520,
+          "name": "diffkin-desktop"
+        },
+        {
+          "pid": 40868,
+          "rssKiB": 33040,
+          "name": "com.apple.WebKit.GPU"
+        },
+        {
+          "pid": 40869,
+          "rssKiB": 76784,
+          "name": "com.apple.WebKit.WebContent"
+        },
+        {
+          "pid": 40870,
+          "rssKiB": 10736,
+          "name": "com.apple.WebKit.Networking"
+        },
+        {
+          "pid": 42580,
+          "rssKiB": 0,
+          "name": "(git)"
+        }
+      ],
+      "footprintBytes": 123096400,
+      "footprintProcesses": [
+        {
+          "name": "diffkin-desktop",
+          "pid": 40864,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 55837920,
+          "auxiliary": {
+            "phys_footprint_peak": 55870688,
+            "phys_footprint": 55837920
+          }
+        },
+        {
+          "name": "com.apple.WebKit.WebContent",
+          "pid": 40869,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 48301016,
+          "auxiliary": {
+            "phys_footprint_peak": 73696216,
+            "phys_footprint": 48301016
+          }
+        },
+        {
+          "name": "com.apple.WebKit.GPU",
+          "pid": 40868,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 13222608,
+          "auxiliary": {
+            "phys_footprint_peak": 21332688,
+            "phys_footprint": 13222608
+          }
+        },
+        {
+          "name": "com.apple.WebKit.Networking",
+          "pid": 40870,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 5997000,
+          "auxiliary": {
+            "phys_footprint_peak": 7864776,
+            "phys_footprint": 5997000
+          }
+        }
+      ],
+      "errors": []
+    },
+    {
+      "seconds": 13.560324957999999,
+      "rssKiB": 258240,
+      "processes": [
+        {
+          "pid": 40864,
+          "rssKiB": 136800,
+          "name": "diffkin-desktop"
+        },
+        {
+          "pid": 40868,
+          "rssKiB": 33024,
+          "name": "com.apple.WebKit.GPU"
+        },
+        {
+          "pid": 40869,
+          "rssKiB": 76784,
+          "name": "com.apple.WebKit.WebContent"
+        },
+        {
+          "pid": 40870,
+          "rssKiB": 10736,
+          "name": "com.apple.WebKit.Networking"
+        },
+        {
+          "pid": 43746,
+          "rssKiB": 896,
+          "name": "(git)"
+        }
+      ],
+      "footprintBytes": 125193552,
+      "footprintProcesses": [
+        {
+          "name": "diffkin-desktop",
+          "pid": 40864,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 58213600,
+          "auxiliary": {
+            "phys_footprint_peak": 58213600,
+            "phys_footprint": 58180832
+          }
+        },
+        {
+          "name": "com.apple.WebKit.WebContent",
+          "pid": 40869,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 48284632,
+          "auxiliary": {
+            "phys_footprint_peak": 73696216,
+            "phys_footprint": 48284632
+          }
+        },
+        {
+          "name": "com.apple.WebKit.GPU",
+          "pid": 40868,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 12960464,
+          "auxiliary": {
+            "phys_footprint_peak": 21332688,
+            "phys_footprint": 12960464
+          }
+        },
+        {
+          "name": "com.apple.WebKit.Networking",
+          "pid": 40870,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 5997000,
+          "auxiliary": {
+            "phys_footprint_peak": 7864776,
+            "phys_footprint": 5997000
+          }
+        }
+      ],
+      "errors": []
+    },
+    {
+      "seconds": 14.679979083,
+      "rssKiB": 259248,
+      "processes": [
+        {
+          "pid": 40864,
+          "rssKiB": 138704,
+          "name": "diffkin-desktop"
+        },
+        {
+          "pid": 40868,
+          "rssKiB": 33024,
+          "name": "com.apple.WebKit.GPU"
+        },
+        {
+          "pid": 40869,
+          "rssKiB": 76784,
+          "name": "com.apple.WebKit.WebContent"
+        },
+        {
+          "pid": 40870,
+          "rssKiB": 10736,
+          "name": "com.apple.WebKit.Networking"
+        }
+      ],
+      "footprintBytes": 125586768,
+      "footprintProcesses": [
+        {
+          "name": "diffkin-desktop",
+          "pid": 40864,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 59131104,
+          "auxiliary": {
+            "phys_footprint_peak": 59147488,
+            "phys_footprint": 59131104
+          }
+        },
+        {
+          "name": "com.apple.WebKit.WebContent",
+          "pid": 40869,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 47760344,
+          "auxiliary": {
+            "phys_footprint_peak": 73696216,
+            "phys_footprint": 47760344
+          }
+        },
+        {
+          "name": "com.apple.WebKit.GPU",
+          "pid": 40868,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 12960464,
+          "auxiliary": {
+            "phys_footprint_peak": 21332688,
+            "phys_footprint": 12960464
+          }
+        },
+        {
+          "name": "com.apple.WebKit.Networking",
+          "pid": 40870,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 5997000,
+          "auxiliary": {
+            "phys_footprint_peak": 7864776,
+            "phys_footprint": 5997000
+          }
+        }
+      ],
+      "errors": []
+    },
+    {
+      "seconds": 15.7920375,
+      "rssKiB": 265952,
+      "processes": [
+        {
+          "pid": 40864,
+          "rssKiB": 141520,
+          "name": "diffkin-desktop"
+        },
+        {
+          "pid": 40868,
+          "rssKiB": 33024,
+          "name": "com.apple.WebKit.GPU"
+        },
+        {
+          "pid": 40869,
+          "rssKiB": 76784,
+          "name": "com.apple.WebKit.WebContent"
+        },
+        {
+          "pid": 40870,
+          "rssKiB": 10736,
+          "name": "com.apple.WebKit.Networking"
+        },
+        {
+          "pid": 46003,
+          "rssKiB": 3888,
+          "name": "(git)"
+        }
+      ],
+      "footprintBytes": 128617808,
+      "footprintProcesses": [
+        {
+          "name": "diffkin-desktop",
+          "pid": 40864,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 62211296,
+          "auxiliary": {
+            "phys_footprint_peak": 62178528,
+            "phys_footprint": 62178528
+          }
+        },
+        {
+          "name": "com.apple.WebKit.WebContent",
+          "pid": 40869,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 47760344,
+          "auxiliary": {
+            "phys_footprint_peak": 73696216,
+            "phys_footprint": 47760344
+          }
+        },
+        {
+          "name": "com.apple.WebKit.GPU",
+          "pid": 40868,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 12911312,
+          "auxiliary": {
+            "phys_footprint_peak": 21332688,
+            "phys_footprint": 12911312
+          }
+        },
+        {
+          "name": "com.apple.WebKit.Networking",
+          "pid": 40870,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 5997000,
+          "auxiliary": {
+            "phys_footprint_peak": 7864776,
+            "phys_footprint": 5997000
+          }
+        }
+      ],
+      "errors": []
+    },
+    {
+      "seconds": 16.907218791,
+      "rssKiB": 344080,
+      "processes": [
+        {
+          "pid": 40864,
+          "rssKiB": 149600,
+          "name": "diffkin-desktop"
+        },
+        {
+          "pid": 40868,
+          "rssKiB": 41088,
+          "name": "com.apple.WebKit.GPU"
+        },
+        {
+          "pid": 40869,
+          "rssKiB": 142688,
+          "name": "com.apple.WebKit.WebContent"
+        },
+        {
+          "pid": 40870,
+          "rssKiB": 10704,
+          "name": "com.apple.WebKit.Networking"
+        }
+      ],
+      "footprintBytes": 304156128,
+      "footprintProcesses": [
+        {
+          "name": "com.apple.WebKit.WebContent",
+          "pid": 40869,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 225838088,
+          "auxiliary": {
+            "phys_footprint_peak": 225985544,
+            "phys_footprint": 225838088
+          }
+        },
+        {
+          "name": "diffkin-desktop",
+          "pid": 40864,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 45155552,
+          "auxiliary": {
+            "phys_footprint_peak": 62751968,
+            "phys_footprint": 45155552
+          }
+        },
+        {
+          "name": "com.apple.WebKit.GPU",
+          "pid": 40868,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 27444016,
+          "auxiliary": {
+            "phys_footprint_peak": 27657008,
+            "phys_footprint": 27444016
+          }
+        },
+        {
+          "name": "com.apple.WebKit.Networking",
+          "pid": 40870,
+          "translated": false,
+          "page size": 16384,
+          "footprint": 5980616,
+          "auxiliary": {
+            "phys_footprint_peak": 7864776,
+            "phys_footprint": 5980616
+          }
+        }
+      ],
+      "errors": []
+    }
+  ]
+}

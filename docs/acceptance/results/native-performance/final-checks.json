@@ -14,7 +14,16 @@
     "nativeProductionBuild": "passed, tauri/custom-protocol without native-benchmark feature",
     "nativeLifecycle": "Two 10,000-file captures and final frozen reads passed; normal native exit succeeded; no snapshot directories remained after exit",
     "cleanupRegression": "6 application unit tests (including 1 additional cross-instance retirement test) and 3 disk integration tests passed after final cleanup synchronization",
-    "productionControlEntry": "benchmark_control absent from production binary"
+    "productionControlEntry": "benchmark_control absent from production binary",
+    "nativeGiantForeground": {
+      "complete": true,
+      "iterations": 1,
+      "physicalFootprintSamplePeakBytes": 304156128,
+      "memorySamples": 16,
+      "survivingHelpers": [],
+      "postExitSnapshotDirectories": [],
+      "note": "Foreground rerun after manual unlock; independent memory sample, not a 30-run latency p95"
+    }
   },
   "binary": {
     "path": "/Users/yourtionguo/codes/open/diffkin/target/release/bundle/macos/Diffkin Acceptance.app/Contents/MacOS/diffkin-desktop",
@@ -40,7 +49,6 @@
   ],
   "limits": [
     "Native giant comparison has one functional sample, not a p95 performance claim",
-    "Final foreground rerun blocked by desktop tool reporting locked; separate native IPC lifecycle check does not measure visible latency",
     "Cold startup, scroll frame rate, sustained memory and cross-platform/system scaling certification remain unverified"
   ],
   "postExitSnapshotDirectories": []

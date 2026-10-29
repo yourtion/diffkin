@@ -1,0 +1,140 @@
+{
+  "complete": true,
+  "config": {
+    "idleMs": 10000,
+    "iterations": 1,
+    "lastPath": "packages/module-099/file-09999.ts",
+    "layout": true,
+    "spec": {
+      "base": "44edc60581c06216d4d2de45ab044752cb4ca7fb",
+      "head": "3f49b4b1f5d02751796bc9d26673d6b4aeed20e1",
+      "includeUntracked": false,
+      "mode": "commits",
+      "repository": "/private/tmp/diffkin-native-10000-changes-20261029"
+    }
+  },
+  "environment": {
+    "height": 738,
+    "pixelRatio": 2,
+    "timeOrigin": 1793271490455,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko)",
+    "width": 1200
+  },
+  "giant": {
+    "selected": "packages/module-099/file-09999.ts",
+    "source": "/** documented behavior documented behavior documented behavior documented behavior documented behavior  */export function value_9999_0(input: number) { return input >= 0 ? 1 : 0; }",
+    "total": "10000",
+    "visibleRows": 1
+  },
+  "ipc": [
+    {
+      "command": "open_comparison",
+      "ms": 5514
+    },
+    {
+      "command": "preview_file",
+      "ms": 13
+    },
+    {
+      "command": "request_file",
+      "ms": 43
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "request_file",
+      "ms": 4
+    },
+    {
+      "command": "preview_file",
+      "ms": 2
+    },
+    {
+      "command": "request_file",
+      "ms": 2
+    },
+    {
+      "command": "preview_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 3
+    },
+    {
+      "command": "request_file",
+      "ms": 4
+    },
+    {
+      "command": "preview_file",
+      "ms": 4
+    },
+    {
+      "command": "list_change_catalog",
+      "ms": 13
+    },
+    {
+      "command": "preview_file",
+      "ms": 5
+    },
+    {
+      "command": "request_file",
+      "ms": 5
+    }
+  ],
+  "layouts": [
+    {
+      "height": 508,
+      "overflow": false,
+      "width": 760
+    },
+    {
+      "height": 738,
+      "overflow": false,
+      "width": 1200
+    }
+  ],
+  "samples": [
+    {
+      "iteration": 0,
+      "ms": 5590,
+      "name": "capture-list"
+    },
+    {
+      "iteration": 0,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 0,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00001.ts"
+    },
+    {
+      "iteration": 0,
+      "ms": 34,
+      "name": "uncached-text",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 0,
+      "ms": 66,
+      "name": "uncached-structure",
+      "path": "packages/module-000/file-00002.ts"
+    },
+    {
+      "iteration": 0,
+      "ms": 33,
+      "name": "cached-switch"
+    },
+    {
+      "ms": 65,
+      "name": "last-catalog-file",
+      "path": "packages/module-099/file-09999.ts"
+    }
+  ]
+}
