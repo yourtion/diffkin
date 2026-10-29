@@ -84,6 +84,7 @@ async function bridge(
   page: Page,
   options: {
     delayFirst?: number;
+    delayPreview?: number;
     delayCapture?: number;
     refreshIdentity?: boolean;
     refreshRules?: boolean;
@@ -144,6 +145,8 @@ async function bridge(
               return { ...manifest, files: [] };
             }
             if (command === "preview_file") {
+              if (args.fileId === "first" && options.delayPreview)
+                await new Promise((resolve) => setTimeout(resolve, options.delayPreview));
               return args.fileId === "first"
                 ? result.file
                 : {
@@ -661,4 +664,39 @@ test("large frozen sources paginate independently and retain explicit truncation
   await expect(page.locator(".source-segments textarea").last()).toHaveValue(/TAIL😀new$/);
   await expect(page.locator(".source-segments textarea").first()).not.toHaveValue(/TAIL/);
   await expect(page.locator(".cm-content")).toHaveCount(0);
+});
+
+test("late text preview cannot replace a newer selected file", async ({ page }) => {
+  await bridge(page, { delayPreview: 900, delayFirst: 1300 });
+  await open(page);
+  await page.getByRole("button", { name: "src/other.ts", exact: true }).click();
+  await expect(page.locator(".merge-host")).toContainText("other = 2");
+  await page.waitForTimeout(1500);
+  await expect(page.locator(".file-heading h2")).toHaveText("src/other.ts");
+  await expect(page.locator(".merge-host")).toContainText("other = 2");
+});
+test("refresh keeps the selected path and resets history to the new snapshot", async ({ page }) => {
+  await bridge(page, { refreshIdentity: true });
+  await open(page);
+  await page.getByRole("button", { name: "src/other.ts", exact: true }).click();
+  await expect(page.getByRole("button", { name: "浏览历史后退" })).toBeEnabled();
+  await page.getByRole("button", { name: "刷新比较", exact: true }).click();
+  await expect(page.getByRole("button", { name: "标记已审查", exact: true })).toBeEnabled();
+  await expect(page.locator(".file-heading h2")).toHaveText("src/other.ts");
+  await expect(page.getByRole("button", { name: "浏览历史后退" })).toBeDisabled();
+});
+test("file navigation restores the reading scroll position", async ({ page }) => {
+  const before = Array.from({ length: 400 }, (_, i) => `const before${i} = ${i};`).join("\n");
+  const after = before.replaceAll("before", "after");
+  await bridge(page, {}, { ...result, analysis: null, file: { ...result.file, before, after } });
+  await open(page);
+  await expect(page.locator(".merge-host")).toBeVisible();
+  await page.locator(".merge-host").evaluate((node) => {
+    node.scrollTop = 600;
+  });
+  await expect.poll(() => page.locator(".merge-host").evaluate((node) => node.scrollTop)).toBe(600);
+  await page.getByRole("button", { name: "src/other.ts", exact: true }).click();
+  await expect(page.locator(".merge-host")).toContainText("other = 2");
+  await page.getByRole("button", { name: "src/withdraw.ts", exact: true }).click();
+  await expect.poll(() => page.locator(".merge-host").evaluate((node) => node.scrollTop)).toBe(600);
 });

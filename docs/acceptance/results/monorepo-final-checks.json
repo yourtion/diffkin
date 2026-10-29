@@ -1,0 +1,24 @@
+{
+  "rust": {
+    "log": "/private/tmp/diffkin-final-rust.log",
+    "passed": 140,
+    "failed": false
+  },
+  "browser": {
+    "log": "/private/tmp/diffkin-final-ui.log",
+    "passed": 69,
+    "failed": false
+  },
+  "scale": {
+    "log": "/private/tmp/diffkin-p5-scale.log",
+    "passed": 1,
+    "failed": false
+  },
+  "date": "2026-10-29",
+  "p5Commit": "e4ab484",
+  "nativeApp": "/Users/yourtionguo/codes/open/diffkin/target/release/bundle/macos/Diffkin Acceptance.app",
+  "binarySha256": "ed21621df9ddd42b649344515f3b3dc3bb87320d3056dc16c8fb8316f039a3d6",
+  "nativeUiStatus": "blocked: user confirms desktop is unlocked; desktop control still reports locked after reconnect; display/system wake assertions verified active",
+  "nativeEndToEndLatency": "not measured; worker timings exclude IPC and WebView",
+  "rustScaleNote": "100k and 500k index entries with one staged change; isolated acceptance. Concurrent run hit 20s capture budget; no budget was raised."
+}

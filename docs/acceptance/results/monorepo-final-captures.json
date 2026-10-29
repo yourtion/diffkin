@@ -1,0 +1,28 @@
+[
+  {
+    "repo": "vscode",
+    "exitCode": 1,
+    "changedFiles": 25,
+    "snapshotId": "1b46cb32889f6dd758278d8f489739cfad37320ded92fd2db7ee4054af1ce011",
+    "elapsedMs": 310.0174579885788,
+    "identityUnchanged": true
+  },
+  {
+    "repo": "react-native",
+    "exitCode": 1,
+    "changedFiles": 2,
+    "snapshotId": "05a9eaf88224be537361726270a728ce415e7dd0e62bb37d89b19b0cc2dffa8e",
+    "elapsedMs": 111.95237500942312,
+    "identityUnchanged": true
+  },
+  {
+    "repo": "changed-2001",
+    "unscopedExit": 2,
+    "unscopedMessage": "Comparison exceeds 2,000 changed paths; choose a literal path scope or a smaller commit range",
+    "scope": "packages/group-9/file-0999.ts",
+    "scopedChangedFiles": 1,
+    "warnings": [
+      "Path scope: packages/group-9/file-0999.ts. Only this literal file/directory is captured; paths outside this scope are excluded. Cross-boundary renames appear as additions/deletions. \u8303\u56f4\u5916\u5185\u5bb9\u672a\u6355\u83b7\u3001\u672a\u5ba1\u67e5\u3002"
+    ]
+  }
+]

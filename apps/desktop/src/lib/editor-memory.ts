@@ -43,6 +43,8 @@ export function restoreEditor(
 ) {
   const value = memories.get(key);
   if (!value) return;
+  // Restore immediately too: StrictMode can clean up before the first measure.
+  host.scrollTop = value.top;
   for (const [view, saved] of [
     [views.a, value.a],
     [views.b, value.b],
@@ -56,6 +58,7 @@ export function restoreEditor(
       },
       effects: setSearchQuery.of(saved.query),
     });
+    view.scrollDOM.scrollLeft = saved.left;
     view.requestMeasure({
       read: () => null,
       write: () => {

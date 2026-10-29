@@ -19,6 +19,8 @@ for (const input of inputs) {
           invoke: async (command: string, args: Record<string, unknown>) => {
             if (command === "cancel_job") return;
             if (command === "open_comparison") return capture.manifest;
+            if (command === "preview_file")
+              return capture.files.find((item) => item.file.summary.id === args.fileId)?.file;
             if (command === "request_file")
               return capture.files.find((item) => item.file.summary.id === args.fileId);
             if (command === "list_changes") return { ...capture.manifest, files: [] };

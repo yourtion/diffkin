@@ -141,7 +141,9 @@ export function App({
       !fromHistory &&
       (history.snapshot !== snapshot.id || history.files[history.index]?.id !== file.id)
     ) {
-      const files = [...history.files.slice(0, history.index + 1), file].slice(-100);
+      const preceding =
+        history.snapshot === snapshot.id ? history.files.slice(0, history.index + 1) : [];
+      const files = [...preceding, file].slice(-100);
       setHistory({ snapshot: snapshot.id, files, index: files.length - 1 });
     }
     cancelOne(fileJob);

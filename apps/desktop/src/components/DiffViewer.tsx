@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Compartment, EditorState, type Extension } from "@codemirror/state";
 import { EditorView, keymap, lineNumbers } from "@codemirror/view";
 import { languageExtensions } from "../lib/languages";
@@ -87,7 +87,7 @@ export function DiffViewer({
       : focused
         ? ""
         : after;
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!host.current) return;
     const scrollHost = host.current;
     const memoryKey = `${viewKey}:${layout}`;
