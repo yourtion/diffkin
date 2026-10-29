@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-29",
+  "branch": "codex/monorepo-experience",
+  "base": "8d1bba2",
+  "checks": {
+    "frontend": "pnpm check + build passed; final docs and harness format/lint checked again",
+    "scriptTests": 7,
+    "playwrightPassed": 72,
+    "rustWorkspacePassed": 149,
+    "rustWorkspaceIgnored": 1,
+    "isolated100k500k": "passed",
+    "clippy": "workspace all-targets, benchmark feature, warnings denied: passed",
+    "protocol": "unchanged",
+    "nativeProductionBuild": "passed, tauri/custom-protocol without native-benchmark feature",
+    "nativeLifecycle": "Two 10,000-file captures and final frozen reads passed; normal native exit succeeded; no snapshot directories remained after exit",
+    "cleanupRegression": "6 application unit tests (including 1 additional cross-instance retirement test) and 3 disk integration tests passed after final cleanup synchronization",
+    "productionControlEntry": "benchmark_control absent from production binary"
+  },
+  "binary": {
+    "path": "/Users/yourtionguo/codes/open/diffkin/target/release/bundle/macos/Diffkin Acceptance.app/Contents/MacOS/diffkin-desktop",
+    "bytes": 13731024,
+    "sha256": "e8c9c825a62ffae2b6ee966bfa67dd3abec1f6bebe405b07b95fba255e73c9f9"
+  },
+  "logs": [
+    "/private/tmp/diffkin-next-check.log",
+    "/private/tmp/diffkin-next-build.log",
+    "/private/tmp/diffkin-next-ui.log",
+    "/private/tmp/diffkin-next-full-rust.log",
+    "/private/tmp/diffkin-next-scale.log",
+    "/private/tmp/diffkin-next-clippy.log",
+    "/private/tmp/diffkin-next-protocol.log",
+    "/private/tmp/diffkin-next-final-format.log",
+    "/private/tmp/diffkin-next-final-lint.log",
+    "/private/tmp/diffkin-next-production-build.log",
+    "/private/tmp/diffkin-next-production-bundle.log",
+    "/private/tmp/diffkin-next-cleanup-unit.log",
+    "/private/tmp/diffkin-next-cleanup-tests.log",
+    "/private/tmp/diffkin-native-lifecycle-build.log",
+    "/private/tmp/diffkin-native-lifecycle-bundle.log"
+  ],
+  "limits": [
+    "Native giant comparison has one functional sample, not a p95 performance claim",
+    "Final foreground rerun blocked by desktop tool reporting locked; separate native IPC lifecycle check does not measure visible latency",
+    "Cold startup, scroll frame rate, sustained memory and cross-platform/system scaling certification remain unverified"
+  ],
+  "postExitSnapshotDirectories": []
+}

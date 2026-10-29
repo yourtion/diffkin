@@ -16,6 +16,10 @@ use std::{
     time::{Duration, Instant, SystemTime},
 };
 
+#[path = "large_comparison.rs"]
+mod large_comparison;
+pub use large_comparison::{capture_large_commits, DiskComparison};
+
 const MAX_FILE: usize = 2 * 1024 * 1024;
 const MAX_SNAPSHOT: usize = 64 * 1024 * 1024;
 const MAX_GIT_OUTPUT: usize = 80 * 1024 * 1024;
@@ -67,7 +71,7 @@ impl Context<'_> {
             });
         }
         if Instant::now() >= self.deadline {
-            return Err(budget("Snapshot exceeded its 20 second budget"));
+            return Err(budget("Snapshot exceeded its capture time budget"));
         }
         Ok(())
     }
@@ -1356,6 +1360,20 @@ pub fn capture(
     spec: &ComparisonSpec,
     cancel: &AtomicBool,
 ) -> Result<FrozenComparison, RepositoryError> {
+    capture_subset(spec, cancel, None)
+}
+
+struct CaptureSubset<'a> {
+    paths: &'a BTreeSet<Vec<u8>>,
+    renames: &'a BTreeMap<Vec<u8>, Vec<u8>>,
+    deadline: Instant,
+}
+
+fn open_context<'a>(
+    spec: &'a ComparisonSpec,
+    cancel: &'a AtomicBool,
+    deadline: Instant,
+) -> Result<Context<'a>, RepositoryError> {
     if let Some(scope) = &spec.path_scope {
         if scope.len() > 4096
             || scope.contains('\0')
@@ -1375,7 +1393,7 @@ pub fn capture(
     let mut context = Context {
         root,
         cancel,
-        deadline: Instant::now() + CAPTURE_BUDGET,
+        deadline,
         scope: spec.path_scope.as_deref().map(str::as_bytes),
     };
     let version = context.git(&["--version"], None)?;
@@ -1411,6 +1429,19 @@ pub fn capture(
             message: "Diffkin requires Git 2.45 or newer".into(),
         });
     }
+    Ok(context)
+}
+
+fn capture_subset(
+    spec: &ComparisonSpec,
+    cancel: &AtomicBool,
+    subset: Option<&CaptureSubset<'_>>,
+) -> Result<FrozenComparison, RepositoryError> {
+    let context = open_context(
+        spec,
+        cancel,
+        subset.map_or_else(|| Instant::now() + CAPTURE_BUDGET, |value| value.deadline),
+    )?;
     let mut warnings = Vec::new();
     if let Some(scope) = &spec.path_scope {
         warnings.push(format!("Path scope: {scope}. Only this literal file/directory is captured; paths outside this scope are excluded. Cross-boundary renames appear as additions/deletions. 范围外内容未捕获、未审查。"));
@@ -1588,6 +1619,9 @@ pub fn capture(
                 || after.get(path).is_some_and(|entry| entry.conflict)
         })
         .collect();
+    if let Some(subset) = subset {
+        changed.retain(|path| subset.paths.contains(path));
+    }
     if changed.len() > MAX_CHANGES {
         return Err(budget(
             "Comparison exceeds 2,000 changed paths; choose a literal path scope or a smaller commit range",
@@ -1614,32 +1648,18 @@ pub fn capture(
     if total > MAX_SNAPSHOT {
         return Err(budget("Comparison exceeds the 64 MiB snapshot budget"));
     }
-    // Only unique, exactly identical objects are paired as path renames.
-    let mut deleted: BTreeMap<(String, String), Vec<Vec<u8>>> = BTreeMap::new();
-    let mut added: BTreeMap<(String, String), Vec<Vec<u8>>> = BTreeMap::new();
-    for path in &changed {
-        match (before.get(path), after.get(path)) {
-            (Some(old), None) if !old.conflict => deleted
-                .entry((old.oid.clone(), old.mode.clone()))
-                .or_default()
-                .push(path.clone()),
-            (None, Some(new)) if !new.conflict => added
-                .entry((new.oid.clone(), new.mode.clone()))
-                .or_default()
-                .push(path.clone()),
-            _ => (),
-        }
-    }
-    let mut renames = BTreeMap::new();
-    let mut renamed_old = BTreeSet::new();
-    for (key, destinations) in &added {
-        if let Some(origins) = deleted.get(key) {
-            if origins.len() == 1 && destinations.len() == 1 {
-                renames.insert(destinations[0].clone(), origins[0].clone());
-                renamed_old.insert(origins[0].clone());
-            }
-        }
-    }
+    let renames = subset.map_or_else(
+        || exact_renames(&changed, &before, &after),
+        |value| {
+            value
+                .renames
+                .iter()
+                .filter(|(destination, _)| value.paths.contains(*destination))
+                .map(|(destination, origin)| (destination.clone(), origin.clone()))
+                .collect()
+        },
+    );
+    let renamed_old: BTreeSet<_> = renames.values().cloned().collect();
     changed.retain(|path| !renamed_old.contains(path));
     let mut files = BTreeMap::new();
     let mut summaries = Vec::new();
@@ -1685,19 +1705,7 @@ pub fn capture(
         };
         let (old_text, before_truncated) = text_content(old, old_content, "Before", &mut notices);
         let (new_text, after_truncated) = text_content(new, new_content, "After", &mut notices);
-        let mut identity = Sha256::new();
-        identity.update(&path);
-        identity.update([0]);
-        identity.update(old_path);
-        if let Some(entry) = old {
-            identity.update(entry.oid.as_bytes());
-            identity.update(entry.mode.as_bytes());
-        }
-        if let Some(entry) = new {
-            identity.update(entry.oid.as_bytes());
-            identity.update(entry.mode.as_bytes());
-        }
-        let id = format!("{:x}", identity.finalize());
+        let id = file_identity(&path, old_path, old, new);
         let summary = FileSummary {
             id: id.clone(),
             path: display_path(&path),
@@ -1761,19 +1769,13 @@ pub fn capture(
     {
         return Err(stale("Untracked file list changed during capture"));
     }
-    let mut identity = Sha256::new();
-    identity.update(context.root.as_os_str().to_string_lossy().as_bytes());
-    if let Some(scope) = &spec.path_scope {
-        identity.update(b"\0path-scope\0");
-        identity.update((scope.len() as u64).to_le_bytes());
-        identity.update(scope.as_bytes());
-    }
-    identity.update(before_label.as_bytes());
-    identity.update(after_label.as_bytes());
-    for file in &summaries {
-        identity.update(file.id.as_bytes());
-    }
-    let id = format!("{:x}", identity.finalize());
+    let id = comparison_identity(
+        &context.root,
+        spec.path_scope.as_ref(),
+        &before_label,
+        &after_label,
+        &summaries,
+    );
     Ok(FrozenComparison {
         manifest: ComparisonManifest {
             id,
@@ -1852,6 +1854,76 @@ fn text_content(
         ));
     }
     (Some(data.into()), content.truncated)
+}
+
+fn exact_renames(
+    changed: &[Vec<u8>],
+    before: &Entries,
+    after: &Entries,
+) -> BTreeMap<Vec<u8>, Vec<u8>> {
+    // Only unique, exactly identical objects are paired as path renames.
+    let mut deleted: BTreeMap<(String, String), Vec<Vec<u8>>> = BTreeMap::new();
+    let mut added: BTreeMap<(String, String), Vec<Vec<u8>>> = BTreeMap::new();
+    for path in changed {
+        match (before.get(path), after.get(path)) {
+            (Some(old), None) if !old.conflict => deleted
+                .entry((old.oid.clone(), old.mode.clone()))
+                .or_default()
+                .push(path.clone()),
+            (None, Some(new)) if !new.conflict => added
+                .entry((new.oid.clone(), new.mode.clone()))
+                .or_default()
+                .push(path.clone()),
+            _ => (),
+        }
+    }
+    let mut renames = BTreeMap::new();
+    for (key, destinations) in &added {
+        if let Some(origins) = deleted.get(key) {
+            if origins.len() == 1 && destinations.len() == 1 {
+                renames.insert(destinations[0].clone(), origins[0].clone());
+            }
+        }
+    }
+    renames
+}
+
+fn file_identity(path: &[u8], old_path: &[u8], old: Option<&Entry>, new: Option<&Entry>) -> String {
+    let mut identity = Sha256::new();
+    identity.update(path);
+    identity.update([0]);
+    identity.update(old_path);
+    if let Some(entry) = old {
+        identity.update(entry.oid.as_bytes());
+        identity.update(entry.mode.as_bytes());
+    }
+    if let Some(entry) = new {
+        identity.update(entry.oid.as_bytes());
+        identity.update(entry.mode.as_bytes());
+    }
+    format!("{:x}", identity.finalize())
+}
+
+fn comparison_identity(
+    root: &std::path::Path,
+    scope: Option<&String>,
+    before_label: &str,
+    after_label: &str,
+    summaries: &[FileSummary],
+) -> String {
+    let mut identity = Sha256::new();
+    identity.update(root.as_os_str().to_string_lossy().as_bytes());
+    if let Some(scope) = scope {
+        identity.update(b"\0path-scope\0");
+        identity.update((scope.len() as u64).to_le_bytes());
+        identity.update(scope.as_bytes());
+    }
+    identity.update(before_label.as_bytes());
+    identity.update(after_label.as_bytes());
+    for file in summaries {
+        identity.update(file.id.as_bytes());
+    }
+    format!("{:x}", identity.finalize())
 }
 
 #[cfg(test)]

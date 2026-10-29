@@ -751,3 +751,198 @@ fn streamed_commit_blobs_preserve_empty_shared_and_multibyte_sources() {
         assert_eq!(file.after, Some(format!("{after}{suffix}")));
     }
 }
+
+#[test]
+fn disk_snapshots_match_memory_pairing_and_survive_repository_removal() {
+    use diffkin_application::capture_large_commits;
+    let repo = Repo::new();
+    let cache = Repo::new();
+    let root = cache.0.join("snapshots");
+    repo.write("a-unique", "unique renamed content");
+    repo.write("a-ambiguous", "shared");
+    repo.write("z-ambiguous", "shared");
+    for i in 0..400 {
+        repo.write(&format!("files/{i:04}.ts"), format!("const value = {i};\n"));
+    }
+    repo.commit();
+    repo.git(&["mv", "a-unique", "z-renamed"]);
+    repo.git(&["rm", "a-ambiguous", "z-ambiguous"]);
+    repo.write("b-ambiguous", "shared");
+    repo.write("y-ambiguous", "shared");
+    for i in 0..400 {
+        repo.write(
+            &format!("files/{i:04}.ts"),
+            format!("const value = {};\n", i + 1),
+        );
+    }
+    repo.commit();
+    let spec = repo.spec(CompareMode::Commits);
+    let memory = capture(&spec, &AtomicBool::new(false)).unwrap();
+    let first = capture_large_commits(&spec, &root, &AtomicBool::new(false)).unwrap();
+    let second = capture_large_commits(&spec, &root, &AtomicBool::new(false)).unwrap();
+    let manifest = first.manifest(0, usize::MAX);
+    assert_eq!(manifest.id, memory.manifest(0, 0).id);
+    assert_eq!(
+        serde_json::to_value(&manifest.files).unwrap(),
+        serde_json::to_value(memory.manifest(0, usize::MAX).files).unwrap()
+    );
+    assert_eq!(first.manifest(399, 2).files.len(), 2);
+    fs::rename(repo.0.join(".git"), repo.0.join(".git-hidden")).unwrap();
+    for summary in &manifest.files {
+        assert_eq!(
+            serde_json::to_value(first.read_file(&summary.id).unwrap()).unwrap(),
+            serde_json::to_value(memory.read_file(&summary.id).unwrap()).unwrap()
+        );
+    }
+    drop(second);
+    let directory = fs::read_dir(&root)
+        .unwrap()
+        .map(Result::unwrap)
+        .find(|entry| entry.file_type().unwrap().is_dir())
+        .unwrap()
+        .path();
+    fs::write(
+        directory.join(format!("{}.json", manifest.files[0].id)),
+        b"{}",
+    )
+    .unwrap();
+    assert!(matches!(
+        first.read_file(&manifest.files[0].id),
+        Err(RepositoryError::Stale { .. })
+    ));
+    drop(first);
+    assert!(!fs::read_dir(root)
+        .unwrap()
+        .map(Result::unwrap)
+        .any(|entry| entry.file_type().unwrap().is_dir()));
+}
+
+#[test]
+fn ten_thousand_disk_changes_are_paged_frozen_and_cancelled_atomically() {
+    use diffkin_application::capture_large_commits;
+    use std::{
+        sync::Arc,
+        thread,
+        time::{Duration, Instant},
+    };
+    let repo = Repo::new();
+    let cache = Repo::new();
+    let root = cache.0.join("snapshots");
+    repo.write("README", "baseline");
+    repo.commit();
+    for i in 0..10_000 {
+        repo.write(
+            &format!("packages/file-{i:05}.ts"),
+            format!("export const value = {i};\n"),
+        );
+    }
+    repo.commit();
+    let spec = repo.spec(CompareMode::Commits);
+    assert!(matches!(
+        capture(&spec, &AtomicBool::new(false)),
+        Err(RepositoryError::BudgetExceeded { .. })
+    ));
+    let snapshot = capture_large_commits(&spec, &root, &AtomicBool::new(false)).unwrap();
+    assert_eq!(snapshot.manifest(0, 200).files.len(), 200);
+    assert_eq!(snapshot.manifest(0, 0).total_files, 10_000);
+    let last = &snapshot.manifest(9_999, 200).files[0];
+    assert_eq!(last.path, "packages/file-09999.ts");
+    repo.write(&last.path, "changed after capture");
+    assert_eq!(
+        snapshot.read_file(&last.id).unwrap().after.as_deref(),
+        Some("export const value = 9999;\n")
+    );
+    let old_directory = fs::read_dir(&root)
+        .unwrap()
+        .map(Result::unwrap)
+        .find(|entry| entry.file_type().unwrap().is_dir())
+        .unwrap()
+        .path();
+    let token = Arc::new(AtomicBool::new(false));
+    let worker_token = token.clone();
+    let worker_root = root.clone();
+    let worker = thread::spawn(move || capture_large_commits(&spec, &worker_root, &worker_token));
+    let start = Instant::now();
+    loop {
+        let has_partial_content = fs::read_dir(&root)
+            .unwrap()
+            .map(Result::unwrap)
+            .any(|entry| {
+                entry.path() != old_directory
+                    && entry.file_type().unwrap().is_dir()
+                    && fs::read_dir(entry.path())
+                        .unwrap()
+                        .map(Result::unwrap)
+                        .any(|file| {
+                            file.path()
+                                .extension()
+                                .is_some_and(|extension| extension == "json")
+                        })
+            });
+        if has_partial_content {
+            break;
+        }
+        assert!(
+            start.elapsed() < Duration::from_secs(30),
+            "partial disk capture never started"
+        );
+        thread::sleep(Duration::from_millis(5));
+    }
+    token.store(true, Ordering::Relaxed);
+    assert!(matches!(
+        worker.join().unwrap(),
+        Err(RepositoryError::Cancelled { .. })
+    ));
+    assert_eq!(
+        fs::read_dir(&root)
+            .unwrap()
+            .map(Result::unwrap)
+            .filter(|entry| entry.file_type().unwrap().is_dir())
+            .count(),
+        1
+    );
+    assert!(snapshot.read_file(&last.id).is_ok());
+    drop(snapshot);
+    assert!(!fs::read_dir(root)
+        .unwrap()
+        .map(Result::unwrap)
+        .any(|entry| entry.file_type().unwrap().is_dir()));
+}
+
+#[test]
+fn disk_path_limit_is_checked_before_creating_snapshot_storage() {
+    use std::io::Write;
+    use std::process::Stdio;
+    let repo = Repo::new();
+    let cache = Repo::new();
+    repo.write("README", "baseline");
+    let base = repo.commit();
+    let git_input = |arguments: &[&str], input: &[u8]| {
+        let mut child = Command::new("git")
+            .current_dir(&repo.0)
+            .args(arguments)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap();
+        child.stdin.take().unwrap().write_all(input).unwrap();
+        let output = child.wait_with_output().unwrap();
+        assert!(output.status.success());
+        String::from_utf8(output.stdout).unwrap().trim().to_owned()
+    };
+    let oid = git_input(&["hash-object", "-w", "--stdin"], b"content\n");
+    let entries: String = (0..20_001)
+        .map(|i| format!("100644 blob {oid}\tfile-{i:05}\n"))
+        .collect();
+    let tree = git_input(&["mktree"], entries.as_bytes());
+    let head = repo.git(&["commit-tree", &tree, "-p", &base, "-m", "large"]);
+    let mut spec = repo.spec(CompareMode::Commits);
+    spec.base = Some(base);
+    spec.head = Some(head);
+    let root = cache.0.join("snapshots");
+    assert!(matches!(
+        diffkin_application::capture_large_commits(&spec, &root, &AtomicBool::new(false)),
+        Err(RepositoryError::BudgetExceeded { .. })
+    ));
+    assert!(!root.exists());
+}

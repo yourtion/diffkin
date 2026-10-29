@@ -22,12 +22,54 @@ pub async fn benchmark_control(
         }
         "status" => Ok(json!({"active": Runtime::has_active_jobs(&state)})),
         "report" => {
-            let path = std::env::var("DIFFKIN_BENCH_OUTPUT").map_err(|e| e.to_string())?;
-            let bytes = serde_json::to_vec_pretty(&report).map_err(|e| e.to_string())?;
-            if bytes.len() > 4 * 1024 * 1024 {
-                return Err("Benchmark report exceeds 4 MiB".into());
+            write_report(&report)?;
+            Ok(Value::Null)
+        }
+        "lifecycle" => {
+            // Keep the lifecycle entirely native: hidden WebViews may suspend JS
+            // while an IPC reply is pending. This measures no rendering latency.
+            let config: Value = serde_json::from_str(&config).map_err(|e| e.to_string())?;
+            let mut report = json!({"config": config, "samples": [], "complete": false});
+            let result: Result<(), String> = async {
+                let spec: diffkin_domain::ComparisonSpec =
+                    serde_json::from_value(config["spec"].clone()).map_err(|e| e.to_string())?;
+                for iteration in 0..2 {
+                    let manifest = crate::open_comparison(
+                        spec.clone(),
+                        format!("benchmark-lifecycle-{iteration}"),
+                        app.clone(),
+                        state.clone(),
+                    )
+                    .await
+                    .map_err(|e| format!("{e:?}"))?;
+                    if Some(u64::from(manifest.total_files)) != config["expectedFiles"].as_u64()
+                        || manifest.total_files == 0
+                    {
+                        return Err("Incomplete lifecycle capture".into());
+                    }
+                    let snapshot = state.snapshot(&manifest.id).map_err(|e| format!("{e:?}"))?;
+                    let last = snapshot.manifest(manifest.total_files as usize - 1, 1);
+                    let file = snapshot
+                        .read_file(&last.files[0].id)
+                        .map_err(|e| format!("{e:?}"))?;
+                    if Some(file.summary.path.as_str()) != config["lastPath"].as_str()
+                        || file.after.as_ref().is_none_or(String::is_empty)
+                    {
+                        return Err("Missing final frozen file".into());
+                    }
+                    report["samples"].as_array_mut().unwrap().push(json!({
+                        "name": "native-lifecycle-capture", "total": manifest.total_files
+                    }));
+                }
+                Ok(())
             }
-            std::fs::write(path, bytes).map_err(|e| e.to_string())?;
+            .await;
+            report["complete"] = json!(result.is_ok());
+            if let Err(error) = result {
+                report["error"] = json!(error);
+            }
+            write_report(&Some(report))?;
+            app.exit(0);
             Ok(Value::Null)
         }
         "viewport" => {
@@ -49,4 +91,13 @@ pub async fn benchmark_control(
         }
         _ => Err("Unknown benchmark action".into()),
     }
+}
+
+fn write_report(report: &Option<Value>) -> Result<(), String> {
+    let path = std::env::var("DIFFKIN_BENCH_OUTPUT").map_err(|e| e.to_string())?;
+    let bytes = serde_json::to_vec_pretty(report).map_err(|e| e.to_string())?;
+    if bytes.len() > 4 * 1024 * 1024 {
+        return Err("Benchmark report exceeds 4 MiB".into());
+    }
+    std::fs::write(path, bytes).map_err(|e| e.to_string())
 }

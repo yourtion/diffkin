@@ -10,7 +10,7 @@ mod workspace_commands;
 use diffkin_domain::{
     ComparisonManifest, ComparisonSpec, FileAnalysis, FrozenFile, RepositoryError,
 };
-use runtime::{check_cancel, permit, Runtime};
+use runtime::{check_cancel, permit, Runtime, Snapshot};
 use std::sync::Arc;
 use tauri::{Manager, State};
 
@@ -25,15 +25,31 @@ fn internal(error: impl std::fmt::Display) -> RepositoryError {
 async fn open_comparison(
     spec: ComparisonSpec,
     job_id: String,
+    app: tauri::AppHandle,
     state: State<'_, Shared>,
 ) -> Result<ComparisonManifest, RepositoryError> {
     let runtime = state.inner().clone();
+    let disk_root = app
+        .path()
+        .app_cache_dir()
+        .map_err(internal)?
+        .join("frozen-comparisons");
     let token = runtime.begin(&job_id)?;
     let worker = runtime.clone();
     let result = tauri::async_runtime::spawn_blocking(move || {
         let _permit = permit(&worker.capture_gate, &token)?;
         check_cancel(&token)?;
-        let snapshot = Arc::new(diffkin_application::capture(&spec, &token)?);
+        let snapshot = match diffkin_application::capture(&spec, &token) {
+            Ok(snapshot) => Snapshot::Memory(Arc::new(snapshot)),
+            Err(RepositoryError::BudgetExceeded { .. })
+                if spec.mode == diffkin_domain::CompareMode::Commits =>
+            {
+                Snapshot::Disk(diffkin_application::capture_large_commits(
+                    &spec, &disk_root, &token,
+                )?)
+            }
+            Err(error) => return Err(error),
+        };
         check_cancel(&token)?;
         let manifest = snapshot.manifest(0, 200);
         worker.install_comparison(snapshot);
@@ -159,6 +175,9 @@ fn main() {
         .build(tauri::generate_context!())
         .expect("failed to build Diffkin desktop");
     application.run(move |app, event| {
+        if matches!(event, tauri::RunEvent::Exit) {
+            app.state::<Shared>().release_snapshots();
+        }
         if let tauri::RunEvent::ExitRequested { api, code, .. } = event {
             let runtime = app.state::<Shared>().inner().clone();
             runtime.shutdown();

@@ -1,5 +1,5 @@
-use diffkin_application::{FrozenComparison, FrozenWorkspace};
-use diffkin_domain::{FileAnalysis, RepositoryError};
+use diffkin_application::{DiskComparison, FrozenComparison, FrozenWorkspace};
+use diffkin_domain::{ComparisonManifest, FileAnalysis, FrozenFile, RepositoryError};
 use std::{
     collections::{HashMap, VecDeque},
     sync::{
@@ -11,12 +11,36 @@ use std::{
 const CACHE_BYTES: usize = 32 * 1024 * 1024;
 type CacheEntry = (String, String, Arc<FileAnalysis>, usize);
 
+pub enum Snapshot {
+    Memory(Arc<FrozenComparison>),
+    Disk(DiskComparison),
+}
+impl From<Arc<FrozenComparison>> for Snapshot {
+    fn from(value: Arc<FrozenComparison>) -> Self {
+        Self::Memory(value)
+    }
+}
+impl Snapshot {
+    pub fn manifest(&self, offset: usize, limit: usize) -> ComparisonManifest {
+        match self {
+            Self::Memory(value) => value.manifest(offset, limit),
+            Self::Disk(value) => value.manifest(offset, limit),
+        }
+    }
+    pub fn read_file(&self, id: &str) -> Result<FrozenFile, RepositoryError> {
+        match self {
+            Self::Memory(value) => value.read_file(id),
+            Self::Disk(value) => value.read_file(id),
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct Runtime {
     pub capture_gate: Mutex<()>,
     pub analysis_gate: Mutex<()>,
-    previous: Mutex<Option<Arc<FrozenComparison>>>,
-    pub current: Mutex<Option<Arc<FrozenComparison>>>,
+    previous: Mutex<Option<Arc<Snapshot>>>,
+    pub current: Mutex<Option<Arc<Snapshot>>>,
     cache: Mutex<VecDeque<CacheEntry>>,
     jobs: Mutex<Jobs>,
     workspaces: Mutex<VecDeque<Arc<FrozenWorkspace>>>,
@@ -32,7 +56,8 @@ impl Runtime {
     pub fn clear_benchmark_cache(&self) {
         self.cache.lock().unwrap().clear();
     }
-    pub fn install_comparison(&self, snapshot: Arc<FrozenComparison>) {
+    pub fn install_comparison(&self, snapshot: impl Into<Snapshot>) {
+        let snapshot = Arc::new(snapshot.into());
         let mut current = self.current.lock().unwrap();
         *self.previous.lock().unwrap() = current.replace(snapshot);
     }
@@ -88,6 +113,13 @@ impl Runtime {
         // Once the latch is visible no new job can enter; finishing existing jobs is safe.
         self.cancel_all();
     }
+    /// Tauri exits the process directly, so managed state destructors are not enough.
+    pub fn release_snapshots(&self) {
+        self.current.lock().unwrap().take();
+        self.previous.lock().unwrap().take();
+        self.cache.lock().unwrap().clear();
+        self.workspaces.lock().unwrap().clear();
+    }
     pub fn cancel_all(&self) {
         for token in self.jobs.lock().unwrap().active.values() {
             token.store(true, Ordering::Relaxed);
@@ -122,7 +154,7 @@ impl Runtime {
                         .into(),
             })
     }
-    pub fn snapshot(&self, id: &str) -> Result<Arc<FrozenComparison>, RepositoryError> {
+    pub fn snapshot(&self, id: &str) -> Result<Arc<Snapshot>, RepositoryError> {
         if let Some(snapshot) = self
             .current
             .lock()
@@ -150,7 +182,9 @@ impl Runtime {
                     .as_ref()
                     .is_some_and(|manifest| manifest.id == id)
                 {
-                    return workspace.repository(&repository.repository_id);
+                    return workspace
+                        .repository(&repository.repository_id)
+                        .map(|value| Arc::new(Snapshot::Memory(value)));
                 }
             }
         }
@@ -297,6 +331,26 @@ mod tests {
         assert!(runtime.begin("after-finish").is_err());
     }
 
+    #[test]
+    fn exit_releases_current_and_previous_snapshot_owners() {
+        let runtime = Runtime::default();
+        let first = workspace_fixture("first", "first-file", "before")
+            .repository("repo")
+            .unwrap();
+        let second = workspace_fixture("second", "second-file", "after")
+            .repository("repo")
+            .unwrap();
+        let first_owner = Arc::downgrade(&first);
+        let second_owner = Arc::downgrade(&second);
+        runtime.install_comparison(first);
+        runtime.install_comparison(second);
+        assert!(first_owner.upgrade().is_some());
+        assert!(second_owner.upgrade().is_some());
+        runtime.release_snapshots();
+        assert!(first_owner.upgrade().is_none());
+        assert!(second_owner.upgrade().is_none());
+    }
+
     fn workspace_fixture(id: &str, repository_id: &str, content: &str) -> Arc<FrozenWorkspace> {
         let summary = serde_json::json!({"id":repository_id,"path":"src/index.ts","oldPath":null,"status":"added","oldMode":null,"newMode":"100644","beforeId":null,"afterId":"a".repeat(40),"notices":[]});
         let manifest = serde_json::json!({"id":repository_id,"repository":"/unused","mode":"worktree","baseLabel":"unborn HEAD","headLabel":"worktree:test","files":[summary.clone()],"totalFiles":1,"warnings":[]});
@@ -379,7 +433,7 @@ mod tests {
         let single = workspace_fixture("single", "repo-single", "single content");
         runtime.install_workspace(first.clone());
         runtime.install_workspace(second);
-        *runtime.current.lock().unwrap() = Some(single.repository("repo").unwrap());
+        runtime.install_comparison(single.repository("repo").unwrap());
         for (id, expected) in [
             ("repo-first", "first content"),
             ("repo-second", "second content"),

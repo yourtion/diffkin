@@ -54,6 +54,13 @@
     const config = await control("config");
     report.config = config;
 
+    // Resource lifecycle check through real IPC; no visible-latency claim.
+    // It can run without foreground rendering and owns two disk snapshots at exit.
+    if (config.lifecycleOnly) {
+      await control("lifecycle");
+      return;
+    }
+
     report.environment = {
       userAgent: navigator.userAgent,
       width: innerWidth,
@@ -161,6 +168,31 @@
         }
       }
       await control("report", report);
+    }
+    if (config.lastPath) {
+      const started = performance.now();
+      await input("筛选文件", config.lastPath);
+      await wait(() => button(config.lastPath), "last catalog path");
+      button(config.lastPath).click();
+      await wait(
+        () =>
+          document.querySelector(".file-heading h2")?.title === config.lastPath &&
+          ready() &&
+          readable(),
+        "last file source",
+      );
+      await painted();
+      report.samples.push({
+        name: "last-catalog-file",
+        ms: performance.now() - started,
+        path: config.lastPath,
+      });
+      report.giant = {
+        total: document.querySelector(".panel-heading span")?.textContent,
+        selected: document.querySelector(".file-heading h2")?.title,
+        visibleRows: document.querySelectorAll(".file-item").length,
+        source: document.querySelector('[aria-label="修改后源码"]')?.textContent,
+      };
     }
     if (config.layout) {
       if (!document.querySelector("#review-files").hidden)

@@ -5,7 +5,7 @@ pub mod workspace;
 pub use diffkin_analysis::analyze as analyze_text;
 pub use diffkin_analysis::compare as compare_text;
 pub use diffkin_analysis::MAX_BYTES as MAX_INPUT_BYTES;
-pub use repository::{capture, FrozenComparison};
+pub use repository::{capture, capture_large_commits, DiskComparison, FrozenComparison};
 pub use workspace::{capture_workspace, FrozenWorkspace, WorkspaceStore};
 
 /// Shared by the native bridge and CLI; metadata-only changes never become empty-text claims.
