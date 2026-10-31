@@ -15,12 +15,16 @@ type Row =
   | { key: string; depth: number; file: FileSummary };
 export function ChangeNavigator({
   files,
+  visible,
+  snapshotId,
   selected,
   onSelect,
   reviewed,
   query,
 }: {
   files: FileSummary[];
+  visible: boolean;
+  snapshotId: string | undefined;
   selected: string | undefined;
   onSelect: (file: FileSummary) => void;
   reviewed: (file: FileSummary) => boolean;
@@ -53,6 +57,14 @@ export function ChangeNavigator({
     }
     return result;
   }, [files, tree, closed, query]);
+  const fileRows = useMemo(() => {
+    const indexes = new Map<string, number>();
+    rows.forEach((row, index) => {
+      if ("file" in row) indexes.set(row.file.id, index);
+    });
+    return indexes;
+  }, [rows]);
+  const selectedRow = selected === undefined ? undefined : fileRows.get(selected);
   useEffect(() => {
     const element = viewport.current;
     if (!element) return;
@@ -63,15 +75,16 @@ export function ChangeNavigator({
   useEffect(() => {
     if (viewport.current) viewport.current.scrollTop = 0;
   }, [query, tree]);
+  // Only navigation context changes reveal the selection; appended pages and
+  // review updates must not interrupt manual scrolling.
   useEffect(() => {
-    const index = rows.findIndex((row) => "file" in row && row.file.id === selected);
     const element = viewport.current;
-    if (index >= 0 && element) {
-      const y = index * rowHeight;
+    if (visible && selectedRow !== undefined && element) {
+      const y = selectedRow * rowHeight;
       if (y < element.scrollTop || y + rowHeight > element.scrollTop + element.clientHeight)
         element.scrollTop = y;
     }
-  }, [selected, rows]);
+  }, [selected, selectedRow, query, tree, visible, snapshotId]);
   function navigate(event: KeyboardEvent<HTMLButtonElement>, index: number) {
     if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
     event.preventDefault();

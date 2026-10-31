@@ -1,5 +1,5 @@
 /* oxlint-disable jsx-a11y/prefer-tag-over-role -- A focusable window splitter uses the ARIA separator widget, not a thematic hr. */
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import type {
   ChangeEvent,
   ComparisonManifest,
@@ -109,10 +109,12 @@ export function App({
   const fileJob = useRef<string | null>(null);
   const pathInput = useRef<HTMLInputElement>(null);
   const pickerButton = useRef<HTMLButtonElement>(null);
-  const visibleFiles =
-    manifest?.files.filter((file) =>
-      file.path.toLocaleLowerCase().includes(filter.toLocaleLowerCase()),
-    ) ?? [];
+  const files = manifest?.files;
+  const visibleFiles = useMemo(() => {
+    if (!filter) return files ?? [];
+    const query = filter.toLocaleLowerCase();
+    return files?.filter((file) => file.path.toLocaleLowerCase().includes(query)) ?? [];
+  }, [files, filter]);
 
   const cancelOne = useCallback(
     (ref: { current: string | null }) => {
@@ -810,6 +812,8 @@ export function App({
           )}
           <ChangeNavigator
             files={visibleFiles}
+            visible={showFiles || !manifest}
+            snapshotId={manifest?.id}
             selected={selectedFile?.id}
             query={filter}
             onSelect={(file) => void selectFile(file)}

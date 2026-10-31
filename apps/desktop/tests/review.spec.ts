@@ -143,7 +143,8 @@ async function bridge(
                 );
                 throw new Error(`stale page ${generation}`);
               }
-              return { ...manifest, files: [] };
+              const offset = Number(args.offset);
+              return { ...manifest, files: manifest.files.slice(offset, offset + 200) };
             }
             if (command === "preview_file") {
               if (args.fileId === "first" && options.delayPreview)
@@ -575,7 +576,7 @@ test("reading focus preserves code space and exposes navigation and details on d
   await page.screenshot({ path: "test-results/reading-focus-760-dark.png", fullPage: true });
 });
 
-for (const count of [420, 2000])
+for (const count of [420, 2000, 10_000])
   test(`complete search and virtual navigation cover ${count} changes`, async ({ page }) => {
     await bridge(page, { count });
     await open(page);
@@ -594,6 +595,91 @@ for (const count of [420, 2000])
     await expect(page.locator(".file-heading h2")).toContainText("file-0001.ts");
     expect(await page.locator(".file-item").count()).toBeLessThan(40);
   });
+
+test("browsing a large file list survives unrelated review updates", async ({ page }) => {
+  await bridge(page, { count: 10_000 });
+  await open(page);
+  await page.getByLabel("筛选文件").fill("file-");
+  await expect(page.locator(".navigator-layout")).toContainText("10000 个匹配");
+  await expect(page.getByRole("button", { name: "标记已审查", exact: true })).toBeEnabled();
+  const viewport = page.locator(".virtual-files");
+  await viewport.evaluate((node) => {
+    node.scrollTop = 44 * 5000;
+  });
+  await expect.poll(() => viewport.evaluate((node) => node.scrollTop)).toBe(44 * 5000);
+  await page.getByRole("button", { name: "变更详情", exact: true }).click();
+  await expect.poll(() => viewport.evaluate((node) => node.scrollTop)).toBe(44 * 5000);
+  await page.getByRole("button", { name: "标记已审查", exact: true }).click();
+  await expect.poll(() => viewport.evaluate((node) => node.scrollTop)).toBe(44 * 5000);
+  expect(await page.locator(".file-item").count()).toBeLessThan(40);
+});
+
+test("loading another file page keeps the navigation viewport", async ({ page }) => {
+  await bridge(page, { count: 420 });
+  await open(page);
+  await expect(page.getByRole("button", { name: "标记已审查", exact: true })).toBeEnabled();
+  const viewport = page.locator(".virtual-files");
+  await viewport.evaluate((node) => {
+    node.scrollTop = 44 * 150;
+  });
+  await expect.poll(() => viewport.evaluate((node) => node.scrollTop)).toBe(44 * 150);
+  await page.getByRole("button", { name: "加载更多（200/420）", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "加载更多（400/420）", exact: true }),
+  ).toBeVisible();
+  await expect.poll(() => viewport.evaluate((node) => node.scrollTop)).toBe(44 * 150);
+});
+
+test("reopening navigation reveals a file selected while the panel was hidden", async ({
+  page,
+}) => {
+  await bridge(page, { count: 420 });
+  await open(page);
+  await page.getByLabel("筛选文件").fill("file-0419.ts");
+  await page.locator(".file-item").click();
+  await page.getByLabel("筛选文件").fill("");
+  await expect(page.locator(".file-item.selected")).toBeVisible();
+  await page.getByRole("button", { name: /变更文件 ·/ }).click();
+  await page.getByRole("button", { name: "浏览历史后退" }).click();
+  await expect(page.locator(".file-heading h2")).toContainText("file-0000.ts");
+  await page.getByRole("button", { name: /变更文件 ·/ }).click();
+  await expect(page.locator(".file-item.selected")).toBeVisible();
+});
+
+test("virtual keyboard navigation reaches both ends of ten thousand files", async ({ page }) => {
+  await bridge(page, { count: 10_000 });
+  await open(page);
+  await page.getByLabel("筛选文件").fill("file-");
+  await expect(page.locator(".navigator-layout")).toContainText("10000 个匹配");
+  await page.locator(".file-item").first().focus();
+  await page.keyboard.press("End");
+  const last = page.getByRole("button", { name: "packages/p99/file-9999.ts", exact: true });
+  await expect(last).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".file-heading h2")).toContainText("file-9999.ts");
+  await page.keyboard.press("Home");
+  await expect(
+    page.getByRole("button", { name: "packages/p0/file-0000.ts", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".file-heading h2")).toContainText("file-0000.ts");
+});
+
+test("a new snapshot reveals the selected file even when its path identity is unchanged", async ({
+  page,
+}) => {
+  await bridge(page, { count: 420, refreshIdentity: true });
+  await open(page);
+  const viewport = page.locator(".virtual-files");
+  await expect(page.getByRole("button", { name: "标记已审查", exact: true })).toBeEnabled();
+  await viewport.evaluate((node) => {
+    node.scrollTop = 44 * 150;
+  });
+  await expect.poll(() => viewport.evaluate((node) => node.scrollTop)).toBe(44 * 150);
+  await page.getByRole("button", { name: "刷新比较", exact: true }).click();
+  await expect(page.getByRole("button", { name: "标记已审查", exact: true })).toBeEnabled();
+  await expect(page.locator(".file-item.selected")).toBeVisible();
+});
 
 test("relationship selection retains editors and file search survives navigation", async ({
   page,
