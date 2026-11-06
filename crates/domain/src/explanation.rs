@@ -6,6 +6,10 @@ use ts_rs::TS;
 pub enum ExplanationProvider {
     Codex,
     Claude,
+    Openai,
+    Pi,
+    Trae,
+    Acp,
 }
 
 #[derive(Debug, Clone, Serialize, TS)]
@@ -15,12 +19,21 @@ pub struct ExplanationTool {
     pub executable: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, TS)]
+#[derive(Clone, Deserialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct LocalApiConnection {
+    pub base_url: String,
+    pub api_key: Option<String>,
+}
+
+#[derive(Clone, Deserialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ExplanationRequest {
     pub prepared_id: String,
     pub provider: ExplanationProvider,
     pub model: String,
+    #[ts(optional)]
+    pub connection: Option<LocalApiConnection>,
     pub question: String,
 }
 

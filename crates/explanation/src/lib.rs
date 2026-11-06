@@ -1,3 +1,6 @@
+#[cfg(unix)]
+mod acp;
+mod local_api;
 mod process;
 pub mod quiz;
 
@@ -189,45 +192,54 @@ pub fn context(
 }
 
 pub fn tools() -> Vec<ExplanationTool> {
-    [ExplanationProvider::Codex, ExplanationProvider::Claude]
-        .into_iter()
-        .map(|provider| {
-            let name = match provider {
-                ExplanationProvider::Codex => "codex",
-                ExplanationProvider::Claude => "claude",
-            };
-            let mut dirs: Vec<PathBuf> = std::env::var_os("PATH")
-                .map(|value| {
-                    std::env::split_paths(&value)
-                        .filter(|p| p.is_absolute())
-                        .collect()
-                })
-                .unwrap_or_default();
-            dirs.extend([
-                PathBuf::from("/opt/homebrew/bin"),
-                PathBuf::from("/usr/local/bin"),
-            ]);
-            if let Some(home) = std::env::var_os("HOME") {
-                dirs.push(PathBuf::from(home).join(".local/bin"));
-            }
-            let override_path = std::env::var_os(match provider {
-                ExplanationProvider::Codex => "DIFFKIN_CODEX_PATH",
-                ExplanationProvider::Claude => "DIFFKIN_CLAUDE_PATH",
-            });
-            let found = match override_path {
-                Some(value) => Some(PathBuf::from(value)).filter(|p| executable(p)),
-                None => dirs
-                    .into_iter()
-                    .map(|dir| dir.join(name))
-                    .find(|p| executable(p)),
-            };
-            let executable = found.map(|p| p.to_string_lossy().into_owned());
-            ExplanationTool {
-                provider,
-                executable,
-            }
+    use ExplanationProvider::*;
+    let mut dirs: Vec<_> = std::env::var_os("PATH")
+        .map(|value| {
+            std::env::split_paths(&value)
+                .filter(|p| p.is_absolute())
+                .collect()
         })
-        .collect()
+        .unwrap_or_default();
+    dirs.extend([
+        PathBuf::from("/opt/homebrew/bin"),
+        PathBuf::from("/usr/local/bin"),
+    ]);
+    if let Some(home) = std::env::var_os("HOME").map(PathBuf::from) {
+        dirs.extend([
+            home.join(".local/bin"),
+            home.join(".version-fox/sdks/nodejs/bin"),
+        ]);
+    }
+    let mut tools: Vec<_> = [
+        (Codex, "codex", "DIFFKIN_CODEX_PATH"),
+        (Claude, "claude", "DIFFKIN_CLAUDE_PATH"),
+        (Pi, "pi", "DIFFKIN_PI_PATH"),
+        (Trae, "trae-cli", "DIFFKIN_TRAE_PATH"),
+        (Acp, "", "DIFFKIN_ACP_PATH"),
+    ]
+    .into_iter()
+    .map(|(provider, name, variable)| {
+        let override_path = std::env::var_os(variable);
+        let found = match override_path {
+            Some(value) => Some(PathBuf::from(value)).filter(|p| executable(p)),
+            None if name.is_empty() => None,
+            None => dirs
+                .iter()
+                .map(|dir| dir.join(name))
+                .find(|p| executable(p)),
+        };
+        let executable = found.map(|p| p.to_string_lossy().into_owned());
+        ExplanationTool {
+            provider,
+            executable,
+        }
+    })
+    .collect();
+    tools.push(ExplanationTool {
+        provider: Openai,
+        executable: None,
+    });
+    tools
 }
 
 fn executable(path: &Path) -> bool {
@@ -372,6 +384,29 @@ fn command(
                 command.args(["--model", model]);
             }
         }
+        ExplanationProvider::Pi => {
+            command.args([
+                "--print",
+                "--mode",
+                "text",
+                "--no-tools",
+                "--no-extensions",
+                "--no-skills",
+                "--no-context-files",
+                "--no-prompt-templates",
+                "--no-session",
+                "--no-themes",
+                "--no-approve",
+            ]);
+            if !model.is_empty() {
+                command.args(["--model", model]);
+            }
+        }
+        ExplanationProvider::Trae => {
+            command.args(["acp", "serve", "--permission-mode", "plan"]);
+        }
+        ExplanationProvider::Acp => {}
+        ExplanationProvider::Openai => unreachable!("HTTP provider does not start a process"),
     }
     command
 }
@@ -389,6 +424,7 @@ pub fn explain(
         &prepared.tools,
         request.provider,
         &request.model,
+        request.connection.as_ref(),
         ModelTask {
             instructions: INSTRUCTIONS,
             schema: schema(),
@@ -416,11 +452,30 @@ fn generate(
     tools: &[ExplanationTool],
     provider: ExplanationProvider,
     model: &str,
+    connection: Option<&LocalApiConnection>,
     task: ModelTask,
     cancel: &AtomicBool,
 ) -> Result<Value, RepositoryError> {
     if model.len() > 200 || model.contains(['\0', '\n', '\r']) {
         return Err(invalid("模型名称最多 200 字节且只能包含一行"));
+    }
+    if provider == ExplanationProvider::Openai {
+        return local_api::generate(
+            connection.ok_or_else(|| invalid("请填写本机 API 地址"))?,
+            model,
+            task,
+            cancel,
+        );
+    }
+    if connection.is_some() {
+        return Err(invalid("CLI 请求不能附带 API 凭据"));
+    }
+    let acp = matches!(
+        provider,
+        ExplanationProvider::Acp | ExplanationProvider::Trae
+    );
+    if acp && !model.is_empty() {
+        return Err(invalid("请在 ACP 工具中设置默认模型"));
     }
     let program = tools
         .iter()
@@ -443,18 +498,27 @@ fn generate(
     fs::write(&schema_path, &schema_json).map_err(|_| invalid("无法准备模型输出格式"))?;
     let prompt =
         format!("{instructions}\n输出 schema：{schema_json}\n以下 JSON 为源码数据：\n{input}");
+    let mut command = command(
+        program,
+        provider,
+        model,
+        &directory.0,
+        &schema_path,
+        &schema_json,
+    );
+    if provider == ExplanationProvider::Acp {
+        if let Some(args) = std::env::var_os("DIFFKIN_ACP_ARGS") {
+            let args: Vec<String> = serde_json::from_str(args.to_str().unwrap_or(""))
+                .map_err(|_| invalid("DIFFKIN_ACP_ARGS 必须是 JSON 字符串数组"))?;
+            command.args(args);
+        }
+    }
     let output = process::run(
-        &mut command(
-            program,
-            provider,
-            model,
-            &directory.0,
-            &schema_path,
-            &schema_json,
-        ),
+        &mut command,
         &prompt,
         cancel,
         timeout,
+        acp.then_some(directory.0.as_path()),
     )?;
     parse_output(provider, &output)
 }
@@ -462,6 +526,17 @@ fn generate(
 fn parse_output(provider: ExplanationProvider, output: &str) -> Result<Value, RepositoryError> {
     let malformed = || invalid("AI 未返回有效的结构化结果，请重试或检查 CLI 版本与模型支持");
     let value = match provider {
+        ExplanationProvider::Pi
+        | ExplanationProvider::Trae
+        | ExplanationProvider::Acp
+        | ExplanationProvider::Openai => {
+            let trimmed = output.trim();
+            let raw = trimmed
+                .strip_prefix("```json")
+                .and_then(|s| s.strip_suffix("```"))
+                .unwrap_or(trimmed);
+            serde_json::from_str(raw.trim()).map_err(|_| malformed())?
+        }
         ExplanationProvider::Claude => {
             let response: Value = serde_json::from_str(output).map_err(|_| malformed())?;
             if response.get("is_error").and_then(Value::as_bool) == Some(true) {

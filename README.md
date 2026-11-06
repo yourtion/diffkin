@@ -41,18 +41,30 @@ pnpm desktop dev
 在桌面比较里打开一个文本文件，点击文件名旁的 **AI 解释**。默认解释第一块原始差异；如果先在“变更详情”选中了一个函数移动、内部修改等关系，就从该组变化开始。可以切换差异块，也可以明确选择整个文件。
 
 1. 展开“查看将发送的源码”，核对路径和改前/改后行号。局部解释最多带前后各 4 行相邻代码；完整上下文上限为 48 KiB。二进制、只有预览或元数据的文件不提供解释。
-2. 选择已在本机安装、登录的 **Codex CLI** 或 **Claude Code**，按需填写问题和模型，再点击“生成解释”。仅打开比较或预览不会调用模型。CLI 可能向其模型服务发送这段代码、消耗当前账户额度；Diffkin 不需要 API Key。
+2. 在“本机 AI 工具”选择服务，按需填写问题，再点击“生成解释”。可先预览将发送的片段。
 3. 阅读代码含义和前后行为差异，展开“核对源码”查看引用。修改动机单列为**推测**：当前上下文不含提交说明、需求或作者确认。解释不会改变已审查标记、格式折叠或验证结果。
 
 例如 `balance > amount` 改为 `balance >= amount`，两侧源码可以说明“余额等于金额时由拒绝变为允许”；“可能是为了允许取出全部余额”则需要用需求或提交说明核实。
 
-支持 macOS / Linux，使用本机 CLI 登录状态，在独立临时目录调用一次；Windows 当前不执行。桌面进程会搜索 `PATH`、`~/.local/bin` 和 Homebrew 常用路径，也可在启动 Diffkin 前用 `DIFFKIN_CODEX_PATH` / `DIFFKIN_CLAUDE_PATH` 指定可信 CLI 的绝对路径。需要支持下列参数的版本（本轮核对 Codex CLI 0.162.1 / Claude Code 2.1.278）：[Codex 非交互模式](https://developers.openai.com/codex/noninteractive)使用 `exec --ignore-user-config --ephemeral --sandbox read-only`，不加载个人配置的模型路由；[Claude Code CLI](https://code.claude.com/docs/en/cli-reference) 使用 `--print --safe-mode --tools ""`。本机组织策略仍适用。切换范围、关闭面板或手动取消会停止请求；模型服务已处理的请求不能撤回。
+**本机 OpenAI 兼容 API** 可在 macOS、Windows 和 Linux 使用。填写已启动服务的 HTTP 基础地址（例如 `http://127.0.0.1:11434/v1`）、模型 ID 和可选密钥。Diffkin 向回环地址的 `/chat/completions` 发出请求，绕过系统代理并禁止重定向。应用记住上次使用的地址和模型，密钥仅保存在本次应用内存中，修改地址会清空密钥。[Chat Completions](https://developers.openai.com/api/reference/resources/chat)
+
+**外部 CLI** 支持 macOS 和 Linux。Diffkin 在独立临时目录启动所选工具，将冻结片段发给它。工具使用自身的账号和模型设置，可能向配置的模型服务发送片段。切换范围、关闭面板或点击取消会停止本机请求。
+
+| 工具          | 启动方式                                           | 自定义可执行路径      |
+| ------------- | -------------------------------------------------- | --------------------- |
+| Codex CLI     | `codex exec`，只读沙箱                             | `DIFFKIN_CODEX_PATH`  |
+| Claude Code   | `claude --print --safe-mode`，禁用工具             | `DIFFKIN_CLAUDE_PATH` |
+| Pi            | `pi --print --mode text`，关闭工具、扩展和会话保存 | `DIFFKIN_PI_PATH`     |
+| Trae CLI      | `trae-cli acp serve --permission-mode plan`        | `DIFFKIN_TRAE_PATH`   |
+| 其他 ACP 工具 | ACP v1 的 stdio 服务端模式                         | `DIFFKIN_ACP_PATH`    |
+
+自定义 ACP 工具需要设置可执行文件的绝对路径。在启动 Diffkin 的环境中设置 `DIFFKIN_ACP_PATH`，需要启动参数时再设置 `DIFFKIN_ACP_ARGS`，例如 `["acp","serve"]`。每个参数直接传给进程。ACP 模型在工具内配置。Diffkin 在新会话中发送一次文本请求，拒绝客户端文件、终端及权限请求。请使用可信的服务端，它自身的工具由其配置控制。[ACP 协议](https://agentclientprotocol.com/protocol/v1/prompt-turn) · [Pi CLI](https://pi.dev/docs/latest/cli-integration) · [Trae ACP](https://docs.trae.cn/cli_agent-client-protocol)
 
 ### 用选择题检查对变更的理解
 
-在文件名旁点击 **变更测验**。默认考当前文件的全部文本改动，也可选择一个差异块。面板显示题数、增删行数和将发送的源码。点击“生成测验”，已登录的本机 Codex 或 Claude 会围绕具体输入、执行路径、边界条件和可观察的行为变化出题。
+在文件名旁点击 **变更测验**。默认考当前文件的全部文本改动，也可选择一个差异块。面板显示题数、增删行数和将发送的源码。点击“生成测验”，选定的 AI 服务会围绕具体输入、执行路径、边界条件和可观察的行为变化出题。
 
-每题四选一，交卷后显示得分、每题的正确答案、解析及冻结 diff 的引用。可返回上一题修改选择，交卷后可重答原题或重新出题。重答和评分都在本地完成。新增与删除行数之和为 1–4、5–12、13–24、25–49、50–99、100 以上时，依次出 3、4、5、6、7、8 题。每个差异块最多带前后各两行相邻源码，已预览的片段合计限 48 KiB。
+每题四选一，交卷后显示得分、每题的模型参考答案、解析及冻结 diff 的引用。可返回上一题修改选择，交卷后可重答原题或重新出题。重答和评分都在本地完成。新增与删除行数之和为 1–4、5–12、13–24、25–49、50–99、100 以上时，依次出 3、4、5、6、7、8 题。每个差异块最多带前后各两行相邻源码，已预览的片段合计限 48 KiB。
 
 ### 本地设置
 
@@ -67,6 +79,8 @@ pnpm desktop dev
 3. 选择文件进行审查；在“工作区设置”中展开“手工关联”，选择目标仓库/文件、填写可选备注，再保存关联。关联与审查都绑定这次冻结内容。
 4. 再次启动时，上次打开的工作区排在首页首位。点击名称会回到上次审查的仓库。也可以从工作区设置切换历史快照。恢复读取本机归档，不重读活动源码；重新捕获产生新快照，旧结论保留为历史。
 5. 点击“导出版本清单”获得 JSON 摘要。默认不含源码、绝对路径、显示标签、关联备注或错误文本；它不替代保留源码的本机证据归档。
+
+审查状态首次修改后，Diffkin 将冻结证据保存在同目录的 `.evidence` 文件中。后续切换状态只写较小的审查记录。手工备份时请保留整个工作区存储目录，读取这一格式需要本版或更新版本。
 
 当前使用有界 JSON 存储，最多 16 个工作区，每个配置 8 个仓库、8 个快照；引用中的历史证据不会被普通缓存淘汰。详细限额见[当前验收记录](docs/acceptance/m3-m4.md)。
 
@@ -134,7 +148,7 @@ CI 会先运行 `diffkin-analysis` 的 `ui_fixture` 和 `diffkin-desktop` 的 `w
 | `crates/domain`      | Rust DTO，生成 TypeScript 协议                          |
 | `crates/application` | 只读 Git 捕获、多仓库冻结内容、审查依据与有界 JSON 存储 |
 | `crates/validation`  | 固定提交装配、明确确认后的可信本机执行、日志与结果      |
-| `crates/explanation` | 冻结片段、受限的本机 AI CLI 调用和解释引用校验          |
+| `crates/explanation` | 冻结片段、本机 API 和 CLI 调用和解释引用校验            |
 | `crates/analysis`    | 无损文本、语法关系、覆盖证明和取消预算                  |
 | `fixtures/structure` | 冻结输入与明确 expected                                 |
 | `docs/acceptance`    | 正确性、性能原始记录与未验收事项                        |

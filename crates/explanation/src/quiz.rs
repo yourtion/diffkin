@@ -221,6 +221,7 @@ pub fn generate_quiz(
         &prepared.tools,
         request.provider,
         &request.model,
+        request.connection.as_ref(),
         ModelTask {
             instructions: INSTRUCTIONS,
             schema: schema(prepared.question_count),
@@ -328,15 +329,10 @@ mod tests {
         }
     }
 
-    #[cfg(unix)]
     #[test]
     #[ignore = "explicitly invokes a real installed model on synthetic source"]
     fn installed_cli_generates_quiz() {
-        let provider = match std::env::var("DIFFKIN_TEST_AI").as_deref() {
-            Ok("codex") => ExplanationProvider::Codex,
-            Ok("claude") => ExplanationProvider::Claude,
-            _ => panic!("select a provider with DIFFKIN_TEST_AI"),
-        };
+        let (provider, model, connection) = crate::tests::live_settings();
         let mut builder = QuizBuilder::default();
         builder.add_file(&condition(), None).unwrap();
         let prepared = builder.finish("live-quiz".into(), crate::tools()).unwrap();
@@ -345,7 +341,8 @@ mod tests {
             &QuizRequest {
                 prepared_id: "live-quiz".into(),
                 provider,
-                model: String::new(),
+                connection,
+                model,
             },
             &AtomicBool::new(false),
         )

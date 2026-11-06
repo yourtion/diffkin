@@ -7,6 +7,7 @@ pub(super) fn run(
     prompt: &str,
     cancel: &AtomicBool,
     timeout: Duration,
+    acp_directory: Option<&std::path::Path>,
 ) -> Result<String, RepositoryError> {
     use nix::{
         fcntl::{fcntl, FcntlArg, OFlag},
@@ -58,7 +59,14 @@ pub(super) fn run(
         .map_err(io_error)?;
     }
     let started = Instant::now();
+    let mut pending = Vec::new();
+    let mut turn = acp_directory.map(|dir| super::acp::Turn::start(dir, prompt, &mut pending));
+    if turn.is_none() {
+        pending.extend_from_slice(prompt.as_bytes());
+    }
     let mut sent = 0;
+    let mut stdout_bytes = 0;
+    let mut frame = Vec::new();
     let mut out = Vec::new();
     let mut stderr_bytes = 0;
     let mut status = None;
@@ -75,8 +83,8 @@ pub(super) fn run(
                 message: "AI 请求超时，请缩小范围后重试".into(),
             });
         }
-        if let Some(stdin) = input.as_mut() {
-            match stdin.write(&prompt.as_bytes()[sent..]) {
+        if let Some(stdin) = input.as_mut().filter(|_| sent < pending.len()) {
+            match stdin.write(&pending[sent..]) {
                 Ok(n) => sent += n,
                 Err(e)
                     if matches!(
@@ -88,8 +96,12 @@ pub(super) fn run(
                 }
                 Err(e) => return Err(io_error(e)),
             }
-            if sent == prompt.len() {
-                input = None;
+            if sent == pending.len() {
+                pending.clear();
+                sent = 0;
+                if turn.is_none() {
+                    input = None;
+                }
             }
         }
         for (index, reader) in [&mut stdout as &mut dyn Read, &mut stderr]
@@ -105,11 +117,30 @@ pub(super) fn run(
                     }
                     Ok(n) => {
                         if index == 0 {
-                            out.extend_from_slice(&bytes[..n]);
+                            stdout_bytes += n;
+                            if stdout_bytes > 512 * 1024 {
+                                return Err(RepositoryError::BudgetExceeded {
+                                    message: "CLI 输出超出限制，本次请求已停止".into(),
+                                });
+                            }
+                            if let Some(turn) = &mut turn {
+                                for byte in &bytes[..n] {
+                                    if *byte == b'\n' {
+                                        if let Some(answer) = turn.receive(&frame, &mut pending)? {
+                                            return Ok(answer);
+                                        }
+                                        frame.clear();
+                                    } else {
+                                        frame.push(*byte);
+                                    }
+                                }
+                            } else {
+                                out.extend_from_slice(&bytes[..n]);
+                            }
                         } else {
                             stderr_bytes += n;
                         }
-                        if out.len() > 512 * 1024 || stderr_bytes > 64 * 1024 {
+                        if pending.len() > 512 * 1024 || stderr_bytes > 64 * 1024 {
                             return Err(RepositoryError::BudgetExceeded {
                                 message: "CLI 输出超出限制，本次请求已停止".into(),
                             });
@@ -136,7 +167,7 @@ pub(super) fn run(
         }
         std::thread::sleep(Duration::from_millis(10));
     }
-    if !status.is_some_and(|s| s.success()) {
+    if turn.is_some() || !status.is_some_and(|s| s.success()) {
         return Err(RepositoryError::IoFailure {
             message: "CLI 执行失败，请先在终端确认登录状态、模型权限及 CLI 版本".into(),
         });
@@ -152,6 +183,7 @@ pub(super) fn run(
     _prompt: &str,
     _cancel: &AtomicBool,
     _timeout: Duration,
+    _acp_directory: Option<&std::path::Path>,
 ) -> Result<String, RepositoryError> {
     Err(RepositoryError::Unsupported {
         message: "本机 AI 调用目前支持 macOS / Linux".into(),

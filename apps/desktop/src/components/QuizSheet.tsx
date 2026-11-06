@@ -45,7 +45,8 @@ export function QuizSheet({
                 </p>
               )}
               <p>
-                <strong>正确答案 {letters[q.correctIndex]}</strong> · {q.choices[q.correctIndex]}
+                <strong>模型参考答案 {letters[q.correctIndex]}</strong> ·{" "}
+                {q.choices[q.correctIndex]}
               </p>
               <p>{q.explanation}</p>
               {q.evidenceIds.map((id) => {

@@ -12,10 +12,17 @@ import type {
 } from "@diffkin/protocol";
 import { explanationClient } from "../lib/explanation-client";
 import { message } from "../lib/client";
+import {
+  providerNames as names,
+  aiSettings,
+  localEndpoint,
+  rememberSettings,
+  sessionKey,
+  setSessionKey,
+} from "../lib/local-ai";
 import { QuizSheet } from "./QuizSheet";
 import "./explanation.css";
 
-const names = { codex: "Codex", claude: "Claude Code" };
 type Mode = "explain" | "quiz";
 type Props = {
   mode: Mode;
@@ -42,7 +49,9 @@ export function ExplanationPanel({ mode, comparisonId, fileId, analysis, event, 
   const [target, setTarget] = useState(
     mode === "quiz" ? "file" : event ? "event" : chunks.length ? `raw:${chunks[0].start}` : "file",
   );
-  const [preferred, setPreferred] = useState<ExplanationProvider | null>(null);
+  const [preferred, setPreferred] = useState<ExplanationProvider | null>(
+    () => aiSettings().provider,
+  );
   const title = mode === "quiz" ? "变更测验" : "AI 变更解释";
   return (
     <aside className="review-details explanation-panel" aria-label={title}>
@@ -161,6 +170,9 @@ function ExplanationForm({
   const [prepared, setPrepared] = useState<PreparedExplanation | PreparedQuiz | null>(null);
   const [question, setQuestion] = useState("");
   const [model, setModel] = useState("");
+  const [baseUrl, setBaseUrl] = useState(() => aiSettings().baseUrl);
+  const [apiModel, setApiModel] = useState(() => aiSettings().model);
+  const [key, setKey] = useState(() => sessionKey(baseUrl));
   const [result, setResult] = useState<
     ((ExplanationResult | QuizResult) & { jobId: string }) | null
   >(null);
@@ -192,17 +204,30 @@ function ExplanationForm({
       activeJob.current = null;
     };
   }, [mode, comparisonId, fileId, eventId, rawStart]);
-  const provider = preferred ?? prepared?.tools.find((t) => t.executable)?.provider ?? "codex";
+  const provider =
+    prepared?.tools.find((t) => t.provider === preferred)?.provider ??
+    prepared?.tools.find((t) => t.executable)?.provider ??
+    prepared?.tools.find((t) => t.provider === "openai")?.provider ??
+    "codex";
+  const api = provider === "openai";
+  const acp = provider === "acp" || provider === "trae";
   const tool = prepared?.tools.find((t) => t.provider === provider);
+  const ready = api ? localEndpoint(baseUrl) && !!apiModel.trim() : !!tool?.executable;
   async function run() {
-    if (!prepared || !tool?.executable || activeJob.current) return;
+    if (!prepared || !ready || activeJob.current) return;
     const id = crypto.randomUUID();
     activeJob.current = id;
     setRunning(true);
     setError("");
     if (mode === "explain") setResult(null);
     try {
-      const request = { preparedId: prepared.id, provider, model: model.trim() };
+      rememberSettings(provider, baseUrl.trim(), apiModel.trim());
+      const request = {
+        preparedId: prepared.id,
+        provider,
+        model: api ? apiModel.trim() : acp ? "" : model.trim(),
+        ...(api ? { connection: { baseUrl: baseUrl.trim(), apiKey: key || null } } : {}),
+      };
       const answer =
         "evidence" in prepared
           ? await explanationClient.generateQuiz(request, id)
@@ -286,20 +311,62 @@ function ExplanationForm({
               {prepared.tools.map((t) => (
                 <option key={t.provider} value={t.provider}>
                   {names[t.provider]}
-                  {t.executable ? "" : "（未找到）"}
+                  {t.provider === "openai" || t.executable ? "" : "（未找到）"}
                 </option>
               ))}
             </select>
           </label>
-          {tool?.executable ? (
+          {api ? (
+            <>
+              <label>
+                API 基础地址
+                <input
+                  disabled={running}
+                  value={baseUrl}
+                  maxLength={2048}
+                  onChange={(e) => {
+                    setBaseUrl(e.target.value);
+                    setKey("");
+                    setSessionKey("", "");
+                  }}
+                />
+              </label>
+              {!localEndpoint(baseUrl) && (
+                <p className="notice">请填写本机 HTTP 地址，例如 http://127.0.0.1:11434/v1。</p>
+              )}
+              <label>
+                模型名称
+                <input
+                  disabled={running}
+                  value={apiModel}
+                  maxLength={200}
+                  placeholder="服务中已加载的模型 ID"
+                  onChange={(e) => setApiModel(e.target.value)}
+                />
+              </label>
+              <label>
+                API 密钥（可选）
+                <input
+                  disabled={running}
+                  type="password"
+                  autoComplete="off"
+                  maxLength={4096}
+                  value={key}
+                  onChange={(e) => {
+                    setKey(e.target.value);
+                    setSessionKey(baseUrl.trim(), e.target.value);
+                  }}
+                />
+              </label>
+            </>
+          ) : tool?.executable ? (
             <p className="executable-path" title={tool.executable}>
               {tool.executable}
             </p>
           ) : (
             <p className="notice">
               未找到可用的 {names[provider]}。请在 macOS / Linux 安装并登录 CLI，或用{" "}
-              {provider === "codex" ? "DIFFKIN_CODEX_PATH" : "DIFFKIN_CLAUDE_PATH"}{" "}
-              指定绝对路径后重启。
+              {`DIFFKIN_${provider.toUpperCase()}_PATH`} 指定绝对路径后重启。
             </p>
           )}
           {mode === "explain" && (
@@ -314,26 +381,30 @@ function ExplanationForm({
               />
             </label>
           )}
-          <details>
-            <summary>模型选项</summary>
-            <label>
-              模型名称
-              <input
-                disabled={running}
-                value={model}
-                maxLength={200}
-                placeholder="留空使用 CLI 默认模型"
-                onChange={(e) => setModel(e.target.value)}
-              />
-            </label>
-          </details>
-          <p className="muted">生成时，所选内容可能由此 CLI 发送到模型服务。</p>
+          {!api && !acp && (
+            <details>
+              <summary>模型选项</summary>
+              <label>
+                模型名称
+                <input
+                  disabled={running}
+                  value={model}
+                  maxLength={200}
+                  placeholder="留空使用 CLI 默认模型"
+                  onChange={(e) => setModel(e.target.value)}
+                />
+              </label>
+            </details>
+          )}
+          <p className="muted">
+            {api
+              ? "生成时仅向填写的本机地址发送所选内容。密钥仅保留在本次应用内存中。"
+              : acp
+                ? "使用工具的默认模型。请选择可信工具，它可能把所选内容发送到模型服务。"
+                : "生成时，所选内容可能由此 CLI 发送到模型服务。"}
+          </p>
           <div className="explanation-actions">
-            <button
-              className="primary"
-              disabled={running || !tool?.executable}
-              onClick={() => void run()}
-            >
+            <button className="primary" disabled={running || !ready} onClick={() => void run()}>
               {mode === "quiz"
                 ? running
                   ? "正在出题…"
