@@ -13,7 +13,7 @@ type CacheEntry = (String, String, Arc<FileAnalysis>, usize);
 
 pub enum Snapshot {
     Memory(Arc<FrozenComparison>),
-    Disk(DiskComparison),
+    Disk(Box<DiskComparison>),
 }
 impl From<Arc<FrozenComparison>> for Snapshot {
     fn from(value: Arc<FrozenComparison>) -> Self {

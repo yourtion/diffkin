@@ -45,9 +45,9 @@ async fn open_comparison(
             Err(RepositoryError::BudgetExceeded { .. })
                 if spec.mode == diffkin_domain::CompareMode::Commits =>
             {
-                Snapshot::Disk(diffkin_application::capture_large_commits(
+                Snapshot::Disk(Box::new(diffkin_application::capture_large_commits(
                     &spec, &disk_root, &token,
-                )?)
+                )?))
             }
             Err(error) => return Err(error),
         };

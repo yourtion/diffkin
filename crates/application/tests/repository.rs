@@ -611,11 +611,18 @@ fn missing_promisor_blob_fails_without_fetching() {
 #[test]
 fn literal_scope_is_frozen_mode_consistent_and_part_of_identity() {
     let repo = Repo::new();
-    for path in ["packages/app/a.ts", "packages/apple/a.ts", "literal*/a.ts"] {
+    // Both bracket syntax and its potential glob match are legal Windows paths.
+    let paths = [
+        "packages/app/a.ts",
+        "packages/apple/a.ts",
+        "literal[ab]/a.ts",
+        "literala/a.ts",
+    ];
+    for path in paths {
         repo.write(path, "const x = 1;\n");
     }
     repo.commit();
-    for path in ["packages/app/a.ts", "packages/apple/a.ts", "literal*/a.ts"] {
+    for path in paths {
         repo.write(path, "const x = 2;\n");
     }
     repo.git(&["add", "--all"]);
@@ -629,12 +636,12 @@ fn literal_scope_is_frozen_mode_consistent_and_part_of_identity() {
         spec.path_scope = Some("packages/app/a.ts".into());
         let file_scope = capture(&spec, &AtomicBool::new(false)).unwrap();
         assert_ne!(file_scope.manifest(0, 0).id, scoped.manifest(0, 0).id);
-        spec.path_scope = Some("literal*".into());
+        spec.path_scope = Some("literal[ab]".into());
         assert_eq!(
             one(&capture(&spec, &AtomicBool::new(false)).unwrap())
                 .summary
                 .path,
-            "literal*/a.ts"
+            "literal[ab]/a.ts"
         );
     }
     repo.commit();
