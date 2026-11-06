@@ -68,6 +68,7 @@ pub async fn workspace_save(
 pub async fn workspace_capture(
     config: WorkspaceConfig,
     job_id: String,
+    snapshot_id: Option<String>,
     app: tauri::AppHandle,
     scope: State<'_, WorkspaceShared>,
     state: State<'_, Shared>,
@@ -77,7 +78,7 @@ pub async fn workspace_capture(
     let worker = runtime.clone();
     let cancelled = cancel.clone();
     let result = access(app, scope.inner().clone(), cancel, move |store| {
-        let (session, frozen) = store.capture_and_open(&config, &cancelled)?;
+        let (session, frozen) = store.capture_from(&config, snapshot_id.as_deref(), &cancelled)?;
         check_cancel(&cancelled)?;
         worker.install_workspace(Arc::new(frozen));
         Ok(session)

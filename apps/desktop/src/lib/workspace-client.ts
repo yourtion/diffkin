@@ -31,8 +31,8 @@ export function rememberWorkspace(id: string, repositoryId: string | null) {
 export const workspaceClient = {
   list: () => invoke<WorkspaceSummary[]>("workspace_list"),
   save: (config: WorkspaceConfig) => invoke<WorkspaceSession>("workspace_save", { config }),
-  capture: (config: WorkspaceConfig, jobId: string) =>
-    invoke<WorkspaceSession>("workspace_capture", { config, jobId }),
+  capture: (config: WorkspaceConfig, jobId: string, snapshotId: string | null = null) =>
+    invoke<WorkspaceSession>("workspace_capture", { config, jobId, snapshotId }),
   restore: (id: string, snapshotId: string | null = null) =>
     invoke<WorkspaceSession>("workspace_restore", { id, snapshotId }),
   review: (id: string, basis: EvidenceBasis, state: ReviewState) =>

@@ -46,6 +46,8 @@ export function message(error: unknown): string {
     if ("code" in error && error.code === "stale") {
       if (error.message === "Workspace active snapshot has changed")
         return "工作区快照已切换，请重新打开工作区并确认要审查的版本。";
+      if (error.message === "Workspace configuration changed during capture")
+        return "工作区配置已变化，请重新打开工作区并确认仓库和比较范围。";
       if (error.message === "Workspace snapshot is not retained")
         return "此快照已移出历史记录，请重新打开工作区并选择可用版本。";
       if (

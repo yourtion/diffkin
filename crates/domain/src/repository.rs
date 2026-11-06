@@ -10,7 +10,7 @@ pub enum CompareMode {
     Worktree,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, TS)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ComparisonSpec {
     pub repository: String,
