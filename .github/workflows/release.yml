@@ -29,11 +29,16 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - id: version
-        name: Validate tag and manifest versions
+        name: Validate manifest versions and release tag
         shell: bash
         run: |
-          test "$GITHUB_REF_TYPE" = tag || { echo "Release must run against a version tag"; exit 1; }
-          node scripts/version.mjs check "$GITHUB_REF_NAME"
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            node scripts/version.mjs check "$GITHUB_REF_NAME"
+          elif [[ "$GITHUB_EVENT_NAME" == workflow_dispatch && "$GITHUB_REF_TYPE" == branch ]]; then
+            node scripts/version.mjs check
+          else
+            exit 1
+          fi
 
   checks:
     needs: version
@@ -66,6 +71,8 @@ jobs:
       TARGET: ${{ matrix.target }}
       BUNDLES: ${{ matrix.bundles }}
       TAURI_BUNDLER_DMG_IGNORE_CI: "false"
+      MACOS_SIGNING_ENABLED: ${{ github.ref_type == 'tag' && vars.MACOS_SIGNING_ENABLED == 'true' }}
+      WINDOWS_SIGNING_ENABLED: ${{ github.ref_type == 'tag' && vars.WINDOWS_SIGNING_ENABLED == 'true' }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -76,16 +83,16 @@ jobs:
       - name: Build CLI
         run: cargo build -p diffkin-cli --release --locked --target "$TARGET"
       - name: Build and bundle desktop
-        if: runner.os == 'Linux' || (runner.os == 'Windows' && vars.WINDOWS_SIGNING_ENABLED != 'true')
+        if: runner.os == 'Linux' || (runner.os == 'Windows' && env.WINDOWS_SIGNING_ENABLED != 'true')
         run: pnpm desktop build --target "$TARGET" --bundles "$BUNDLES" -- --locked
       - name: Build desktop before signing
-        if: runner.os == 'macOS' || (runner.os == 'Windows' && vars.WINDOWS_SIGNING_ENABLED == 'true')
+        if: runner.os == 'macOS' || (runner.os == 'Windows' && env.WINDOWS_SIGNING_ENABLED == 'true')
         run: pnpm desktop build --target "$TARGET" --no-bundle -- --locked
       - name: Bundle macOS app and sign CLI ad hoc
-        if: runner.os == 'macOS' && vars.MACOS_SIGNING_ENABLED != 'true'
+        if: runner.os == 'macOS' && env.MACOS_SIGNING_ENABLED != 'true'
         run: bash scripts/bundle-macos.sh ad-hoc
       - name: Bundle and notarize macOS release with Developer ID
-        if: runner.os == 'macOS' && vars.MACOS_SIGNING_ENABLED == 'true'
+        if: runner.os == 'macOS' && env.MACOS_SIGNING_ENABLED == 'true'
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -95,11 +102,11 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: bash scripts/bundle-macos.sh developer-id
       - name: Install Microsoft Artifact Signing client
-        if: runner.os == 'Windows' && vars.WINDOWS_SIGNING_ENABLED == 'true'
+        if: runner.os == 'Windows' && env.WINDOWS_SIGNING_ENABLED == 'true'
         shell: pwsh
         run: nuget install Microsoft.ArtifactSigning.Client -Version 1.0.151 -Source https://api.nuget.org/v3/index.json -OutputDirectory $env:RUNNER_TEMP -ExcludeVersion -NonInteractive
       - name: Bundle and sign Windows release
-        if: runner.os == 'Windows' && vars.WINDOWS_SIGNING_ENABLED == 'true'
+        if: runner.os == 'Windows' && env.WINDOWS_SIGNING_ENABLED == 'true'
         shell: pwsh
         env:
           AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
@@ -120,6 +127,7 @@ jobs:
           overwrite: true
 
   draft:
+    if: github.ref_type == 'tag'
     needs: [version, build]
     runs-on: ubuntu-22.04
     timeout-minutes: 10

@@ -40,7 +40,7 @@ cargo test --workspace --locked
 
 `version:set` 同时更新 root package、Cargo workspace 和 Cargo.lock 中的本地包版本；不会重新解析第三方依赖。检查并提交这些文件，然后在该提交创建并推送 tag。
 
-Release workflow 的顺序为：校验 tag → 复用完整 CI → 四目标构建 → 收集 9 个安装/CLI 产物 → 完整性校验与 SHA256SUMS → 创建或更新草稿。手工触发也必须选择一个版本 tag，分支触发会被拒绝。
+Release workflow 的顺序为：校验 tag → 复用完整 CI → 四目标构建 → 收集 9 个安装/CLI 产物 → 完整性校验与 SHA256SUMS → 创建或更新草稿。要验证分支上的打包改动，可运行 `gh workflow run release.yml --ref <分支名>`。分支验证使用 macOS ad-hoc 签名和未签名的 Windows 包，产物可从 Actions 下载。正式签名和草稿发布仅在版本 tag 上启用。
 
 | 目标                       | 安装包        | CLI                     |
 | -------------------------- | ------------- | ----------------------- |
