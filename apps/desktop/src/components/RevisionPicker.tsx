@@ -129,6 +129,9 @@ export function RevisionPicker({
               aria-label={`搜索${label}`}
               placeholder="搜索本地 / 远程分支或标签"
               value={query}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") event.preventDefault();
+              }}
               onChange={(event) => setQuery(event.target.value)}
             />
             <button type="button" aria-label="关闭分支选择" onClick={() => setExpanded(false)}>

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import type { ComparisonSpec } from "@diffkin/protocol";
 
 async function bridge(
   page: Page,
@@ -79,8 +80,8 @@ async function bridge(
           if (command === "open_comparison")
             return {
               id: "snapshot",
-              repository: "/repo",
-              mode: "commits",
+              repository: (args.spec as ComparisonSpec).repository,
+              mode: (args.spec as ComparisonSpec).mode,
               baseLabel: "base",
               headLabel: "head",
               files: [],
@@ -125,6 +126,53 @@ test("directory selection and cancellation never open a repository automatically
   await expect(page.getByLabel("仓库 1 路径", { exact: true })).toHaveValue("/workspace/other");
 });
 
+test("changing a comparison uses a draft and refresh only uses the applied selection", async ({
+  page,
+}) => {
+  await bridge(page);
+  const path = page.getByLabel("Git 仓库路径");
+  const mode = page.getByLabel("比较模式");
+  const start = page.getByRole("button", { name: "开始比较" });
+  const edit = page.getByRole("button", { name: "更改比较" });
+  const refresh = page.getByRole("button", { name: "刷新比较" });
+  const nav = page.getByRole("navigation", { name: "变更文件" });
+  await expect(nav).toBeHidden();
+  await path.fill("/projects/diffkin");
+  await page.screenshot({ path: "test-results/comparison-setup.png" });
+  await start.click();
+  await expect(nav).toBeVisible();
+  await edit.click();
+  await path.fill("/projects/other");
+  await mode.selectOption("staged");
+  await page.getByLabel("最近使用的仓库").selectOption("/projects/diffkin");
+  await expect(path).toHaveValue("/projects/diffkin");
+  await path.fill("/projects/other");
+  await page.keyboard.press("Escape");
+  await expect(edit).toBeFocused();
+  await refresh.click();
+  await expect(edit).toBeEnabled();
+  const initialCalls = await calls(page, "open_comparison");
+  expect(initialCalls).toHaveLength(2);
+  expect(initialCalls[1].args?.spec).toEqual(initialCalls[0].args?.spec);
+  await edit.click();
+  await expect(path).toHaveValue("/projects/diffkin");
+  await mode.selectOption("commits");
+  await page.getByRole("textbox", { name: "来源分支或提交" }).fill("main");
+  await page.getByRole("textbox", { name: "目标分支或提交" }).fill("feature");
+  await start.click();
+  await expect(page.locator(".review-context")).toContainText("main → feature");
+  await refresh.click();
+  await expect(edit).toBeEnabled();
+  const appliedCalls = await calls(page, "open_comparison");
+  expect(appliedCalls).toHaveLength(4);
+  expect(appliedCalls[3].args?.spec).toMatchObject({
+    repository: "/projects/diffkin",
+    mode: "commits",
+    base: "main",
+    head: "feature",
+  });
+});
+
 test("changing the repository clears a directory picker error", async ({ page }) => {
   await bridge(page, { pickerFailure: true });
   await page.getByRole("button", { name: "选择仓库目录" }).click();
@@ -139,6 +187,8 @@ test("branch choices are paged, while arbitrary commit IDs remain editable", asy
   await page.getByLabel("比较模式").selectOption("commits");
   await page.getByRole("button", { name: "选择来源分支或提交", exact: true }).click();
   await expect(page.getByRole("button", { name: /本地 main/ })).toBeVisible();
+  await page.getByRole("textbox", { name: "搜索来源分支或提交" }).press("Enter");
+  expect(await calls(page, "open_comparison")).toEqual([]);
   await page.screenshot({ path: "test-results/repository-selection.png" });
   await page.getByRole("button", { name: /本地 main/ }).click();
   await expect(page.getByRole("textbox", { name: "来源分支或提交", exact: true })).toHaveValue(
@@ -150,7 +200,7 @@ test("branch choices are paged, while arbitrary commit IDs remain editable", asy
   const target = page.getByRole("textbox", { name: "目标分支或提交", exact: true });
   await expect(target).toHaveValue("refs/tags/v1");
   await target.fill("deadbeef1234567890");
-  await page.getByRole("button", { name: "打开比较" }).click();
+  await page.getByRole("button", { name: "开始比较" }).click();
   expect((await calls(page, "open_comparison"))[0].args?.spec).toMatchObject({
     base: "refs/heads/main",
     head: "deadbeef1234567890",
@@ -319,9 +369,10 @@ test("complete raw verification is an explicit, persistent comparison choice", a
   await bridge(page);
   await page.getByLabel("Git 仓库路径").fill("/verify-all");
   const verification = page.getByRole("checkbox", { name: "完整原文核验", exact: true });
+  await page.getByText("范围与选项", { exact: true }).click();
   await expect(verification).not.toBeChecked();
   await verification.check();
-  await page.getByRole("button", { name: "打开比较" }).click();
+  await page.getByRole("button", { name: "开始比较" }).click();
   expect((await calls(page, "open_comparison"))[0].args?.spec).toMatchObject({
     repository: "/verify-all",
     verifyAll: true,

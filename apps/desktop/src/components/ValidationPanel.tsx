@@ -7,6 +7,7 @@ import type {
 } from "@diffkin/protocol";
 import { message } from "../lib/client";
 import { appendLogs, parseArguments, validationClient } from "../lib/validation-client";
+import { RepositoryPicker } from "./RepositoryPicker";
 import "./validation.css";
 
 const states: Record<string, string> = {
@@ -35,9 +36,11 @@ function date(value: number) {
 export function ValidationPanel({
   repository,
   manifest,
+  onRepository,
 }: {
   repository: string;
   manifest: ComparisonManifest | null;
+  onRepository: (path: string) => void;
 }) {
   const argumentsId = useId();
   const [candidateRef, setCandidateRef] = useState("HEAD");
@@ -247,6 +250,9 @@ export function ValidationPanel({
       >
         <p>
           当前仓库：<code>{repository || "尚未选择仓库"}</code>
+          {!manifest && (
+            <RepositoryPicker value={repository} onChoose={onRepository} disabled={!!busy} />
+          )}
         </p>
         {manifest && (
           <p>

@@ -19,17 +19,10 @@ import { ChangeInspector } from "./components/ChangeInspector";
 import { ExplanationPanel } from "./components/ExplanationPanel";
 import { WorkspacePanel } from "./components/WorkspacePanel";
 import { ValidationPanel } from "./components/ValidationPanel";
-import { RepositoryPicker } from "./components/RepositoryPicker";
-import { RevisionPicker } from "./components/RevisionPicker";
+import { ComparisonSetup, comparisonSources, modeNames } from "./components/ComparisonSetup";
 import { CaptureNotices } from "./components/CaptureNotices";
 import { workspaceClient, sameBasis } from "./lib/workspace-client";
 
-const modeNames = {
-  worktree: "全部本地改动",
-  staged: "已暂存",
-  unstaged: "未暂存",
-  commits: "分支 / 提交",
-};
 let nextJob = 0;
 function jobId() {
   return `ui-${Date.now()}-${++nextJob}`;
@@ -61,13 +54,25 @@ export function App({
   available?: boolean;
 }) {
   const settings = usePreferences(available);
-  const { spec, recent, view } = settings.preferences;
-  const setSpec = (next: ComparisonSpec) =>
-    settings.update((current) => ({ ...current, spec: next }));
+  const { recent, view } = settings.preferences;
+  const [draft, setDraft] = useState<ComparisonSpec | null>(null);
+  const spec = draft ?? settings.preferences.spec;
+  const setSpec = (next: ComparisonSpec) => {
+    if (draft) setDraft(next);
+    else settings.update((current) => ({ ...current, spec: next }));
+  };
   const foldFormats = view.foldFormats;
   const setFoldFormats = (foldFormats: boolean) =>
     settings.update((current) => ({ ...current, view: { ...current.view, foldFormats } }));
-  const [showFiles, setShowFiles] = useState(false);
+  const [showFiles, setShowFiles] = useState(
+    () => window.matchMedia("(min-width: 1001px)").matches,
+  );
+  useEffect(() => {
+    const wide = window.matchMedia("(min-width: 1001px)");
+    const resize = () => setShowFiles(wide.matches);
+    wide.addEventListener("change", resize);
+    return () => wide.removeEventListener("change", resize);
+  }, []);
   const [showDetails, setShowDetails] = useState(false);
   const [aiPanel, setAiPanel] = useState<"explain" | "quiz" | null>(null);
   const [showCompareSettings, setShowCompareSettings] = useState(false);
@@ -112,7 +117,10 @@ export function App({
   const pageGeneration = useRef(new Generation());
   const captureJob = useRef<string | null>(null);
   const fileJob = useRef<string | null>(null);
-  const capturedPath = useRef<string | null>(null);
+  const [appliedSpec, setAppliedSpec] = useState<ComparisonSpec | null>(null);
+  const [recoverScope, setRecoverScope] = useState(false);
+  const editButton = useRef<HTMLButtonElement>(null);
+  const filesButton = useRef<HTMLButtonElement>(null);
   const pathInput = useRef<HTMLInputElement>(null);
   const pickerButton = useRef<HTMLButtonElement>(null);
   const files = manifest?.files;
@@ -141,6 +149,7 @@ export function App({
     setPaging(false);
     setCancelled(false);
     setError(null);
+    setRecoverScope(false);
     return captureGeneration.current.next();
   }
   function cancel() {
@@ -150,15 +159,36 @@ export function App({
   function changeRepository(repository: string) {
     setSpec({ ...spec, repository });
     if (repository.trim() === spec.repository.trim()) return;
-    beginComparisonOperation();
-    if ((manifest || workspaceSession) && !isCurrentRepository(repository.trim()))
-      leaveComparison();
+    setError(null);
+    setRecoverScope(false);
+    setCancelled(false);
+  }
+  function editComparison(pickDirectory = false) {
+    if (workspaceBusy || capturing) return;
+    if (appliedSpec && !showCompareSettings) setDraft(appliedSpec);
+    setShowCompareSettings(true);
+    setShowWorkspace(false);
+    setShowPreferences(false);
+    setValidationOpen(false);
+    setError(null);
+    setRecoverScope(false);
+    requestAnimationFrame(() => {
+      if (pickDirectory && available) pickerButton.current?.click();
+      else pathInput.current?.focus();
+    });
+  }
+  function backToReview() {
+    setDraft(null);
+    setShowCompareSettings(false);
+    setError(null);
+    setRecoverScope(false);
+    requestAnimationFrame(() => editButton.current?.focus());
   }
   function isCurrentRepository(path: string) {
-    return manifest !== null && (path === capturedPath.current || path === manifest.repository);
+    return manifest !== null && (path === appliedSpec?.repository || path === manifest.repository);
   }
   function leaveComparison() {
-    capturedPath.current = null;
+    setAppliedSpec(null);
     setWorkspaceSession(null);
     setRepositoryId(null);
     setManifest(null);
@@ -236,12 +266,16 @@ export function App({
       }
     }
   }
-  async function open() {
-    if (!available || !spec.repository.trim()) return;
+  async function open(input: ComparisonSpec, refresh = false) {
+    if (!available || capturing || workspaceBusy || !input.repository.trim()) return;
     const generation = beginComparisonOperation();
     const job = jobId();
     captureJob.current = job;
-    const request = { ...spec, repository: spec.repository.trim() };
+    const request = { ...input, repository: input.repository.trim() };
+    if (request.mode === "commits") {
+      request.base = request.base || null;
+      request.head = request.head || null;
+    }
     const sameRepository = isCurrentRepository(request.repository);
     const previousPath = sameRepository ? selectedFile?.path : undefined;
     if ((manifest || workspaceSession) && !sameRepository) leaveComparison();
@@ -261,14 +295,17 @@ export function App({
       setRepositoryId(null);
       setReviewBases({});
       setEvent(null);
-      capturedPath.current = request.repository;
+      setAppliedSpec(request);
+      setDraft(null);
       if (manifest && manifest.repository !== result.repository) resetComparisonView();
       setManifest(result);
       settings.update((current) => ({
         ...current,
+        spec: request,
         recent: [...new Set([request.repository, ...current.recent])].slice(0, 8),
       }));
       setShowCompareSettings(false);
+      if (!refresh) requestAnimationFrame(() => filesButton.current?.focus());
       const next =
         (result.repository === manifest?.repository
           ? result.files.find((file) => file.path === previousPath)
@@ -282,9 +319,13 @@ export function App({
       }
     } catch (cause) {
       if (captureGeneration.current.isCurrent(generation)) {
-        setShowCompareSettings(true);
         const overBudget =
           cause && typeof cause === "object" && "code" in cause && cause.code === "budget-exceeded";
+        if (!refresh || overBudget) {
+          setShowCompareSettings(true);
+          setDraft(request);
+        }
+        setRecoverScope(Boolean(overBudget));
         setError(
           message(cause) + (overBudget ? "。可在「路径范围」填写仓库内的文件或目录后重试。" : ""),
         );
@@ -402,8 +443,10 @@ export function App({
     resetComparisonView();
     setError(selected?.error ? message(selected.error) : null);
     const config = session.config.repositories.find((repo) => repo.id === selected?.repositoryId);
-    capturedPath.current = config?.spec.repository.trim() ?? null;
-    if (config) setSpec(config.spec);
+    setAppliedSpec(config?.spec ?? null);
+    setDraft(null);
+    setShowCompareSettings(false);
+    if (config) settings.update((current) => ({ ...current, spec: config.spec }));
     if (selected?.manifest?.files[0])
       void selectFile(selected.manifest.files[0], selected.manifest);
   }
@@ -414,6 +457,29 @@ export function App({
         ? session
         : current,
     );
+  }
+  async function refreshComparison() {
+    if (!workspaceSession) {
+      if (appliedSpec) await open(appliedSpec, true);
+      return;
+    }
+    if (capturing || workspaceBusy) return;
+    const ticket = beginComparisonOperation();
+    const job = jobId();
+    captureJob.current = job;
+    setCapturing(true);
+    try {
+      const session = await workspaceClient.capture(workspaceSession.config, job);
+      if (!captureGeneration.current.isCurrent(ticket)) return;
+      captureJob.current = null;
+      activateWorkspace(session, repositoryId ?? undefined, ticket);
+    } catch (cause) {
+      if (captureGeneration.current.isCurrent(ticket)) {
+        captureJob.current = null;
+        setCapturing(false);
+        setError(message(cause));
+      }
+    }
   }
   function currentBasis(file: FileSummary, basis: string): EvidenceBasis | null {
     if (!workspaceSession?.activeSnapshotId || !repositoryId || !manifest) return null;
@@ -473,17 +539,27 @@ export function App({
   }
   useEffect(() => {
     function keyboard(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "o") {
+        e.preventDefault();
+        editComparison(true);
+        return;
+      }
+      if (validationOpen || showWorkspace || showCompareSettings || !manifest) {
+        if (
+          e.key === "Escape" &&
+          showCompareSettings &&
+          manifest &&
+          !capturing &&
+          !e.defaultPrevented &&
+          !document.querySelector(".revision-menu")
+        )
+          backToReview();
+        return;
+      }
       if ((e.metaKey || e.ctrlKey) && e.key === "p") {
         e.preventDefault();
         setShowFiles(true);
         requestAnimationFrame(() => searchInput.current?.focus());
-        return;
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === "o") {
-        e.preventDefault();
-        setShowCompareSettings(true);
-        if (available) pickerButton.current?.click();
-        else pathInput.current?.focus();
         return;
       }
       if (
@@ -528,6 +604,9 @@ export function App({
   const activeWorkspace = workspaceSession?.snapshots.find(
     (item) => item.id === workspaceSession.activeSnapshotId,
   );
+  const setupVisible =
+    !validationOpen && !showWorkspace && (showCompareSettings || (!manifest && !workspaceSession));
+  const reviewing = !!manifest && !validationOpen && !setupVisible;
   const reviewed = selectedFile ? isReviewed(selectedFile) : false;
   return (
     <main
@@ -543,7 +622,14 @@ export function App({
           <span className="alpha">ALPHA</span>
         </div>
         <div className="header-actions">
-          <button aria-pressed={!validationOpen} onClick={() => setValidationOpen(false)}>
+          <button
+            aria-pressed={!validationOpen && !showWorkspace}
+            onClick={() => {
+              setValidationOpen(false);
+              setShowWorkspace(false);
+              if (workspaceSession && !manifest) editComparison();
+            }}
+          >
             比较
           </button>
           <button
@@ -588,9 +674,10 @@ export function App({
           available={available}
         />
       )}
-      {manifest && !validationOpen && (
+      {reviewing && (
         <div className="review-context" aria-label="当前比较">
           <button
+            ref={filesButton}
             aria-expanded={showFiles}
             aria-controls="review-files"
             onClick={() => setShowFiles(!showFiles)}
@@ -602,17 +689,25 @@ export function App({
           </strong>
           <span>{modeNames[manifest.mode]}</span>
           <code title={`${manifest.baseLabel} → ${manifest.headLabel}`}>
-            {manifest.baseLabel} → {manifest.headLabel}
+            {appliedSpec
+              ? comparisonSources(appliedSpec).join(" → ")
+              : `${manifest.baseLabel} → ${manifest.headLabel}`}
+            {appliedSpec?.pathScope && ` · ${appliedSpec.pathScope}`}
           </code>
           <button
+            ref={editButton}
+            disabled={capturing || workspaceBusy}
             aria-expanded={showCompareSettings}
             aria-controls="comparison-settings"
-            onClick={() => setShowCompareSettings(!showCompareSettings)}
+            onClick={() => editComparison()}
           >
-            比较设置
+            {workspaceSession ? "单独比较此仓库" : "更改比较"}
           </button>
-          <button disabled={pending === "capture" || workspaceBusy} onClick={() => void open()}>
-            刷新比较
+          <button
+            disabled={pending === "capture" || workspaceBusy}
+            onClick={() => void refreshComparison()}
+          >
+            {workspaceSession ? "刷新工作区" : "刷新比较"}
           </button>
           {pending && <button onClick={cancel}>取消</button>}
           <button
@@ -642,120 +737,24 @@ export function App({
           </button>
         </div>
       )}
-      <form
-        id="comparison-settings"
-        hidden={!!manifest && !showCompareSettings}
-        className="repository-bar"
-        onSubmit={(e) => {
-          e.preventDefault();
-          void open();
-        }}
-      >
-        <label className="repo-path">
-          <span>仓库</span>
-          <input
-            ref={pathInput}
-            aria-label="Git 仓库路径"
-            placeholder="输入本地 Git 仓库路径…"
-            value={spec.repository}
-            disabled={workspaceBusy}
-            onChange={(e) => changeRepository(e.target.value)}
-            list="recent-repositories"
-          />
-        </label>
-        <label className="scope-path">
-          <span>路径范围</span>
-          <input
-            aria-label="捕获路径范围"
-            placeholder="全部；或 packages/app"
-            value={spec.pathScope ?? ""}
-            onChange={(e) => setSpec({ ...spec, pathScope: e.target.value || undefined })}
-            title="仓库内文件或目录的字面路径；不支持通配符，范围外内容不捕获"
-          />
-        </label>
-        <RepositoryPicker
-          key={spec.repository}
-          buttonRef={pickerButton}
-          value={spec.repository}
-          onChoose={changeRepository}
-          disabled={!available || pending === "capture" || workspaceBusy}
+      {setupVisible && (
+        <ComparisonSetup
+          spec={spec}
+          recent={recent}
+          available={available}
+          busy={capturing}
+          editing={!!manifest}
+          error={error}
+          recoverScope={recoverScope}
+          pathInput={pathInput}
+          pickerButton={pickerButton}
+          onChange={setSpec}
+          onRepository={changeRepository}
+          onSubmit={() => void open(spec)}
+          onCancel={cancel}
+          onBack={backToReview}
         />
-        <datalist id="recent-repositories">
-          {recent.map((path) => (
-            <option key={path} value={path}>
-              {path}
-            </option>
-          ))}
-        </datalist>
-        <select
-          aria-label="比较模式"
-          value={spec.mode}
-          onChange={(e) => setSpec({ ...spec, mode: e.target.value as ComparisonSpec["mode"] })}
-        >
-          {Object.entries(modeNames).map(([mode, label]) => (
-            <option key={mode} value={mode}>
-              {label}
-            </option>
-          ))}
-        </select>
-        {spec.mode === "commits" ? (
-          <div className="revision-inputs">
-            <RevisionPicker
-              repository={spec.repository}
-              label="来源分支或提交"
-              value={spec.base ?? ""}
-              placeholder="HEAD~1"
-              disabled={!available}
-              onChange={(base) => setSpec({ ...spec, base })}
-            />
-            <span>→</span>
-            <RevisionPicker
-              repository={spec.repository}
-              label="目标分支或提交"
-              value={spec.head ?? ""}
-              placeholder="HEAD"
-              disabled={!available}
-              onChange={(head) => setSpec({ ...spec, head })}
-            />
-          </div>
-        ) : (
-          spec.mode !== "staged" && (
-            <label className="check">
-              <input
-                type="checkbox"
-                checked={spec.includeUntracked}
-                onChange={(e) => setSpec({ ...spec, includeUntracked: e.target.checked })}
-              />
-              未跟踪文件
-            </label>
-          )
-        )}
-        {(spec.mode === "worktree" || spec.mode === "unstaged") && (
-          <label
-            className="check"
-            title="逐文件读取原文，适用于需要核对历史转换遗留内容的场景；大型仓库可能更慢。"
-          >
-            <input
-              type="checkbox"
-              checked={spec.verifyAll === true}
-              onChange={(event) => setSpec({ ...spec, verifyAll: event.target.checked })}
-            />
-            完整原文核验
-          </label>
-        )}
-        <button
-          className="primary"
-          type="submit"
-          disabled={!available || !spec.repository.trim() || pending === "capture" || workspaceBusy}
-        >
-          {pending === "capture" ? "捕获中…" : manifest ? "应用比较设置" : "打开比较"}
-        </button>
-        {pending && !manifest && (
-          <button className="cancel" type="button" onClick={cancel}>
-            取消
-          </button>
-        )}
-      </form>
+      )}
       {showWorkspace && !validationOpen && (
         <WorkspacePanel
           available={available}
@@ -770,7 +769,7 @@ export function App({
           onBusyChange={setWorkspaceBusy}
         />
       )}
-      {activeWorkspace && !validationOpen && (
+      {activeWorkspace && !validationOpen && !setupVisible && (
         <nav className="workspace-tabs" aria-label="工作区仓库">
           <strong>{workspaceSession?.config.name}</strong>
           {activeWorkspace.repositories.map((repo) => (
@@ -795,12 +794,12 @@ export function App({
       {!available && (
         <p className="notice">浏览器仅预览界面。请运行桌面应用以读取本地 Git 仓库。</p>
       )}
-      {error && (
+      {error && !setupVisible && !validationOpen && (
         <p className="error" role="alert">
           {error}
         </p>
       )}
-      {manifest && !validationOpen && (
+      {reviewing && (
         <CaptureNotices
           key={`${manifest.repository}:${manifest.id}`}
           warnings={manifest.warnings}
@@ -809,14 +808,9 @@ export function App({
       <div
         className={`workspace ${!manifest ? "unopened" : ""}`}
         aria-busy={pending !== null}
-        hidden={validationOpen}
+        hidden={!reviewing}
       >
-        <nav
-          id="review-files"
-          hidden={!showFiles && !!manifest}
-          className="files-panel"
-          aria-label="变更文件"
-        >
+        <nav id="review-files" hidden={!showFiles} className="files-panel" aria-label="变更文件">
           <div className="panel-heading">
             <h2>变更文件</h2>
             <span>{manifest?.totalFiles ?? 0}</span>
@@ -841,11 +835,17 @@ export function App({
           )}
           <ChangeNavigator
             files={visibleFiles}
-            visible={showFiles || !manifest}
+            visible={showFiles && reviewing}
             snapshotId={manifest?.id}
             selected={selectedFile?.id}
             query={filter}
-            onSelect={(file) => void selectFile(file)}
+            onSelect={(file) => {
+              void selectFile(file);
+              if (window.matchMedia("(max-width: 1000px)").matches) {
+                setShowFiles(false);
+                filesButton.current?.focus();
+              }
+            }}
             reviewed={isReviewed}
           />
           {manifest && visibleFiles.length === 0 && !needsCatalog && (
@@ -1049,24 +1049,8 @@ export function App({
             </>
           ) : (
             <div className="empty-state">
-              <span className="empty-mark">↔</span>
-              <h2>
-                {pending === "capture"
-                  ? "正在捕获仓库快照"
-                  : manifest
-                    ? "当前比较没有文件变化"
-                    : "看清变化，从一次比较开始"}
-              </h2>
-              <p>
-                {manifest
-                  ? "可切换比较模式，或刷新读取新的改动。"
-                  : "打开本地仓库，审查暂存区、工作区或两个提交之间的变化。"}
-              </p>
-              <div className="empty-features">
-                <span>原始内容完整保留</span>
-                <span>移动与内部修改对照</span>
-                <span>多语言结构分析</span>
-              </div>
+              <h2>当前比较没有文件变化</h2>
+              <p>可更改比较内容，或刷新读取新的改动。</p>
             </div>
           )}
         </section>
@@ -1105,7 +1089,11 @@ export function App({
       </div>
       {validationMounted && (
         <div className="validation-container" hidden={!validationOpen}>
-          <ValidationPanel repository={spec.repository} manifest={manifest} />
+          <ValidationPanel
+            repository={manifest?.repository ?? spec.repository}
+            manifest={manifest}
+            onRepository={changeRepository}
+          />
         </div>
       )}
       <footer>

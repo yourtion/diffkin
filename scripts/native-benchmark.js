@@ -69,7 +69,7 @@
       timeOrigin: performance.timeOrigin,
     };
     window.__diffkinBenchmarkIpc = report.ipc;
-    await wait(() => button("打开比较"), "initial form");
+    await wait(() => button("开始比较"), "initial form");
     // Let the native preference load settle before editing the isolated profile.
     await new Promise((resolve) => setTimeout(resolve, config.idleMs ?? 1000));
     await input("Git 仓库路径", config.spec.repository);
@@ -82,7 +82,7 @@
       await control("reset");
       const opened = report.ipc.filter((item) => item.command === "open_comparison").length;
       const start = performance.now();
-      (button("刷新比较") ?? button("打开比较")).click();
+      (button("刷新比较") ?? button("开始比较")).click();
       await wait(
         () =>
           report.ipc.filter((item) => item.command === "open_comparison").length > opened &&

@@ -53,11 +53,11 @@ async function bridge(page: Page, delayed = false, targetPaging = false) {
           invoke: async (command: string, args: Record<string, unknown>) => {
             calls.push(command);
             if (command === "cancel_job") return;
-            if (command === "open_comparison") {
+            if (command === "workspace_capture" && revision > 0 && "delayRefresh" in window) {
               await new Promise<void>((resolve) => {
                 Object.assign(window, { finishRefresh: resolve });
               });
-              throw new Error("old repository capture failed");
+              throw new Error("old workspace capture failed");
             }
             if (command === "workspace_list")
               return session
@@ -305,7 +305,10 @@ test("workspace repository switch clears refresh status and ignores its late fai
 }) => {
   await bridge(page);
   await capture(page);
-  await page.getByRole("button", { name: "刷新比较" }).click();
+  await page.evaluate(() => {
+    Object.assign(window, { delayRefresh: true });
+  });
+  await page.getByRole("button", { name: "刷新工作区" }).click();
   await expect(page.getByRole("status").filter({ hasText: "上一次比较" })).toBeVisible();
   await page
     .getByRole("navigation", { name: "工作区仓库" })
@@ -315,8 +318,20 @@ test("workspace repository switch clears refresh status and ignores its late fai
   await page.evaluate(() => (window as unknown as { finishRefresh(): void }).finishRefresh());
   await expect(page.getByText(/上一次比较/)).toHaveCount(0);
   await expect(
-    page.getByRole("alert").filter({ hasText: "old repository capture failed" }),
+    page.getByRole("alert").filter({ hasText: "old workspace capture failed" }),
   ).toHaveCount(0);
+});
+
+test("refresh keeps the active workspace and the selected repository", async ({ page }) => {
+  await bridge(page);
+  await capture(page);
+  const sdk = page
+    .getByRole("navigation", { name: "工作区仓库" })
+    .getByRole("button", { name: /SDK/ });
+  await sdk.click();
+  await page.getByRole("button", { name: "刷新工作区" }).click();
+  await expect(page.locator(".merge-host")).toContainText("value1 = 2");
+  await expect(sdk).toHaveAttribute("aria-pressed", "true");
 });
 
 test("manual relation target files can be paged past the first 200", async ({ page }) => {

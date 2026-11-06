@@ -1,5 +1,10 @@
 import { test, expect, type Page } from "@playwright/test";
-import type { ComparisonManifest, FileAnalysis, FileSummary } from "@diffkin/protocol";
+import type {
+  ComparisonManifest,
+  ComparisonSpec,
+  FileAnalysis,
+  FileSummary,
+} from "@diffkin/protocol";
 
 const before =
   "export function canWithdraw(balance: number, amount: number) {\n  return balance > amount;\n}\n";
@@ -119,6 +124,7 @@ async function bridge(
         value: {
           invoke: async (command: string, args: Record<string, unknown>) => {
             calls.push(command);
+            if (command === "preferences_load" || command === "preferences_save") return null;
             if (command === "quiz_prepare") {
               return {
                 id: `quiz:${args.rawStart ?? "file"}`,
@@ -231,7 +237,8 @@ async function bridge(
               if (options.failRefresh && captures > 1) throw new Error("capture failed");
               return {
                 ...manifest,
-                repository: (args.spec as { repository: string }).repository,
+                repository: (args.spec as ComparisonSpec).repository,
+                mode: (args.spec as ComparisonSpec).mode,
                 warnings: options.warnings ?? [],
                 id: options.refreshIdentity ? `frozen-${captures}` : manifest.id,
                 totalFiles: options.delayPage ? 3 : manifest.totalFiles,
@@ -299,9 +306,8 @@ async function bridge(
 }
 async function open(page: Page, panels = true) {
   await page.getByLabel("Git 仓库路径").fill("/repo");
-  await page.getByRole("button", { name: "打开比较", exact: true }).click();
+  await page.getByRole("button", { name: "开始比较", exact: true }).click();
   if (panels) {
-    await page.getByRole("button", { name: /变更文件 ·/ }).click();
     await page.getByRole("button", { name: "变更详情", exact: true }).click();
   }
 }
@@ -376,7 +382,7 @@ test("browser preview never claims to read a native repository", async ({ page }
     page.getByText("浏览器仅预览界面。请运行桌面应用以读取本地 Git 仓库。"),
   ).toBeVisible();
   await page.getByLabel("Git 仓库路径").fill("/repo");
-  await expect(page.getByRole("button", { name: "打开比较", exact: true })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "开始比较", exact: true })).toBeDisabled();
 });
 
 test("only proven formatting collapses and the exact source can be restored", async ({ page }) => {
@@ -647,14 +653,14 @@ test("moves connect original locations and retain grouped internal edits", async
   await expect(overlay).toHaveCount(0);
 });
 
-test("reading focus preserves code space and exposes navigation and details on demand", async ({
-  page,
-}) => {
+test("wide review shows files and lets the reader reclaim code space", async ({ page }) => {
   await page.setViewportSize({ width: 1200, height: 800 });
   await bridge(page);
   await open(page, false);
   await expect(page.locator(".cm-content").first()).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "变更文件" })).toBeHidden();
+  await expect(page.getByRole("navigation", { name: "变更文件" })).toBeVisible();
+  await page.screenshot({ path: "test-results/comparison-review.png" });
+  await page.getByRole("button", { name: /变更文件 ·/ }).click();
   await expect(page.locator(".inspector")).toBeHidden();
   await expect(page.getByLabel("Git 仓库路径")).toBeHidden();
   const code = await page.locator(".merge-host").boundingBox();
@@ -673,10 +679,14 @@ test("reading focus preserves code space and exposes navigation and details on d
   await page.setViewportSize({ width: 760, height: 540 });
   await page.emulateMedia({ colorScheme: "dark" });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await expect(page.getByRole("button", { name: "比较设置", exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "比较设置", exact: true }).click();
+  await expect(page.getByRole("button", { name: "更改比较", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "更改比较", exact: true }).click();
   await expect(page.getByLabel("Git 仓库路径")).toBeVisible();
-  await page.getByRole("button", { name: "比较设置", exact: true }).click();
+  await page.getByRole("button", { name: "返回当前比较", exact: true }).click();
+  await page.getByRole("button", { name: /变更文件 ·/ }).click();
+  await page.getByRole("button", { name: /src\/other.ts/ }).click();
+  await expect(page.getByRole("navigation", { name: "变更文件" })).toBeHidden();
+  await expect(page.locator(".file-heading h2")).toHaveText("src/other.ts");
   await page.screenshot({ path: "test-results/reading-focus-760-dark.png", fullPage: true });
 });
 
@@ -836,10 +846,10 @@ test("switching repositories clears the old comparison even when the new capture
   await bridge(page, { warnings: ["previous repository warning"], failRefresh: true });
   await open(page, false);
   await expect(page.getByText("previous repository warning")).toBeVisible();
-  await page.getByRole("button", { name: "比较设置" }).click();
+  await page.getByRole("button", { name: "更改比较" }).click();
   await page.getByLabel("Git 仓库路径").fill("/missing");
   await expect(page.getByText("previous repository warning")).toHaveCount(0);
-  await page.getByRole("button", { name: "打开比较", exact: true }).click();
+  await page.getByRole("button", { name: "开始比较", exact: true }).click();
   await expect(page.getByRole("alert")).toContainText("capture failed");
   await expect(page.getByText("previous repository warning")).toHaveCount(0);
   await expect(page.locator(".file-heading h2")).toHaveCount(0);
@@ -869,8 +879,9 @@ for (const budgetFailure of ["paths", "time"] as const) {
     await expect(page.getByRole("alert")).toContainText(
       budgetFailure === "time" ? "捕获仓库快照超时" : "2,000 changed paths",
     );
+    await expect(page.getByLabel("捕获路径范围")).toBeFocused();
     await page.getByLabel("捕获路径范围").fill("src");
-    await page.getByRole("button", { name: "打开比较", exact: true }).click();
+    await page.getByRole("button", { name: "开始比较", exact: true }).click();
     await expect(page.locator(".merge-host")).toContainText("balance");
   });
 }
@@ -942,9 +953,9 @@ test("changing repositories clears old filters while same-repository refresh pre
   await page.getByRole("button", { name: "刷新比较", exact: true }).click();
   await expect(page.getByRole("button", { name: "标记已审查", exact: true })).toBeEnabled();
   await expect(page.getByLabel("筛选文件")).toHaveValue("withdraw");
-  await page.getByRole("button", { name: "比较设置", exact: true }).click();
+  await page.getByRole("button", { name: "更改比较", exact: true }).click();
   await page.getByLabel("Git 仓库路径").fill("/another-repo");
-  await page.getByRole("button", { name: "打开比较", exact: true }).click();
+  await page.getByRole("button", { name: "开始比较", exact: true }).click();
   await expect(page.getByLabel("筛选文件")).toHaveValue("");
   await expect(page.getByRole("button", { name: "src/other.ts", exact: true })).toBeVisible();
 });

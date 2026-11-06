@@ -387,3 +387,132 @@
     min-height: 180px;
   }
 }
+
+.setup-screen {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 24px;
+  background: var(--panel);
+}
+.comparison-setup {
+  width: min(100%, 540px);
+  margin: auto;
+  padding: 26px 30px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.comparison-setup h2 {
+  font-size: 21px;
+  letter-spacing: -0.03em;
+  margin-bottom: 20px;
+}
+.comparison-setup fieldset {
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  border: 0;
+}
+.setup-label {
+  display: block;
+  margin-bottom: 7px;
+  font-weight: 600;
+}
+.setup-repo,
+.setup-mode,
+.setup-checks,
+.setup-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.setup-repo {
+  margin-bottom: 18px;
+}
+.setup-repo input {
+  flex: 1;
+}
+.setup-repo select {
+  width: 96px;
+}
+.setup-repo button,
+.setup-actions button {
+  min-height: 34px;
+}
+.setup-mode select {
+  min-width: 145px;
+}
+.setup-mode span,
+.setup-actions > span {
+  color: var(--muted);
+}
+.setup-revisions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+.setup-revisions > div {
+  min-width: 0;
+}
+.setup-revisions .revision-picker {
+  display: flex;
+}
+.setup-revisions .revision-picker > input {
+  flex: 1;
+  width: 0;
+}
+.setup-revisions .revision-menu {
+  top: 100%;
+  width: min(350px, 80vw);
+}
+.setup-revisions > div:first-child .revision-menu {
+  left: 0;
+  right: auto;
+}
+.setup-revisions .revision-options {
+  max-height: min(180px, 24vh);
+}
+.setup-options {
+  margin-top: 20px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+.setup-options summary {
+  color: var(--muted);
+  cursor: pointer;
+  width: fit-content;
+}
+.setup-options summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.scope-field {
+  display: grid;
+  gap: 5px;
+  margin: 12px 0;
+}
+.setup-checks {
+  flex-wrap: wrap;
+}
+.setup-checks .check {
+  font-size: 12px;
+}
+.comparison-setup .error {
+  margin-top: 12px;
+  border-radius: 5px;
+}
+.setup-actions {
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+@media (max-height: 650px) {
+  .setup-screen {
+    padding: 12px 24px;
+  }
+  .comparison-setup {
+    padding: 16px 22px;
+  }
+}
