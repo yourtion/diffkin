@@ -58,6 +58,7 @@ fn main() -> std::io::Result<()> {
         PreferencesError::decl(&config),
         ExplanationProvider::decl(&config),
         ExplanationTool::decl(&config),
+        LocalApiConnection::decl(&config),
         ExplanationRequest::decl(&config),
         ExplanationExcerpt::decl(&config),
         ExplanationContext::decl(&config),

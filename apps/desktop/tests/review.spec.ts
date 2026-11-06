@@ -141,6 +141,7 @@ async function bridge(
                 ],
                 tools: [
                   { provider: "codex", executable: options.missingCli ? null : "/opt/bin/codex" },
+                  { provider: "openai", executable: null },
                 ],
               };
             }
@@ -202,6 +203,7 @@ async function bridge(
                 },
                 tools: [
                   { provider: "codex", executable: options.missingCli ? null : "/opt/bin/codex" },
+                  { provider: "openai", executable: null },
                   { provider: "claude", executable: null },
                 ],
               };
@@ -1050,6 +1052,8 @@ test("missing model tools leave ordinary review available", async ({ page }) => 
   await open(page, false);
   await page.getByRole("button", { name: "AI 解释", exact: true }).click();
   await expect(page.getByRole("button", { name: "生成解释", exact: true })).toBeDisabled();
+  await expect(page.getByLabel("本机 AI 工具")).toHaveValue("openai");
+  await page.getByLabel("本机 AI 工具").selectOption("codex");
   await expect(page.getByText(/未找到可用的 Codex/)).toBeVisible();
   await page.getByRole("button", { name: "关闭解释" }).click();
   await expect(page.getByRole("textbox", { name: "修改后源码", exact: true })).toContainText(
@@ -1096,6 +1100,33 @@ test("quiz waits for answers, grades the final choices, and retries locally", as
   await panel.getByRole("button", { name: "重答这套题" }).click();
   await expect(panel.getByRole("button", { name: "下一题" })).toBeDisabled();
   expect(await generationCount()).toBe(2);
+});
+
+test("shares local API settings with quizzes and forgets the key on address change", async ({
+  page,
+}) => {
+  await bridge(page, { missingCli: true });
+  await open(page, false);
+  await page.getByRole("button", { name: "AI 解释", exact: true }).click();
+  await page.getByLabel("API 基础地址").fill("http://example.com/v1");
+  await page.getByLabel("模型名称").fill("fixture-model");
+  const generate = page.getByRole("button", { name: "生成解释", exact: true });
+  await expect(generate).toBeDisabled();
+  await page.getByLabel("API 基础地址").fill("http://localhost:9000/v1");
+  await page.getByLabel("API 密钥（可选）").fill("synthetic-secret");
+  await generate.click();
+  await expect(page.getByRole("region", { name: "生成的解释" })).toContainText(
+    "本机 OpenAI 兼容 API",
+  );
+  expect(await page.evaluate(() => JSON.stringify(localStorage))).not.toContain("synthetic-secret");
+  await page.getByRole("button", { name: "关闭解释" }).click();
+  await page.getByRole("button", { name: "变更测验", exact: true }).click();
+  await expect(page.getByLabel("模型名称")).toHaveValue("fixture-model");
+  await expect(page.getByLabel("API 密钥（可选）")).toHaveValue("synthetic-secret");
+  await page.getByLabel("API 基础地址").fill("http://127.0.0.1:1234/v1");
+  await expect(page.getByLabel("API 密钥（可选）")).toHaveValue("");
+  await page.getByRole("button", { name: "生成测验", exact: true }).click();
+  await expect(page.getByRole("radio").first()).toBeVisible();
 });
 
 test("a scope switch discards late quiz questions", async ({ page }) => {

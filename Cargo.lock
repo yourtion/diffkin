@@ -635,8 +635,10 @@ dependencies = [
  "diffkin-application",
  "diffkin-domain",
  "nix",
+ "reqwest",
  "serde",
  "serde_json",
+ "tokio",
  "uuid",
 ]
 

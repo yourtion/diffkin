@@ -98,13 +98,18 @@ fn answer() -> Value {
 }
 
 #[test]
-fn rejects_invalid_references_and_unstructured_answers_for_both_providers() {
+fn rejects_invalid_references_and_unstructured_answers_across_transports() {
     let ctx = selected();
-    for provider in [ExplanationProvider::Codex, ExplanationProvider::Claude] {
+    for provider in [
+        ExplanationProvider::Codex,
+        ExplanationProvider::Claude,
+        ExplanationProvider::Pi,
+    ] {
         let wrap = |a: Value| {
             match provider {
             ExplanationProvider::Claude => json!({"structured_output":a}).to_string(),
             ExplanationProvider::Codex => json!({"type":"item.completed","item":{"type":"agent_message","text":a.to_string()}}).to_string(),
+            _ => a.to_string(),
         }
         };
         assert!(parse_output(provider, &wrap(answer()))
@@ -124,13 +129,18 @@ fn rejects_invalid_references_and_unstructured_answers_for_both_providers() {
 fn complete_adapters_pass_only_scoped_source_on_stdin_in_temporary_directory() {
     use std::os::unix::fs::PermissionsExt;
     let dir = Scratch::new().unwrap();
-    for provider in [ExplanationProvider::Codex, ExplanationProvider::Claude] {
+    for provider in [
+        ExplanationProvider::Codex,
+        ExplanationProvider::Claude,
+        ExplanationProvider::Pi,
+    ] {
         let program = dir.0.join("test-cli");
         let response = match provider {
             ExplanationProvider::Codex => {
                 json!({"type":"item.completed","item":{"type":"agent_message","text":answer().to_string()}})
             }
             ExplanationProvider::Claude => json!({"structured_output":answer()}),
+            _ => answer(),
         };
         let check = match provider {
             ExplanationProvider::Codex => {
@@ -139,12 +149,14 @@ fn complete_adapters_pass_only_scoped_source_on_stdin_in_temporary_directory() {
             ExplanationProvider::Claude => {
                 "*--safe-mode*--tools*--strict-mcp-config*--no-session-persistence*"
             }
+            _ => "*--print*--no-tools*--no-extensions*--no-session*",
         };
         fs::write(&program, format!("#!/bin/sh\nset -eu\ntest -f schema.json\ncase \"$*\" in {check}) ;; *) exit 5;; esac\nprompt=$(cat)\ncase \"$prompt\" in *'outside selected context'*) exit 6;; *'balance >= amount;'*) ;; *) exit 7;; esac\nprintf '%s\\n' '{}'\n",response)).unwrap();
         fs::set_permissions(&program, fs::Permissions::from_mode(0o700)).unwrap();
         let request = ExplanationRequest {
             prepared_id: "p".into(),
             provider,
+            connection: None,
             model: String::new(),
             question: "余额相等呢？".into(),
         };
@@ -176,7 +188,13 @@ fn cancels_and_bounds_even_children_that_never_read_stdin() {
     let cancel = AtomicBool::new(false);
     let input = "x".repeat(128 * 1024);
     assert!(matches!(
-        process::run(&mut wait(), &input, &cancel, Duration::from_millis(80)),
+        process::run(
+            &mut wait(),
+            &input,
+            &cancel,
+            Duration::from_millis(80),
+            None
+        ),
         Err(RepositoryError::BudgetExceeded { .. })
     ));
     std::thread::scope(|s| {
@@ -185,22 +203,38 @@ fn cancels_and_bounds_even_children_that_never_read_stdin() {
             cancel.store(true, std::sync::atomic::Ordering::Relaxed);
         });
         assert!(matches!(
-            process::run(&mut wait(), &input, &cancel, Duration::from_secs(2)),
+            process::run(&mut wait(), &input, &cancel, Duration::from_secs(2), None),
             Err(RepositoryError::Cancelled { .. })
         ));
     });
 }
 
-/// Opt-in only: sends the synthetic fixture above using the selected CLI's real account.
-#[cfg(unix)]
-#[test]
-#[ignore = "requires an explicitly selected installed and authenticated CLI"]
-fn installed_cli_explains_synthetic_change() {
+pub(super) fn live_settings() -> (ExplanationProvider, String, Option<LocalApiConnection>) {
     let provider = match std::env::var("DIFFKIN_TEST_AI").as_deref() {
         Ok("codex") => ExplanationProvider::Codex,
         Ok("claude") => ExplanationProvider::Claude,
-        _ => panic!("set DIFFKIN_TEST_AI to codex or claude"),
+        Ok("pi") => ExplanationProvider::Pi,
+        Ok("trae") => ExplanationProvider::Trae,
+        Ok("acp") => ExplanationProvider::Acp,
+        Ok("openai") => ExplanationProvider::Openai,
+        _ => panic!("select a provider with DIFFKIN_TEST_AI"),
     };
+    let connection = (provider == ExplanationProvider::Openai).then(|| LocalApiConnection {
+        base_url: std::env::var("DIFFKIN_TEST_BASE_URL")
+            .expect("provide the local server base URL"),
+        api_key: None,
+    });
+    (
+        provider,
+        std::env::var("DIFFKIN_TEST_MODEL").unwrap_or_default(),
+        connection,
+    )
+}
+
+#[test]
+#[ignore = "explicitly invokes a real model on synthetic source"]
+fn installed_cli_explains_synthetic_change() {
+    let (provider, model, connection) = live_settings();
     let result = explain(
         PreparedExplanation {
             id: "live".into(),
@@ -210,7 +244,8 @@ fn installed_cli_explains_synthetic_change() {
         &ExplanationRequest {
             prepared_id: "live".into(),
             provider,
-            model: String::new(),
+            connection,
+            model,
             question: "余额等于金额时什么不同？".into(),
         },
         &AtomicBool::new(false),
@@ -218,4 +253,57 @@ fn installed_cli_explains_synthetic_change() {
     .unwrap();
     assert!(!result.explanation.references.is_empty());
     println!("{}", result.explanation.change);
+}
+
+#[cfg(unix)]
+#[test]
+fn acp_stdio_completes_one_scoped_turn_and_denies_host_tools() {
+    use std::os::unix::fs::PermissionsExt;
+    let scratch = Scratch::new().unwrap();
+    let agent = scratch.0.join("agent");
+    let script = r#"#!/bin/sh
+set -eu
+read -r init
+case "$init" in *initialize*) ;; *) exit 9;; esac
+echo '{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":1}}'
+read -r session
+case "$session" in *session/new*) ;; *) exit 9;; esac
+echo '{"jsonrpc":"2.0","id":2,"result":{"sessionId":"current"}}'
+read -r prompt
+case "$prompt" in *'balance >= amount;'*) ;; *) exit 9;; esac
+echo '{"jsonrpc":"2.0","id":"perm","method":"session/request_permission","params":{}}'
+read -r denied
+case "$denied" in *cancelled*) ;; *) exit 9;; esac
+echo '{"jsonrpc":"2.0","id":4,"method":"fs/read_text_file","params":{}}'
+read -r refused
+case "$refused" in *-32601*) ;; *) exit 9;; esac
+echo '{"jsonrpc":"2.0","method":"session/update","params":{"sessionId":"other","update":{"sessionUpdate":"agent_message_chunk","content":{"type":"text","text":"discard me"}}}}'
+printf '%s\n' 'REPLY'
+echo '{"jsonrpc":"2.0","id":3,"result":{"stopReason":"end_turn"}}'
+sleep 5
+"#;
+    let reply = json!({"jsonrpc":"2.0","method":"session/update","params":{"sessionId":"current","update":{"sessionUpdate":"agent_message_chunk","content":{"type":"text","text":answer().to_string()}}}});
+    fs::write(&agent, script.replace("REPLY", &reply.to_string())).unwrap();
+    fs::set_permissions(&agent, fs::Permissions::from_mode(0o700)).unwrap();
+    let provider = ExplanationProvider::Trae;
+    let result = explain(
+        PreparedExplanation {
+            id: "p".into(),
+            context: selected(),
+            tools: vec![ExplanationTool {
+                provider,
+                executable: Some(agent.to_string_lossy().into_owned()),
+            }],
+        },
+        &ExplanationRequest {
+            prepared_id: "p".into(),
+            provider,
+            model: String::new(),
+            connection: None,
+            question: String::new(),
+        },
+        &AtomicBool::new(false),
+    )
+    .unwrap();
+    assert_eq!(result.explanation.references[0].start_line, 7);
 }

@@ -1,4 +1,4 @@
-use crate::{ExplanationProvider, ExplanationTool};
+use crate::{ExplanationProvider, ExplanationTool, LocalApiConnection};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
@@ -21,12 +21,14 @@ pub struct PreparedQuiz {
     pub tools: Vec<ExplanationTool>,
 }
 
-#[derive(Debug, Clone, Deserialize, TS)]
+#[derive(Clone, Deserialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct QuizRequest {
     pub prepared_id: String,
     pub provider: ExplanationProvider,
     pub model: String,
+    #[ts(optional)]
+    pub connection: Option<LocalApiConnection>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, TS)]
