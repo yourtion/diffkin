@@ -286,7 +286,7 @@ export function App({
         const overBudget =
           cause && typeof cause === "object" && "code" in cause && cause.code === "budget-exceeded";
         setError(
-          message(cause) + (overBudget ? "；可填写路径范围（如 packages/app）后重新捕获。" : ""),
+          message(cause) + (overBudget ? "。可在「路径范围」填写仓库内的文件或目录后重试。" : ""),
         );
       }
     } finally {

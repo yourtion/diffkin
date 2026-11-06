@@ -79,3 +79,56 @@ fn fs_create(path: &Path) {
     let _ = std::fs::remove_dir_all(path);
     std::fs::create_dir_all(path).unwrap();
 }
+
+#[test]
+fn scoped_worktree_capture_reads_detailed_index_metadata_only_once() {
+    let root = std::env::temp_dir().join(format!("diffkin-cli-scoped-scan-{}", std::process::id()));
+    fs_create(&root);
+    assert!(Command::new("git")
+        .args(["init", "-q"])
+        .arg(&root)
+        .status()
+        .unwrap()
+        .success());
+    std::fs::write(root.join("picked.txt"), "changed").unwrap();
+    std::fs::write(root.join("outside.txt"), "other").unwrap();
+    let trace = root.join(".git/git-trace");
+    let output = Command::new(env!("CARGO_BIN_EXE_diffkin"))
+        .arg("--repo")
+        .arg(&root)
+        .args(["--untracked", "--path-scope", "picked.txt"])
+        .env("GIT_TRACE2_EVENT", &trace)
+        .output()
+        .unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(report["manifest"]["totalFiles"], 1);
+    assert_eq!(report["manifest"]["files"][0]["path"], "picked.txt");
+    let events = std::fs::read_to_string(trace).unwrap();
+    let mut detailed_scans = 0;
+    for line in events.lines() {
+        let event: serde_json::Value = serde_json::from_str(line).unwrap();
+        if event["event"] != "start" {
+            continue;
+        }
+        let args: Vec<&str> = event["argv"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|arg| arg.as_str())
+            .collect();
+        if args.contains(&"--debug") {
+            detailed_scans += 1;
+        }
+        if args.contains(&"--debug") || args.contains(&"--others") {
+            assert!(args.ends_with(&["--", "picked.txt"]), "{args:?}");
+        }
+    }
+    assert_eq!(detailed_scans, 1);
+    std::fs::remove_dir_all(root).unwrap();
+}

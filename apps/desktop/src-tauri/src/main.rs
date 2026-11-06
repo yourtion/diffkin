@@ -40,7 +40,7 @@ async fn open_comparison(
     let result = tauri::async_runtime::spawn_blocking(move || {
         let _permit = permit(&worker.capture_gate, &token)?;
         check_cancel(&token)?;
-        let snapshot = match diffkin_application::capture(&spec, &token) {
+        let snapshot = match diffkin_application::repository::capture_interactive(&spec, &token) {
             Ok(snapshot) => Snapshot::Memory(Arc::new(snapshot)),
             Err(RepositoryError::BudgetExceeded { .. })
                 if spec.mode == diffkin_domain::CompareMode::Commits =>

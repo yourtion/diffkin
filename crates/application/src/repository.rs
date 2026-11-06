@@ -50,7 +50,7 @@ struct Context<'a> {
     root: PathBuf,
     cancel: &'a AtomicBool,
     deadline: Instant,
-    scope: Option<&'a [u8]>,
+    scope: Option<&'a str>,
 }
 struct Output<T = Vec<u8>> {
     success: bool,
@@ -61,8 +61,16 @@ struct Output<T = Vec<u8>> {
 impl Context<'_> {
     fn includes(&self, path: &[u8]) -> bool {
         self.scope.is_none_or(|prefix| {
+            let prefix = prefix.as_bytes();
             path == prefix || (path.starts_with(prefix) && path.get(prefix.len()) == Some(&b'/'))
         })
+    }
+    fn scoped_args<'a>(&'a self, arguments: &[&'a str]) -> Vec<&'a str> {
+        let mut args = arguments.to_vec();
+        if let Some(scope) = self.scope {
+            args.extend(["--", scope]);
+        }
+        args
     }
     fn check(&self) -> Result<(), RepositoryError> {
         if self.cancel.load(Ordering::Relaxed) {
@@ -395,7 +403,8 @@ fn scan_index(
     context: &Context<'_>,
     mut visit: impl FnMut(IndexRecord) -> Result<(), RepositoryError> + Send,
 ) -> Result<(), RepositoryError> {
-    let result = context.git_read(&["ls-files", "--stage", "--debug", "-z"], None, |stdout| {
+    let args = context.scoped_args(&["ls-files", "--stage", "--debug", "-z"]);
+    let result = context.git_read(&args, None, |stdout| {
         let mut reader = BufReader::new(stdout);
         let mut pending: Option<IndexRecord> = None;
         loop {
@@ -548,11 +557,48 @@ fn observe(
     hash.update(format!("{:?}", meta.as_ref().map(stamp)).as_bytes());
     Ok(meta)
 }
+fn visit_index_paths(
+    context: &Context<'_>,
+    args: &[&str],
+    mut visit: impl FnMut(&[u8]) -> Result<(), RepositoryError> + Send,
+) -> Result<(), RepositoryError> {
+    let result = context.git_read(args, None, |stdout| {
+        let mut reader = BufReader::new(stdout);
+        let mut path = Vec::new();
+        loop {
+            context.check()?;
+            path.clear();
+            if reader
+                .by_ref()
+                .take(64 * 1024 + 1)
+                .read_until(0, &mut path)
+                .map_err(io_error)?
+                == 0
+            {
+                break;
+            }
+            if path.len() > 64 * 1024 || path.pop() != Some(0) {
+                return Err(io_error("Index path exceeds the bounded record size"));
+            }
+            visit(&path)?;
+        }
+        Ok(())
+    })?;
+    if !result.success {
+        return Err(io_error(format!("Git ls-files failed: {}", result.stderr)));
+    }
+    Ok(())
+}
+
 fn index_observation(context: &Context<'_>) -> Result<String, RepositoryError> {
     let mut hash = Sha256::new();
-    scan_index(context, |record| {
-        if context.includes(&record.path) {
-            observe(context, &record.path, &mut hash)?;
+    // Recheck the same working paths once, including unmerged entries. The
+    // index digest already covers the modes, object IDs, flags and stat fields.
+    let args = context.scoped_args(&["ls-files", "--cached", "--deduplicate", "-z"]);
+    visit_index_paths(context, &args, |path| {
+        if context.includes(path) {
+            validate_path(path)?;
+            observe(context, path, &mut hash)?;
         }
         Ok(())
     })?;
@@ -573,49 +619,26 @@ impl Attributes {
         let mut indexed_directories = BTreeSet::new();
         let mut attribute_bytes = 0;
         let mut attribute_overflow = false;
-        let listing = context.git_read(&["ls-files", "--cached", "-z"], None, |stdout| {
-            let mut reader = BufReader::new(stdout);
-            loop {
-                context.check()?;
-                let mut path = Vec::new();
-                if reader
-                    .by_ref()
-                    .take(64 * 1024 + 1)
-                    .read_until(0, &mut path)
-                    .map_err(io_error)?
-                    == 0
-                {
-                    break;
-                }
-                if path.len() > 64 * 1024 || path.pop() != Some(0) {
-                    return Err(io_error("Index path exceeds the bounded record size"));
-                }
-                if path.rsplit(|byte| *byte == b'/').next() == Some(b".gitattributes".as_slice())
-                    && !attribute_overflow
-                {
-                    validate_path(&path)?;
-                    attribute_bytes += path.len();
-                    if indexed_directories.len() >= 4096 || attribute_bytes > 1024 * 1024 {
-                        indexed_directories.clear();
-                        attribute_overflow = true;
-                    } else {
-                        let path = path_from_bytes(&path)?;
-                        indexed_directories.insert(
-                            path.parent()
-                                .unwrap_or(std::path::Path::new(""))
-                                .to_path_buf(),
-                        );
-                    }
+        visit_index_paths(context, &["ls-files", "--cached", "-z"], |path| {
+            if path.rsplit(|byte| *byte == b'/').next() == Some(b".gitattributes".as_slice())
+                && !attribute_overflow
+            {
+                validate_path(path)?;
+                attribute_bytes += path.len();
+                if indexed_directories.len() >= 4096 || attribute_bytes > 1024 * 1024 {
+                    indexed_directories.clear();
+                    attribute_overflow = true;
+                } else {
+                    let path = path_from_bytes(path)?;
+                    indexed_directories.insert(
+                        path.parent()
+                            .unwrap_or(std::path::Path::new(""))
+                            .to_path_buf(),
+                    );
                 }
             }
             Ok(())
         })?;
-        if !listing.success {
-            return Err(io_error(format!(
-                "Git attribute discovery failed: {}",
-                listing.stderr
-            )));
-        }
         let autocrlf = context.git(&["config", "--get", "core.autocrlf"], None)?;
         let always = autocrlf.success
             && !matches!(
@@ -851,7 +874,8 @@ fn parse_entries(bytes: &[u8], index: bool) -> Result<Entries, RepositoryError> 
 }
 
 fn untracked(context: &Context<'_>) -> Result<Vec<Vec<u8>>, RepositoryError> {
-    let bytes = context.required(&["ls-files", "--others", "--exclude-standard", "-z"], None)?;
+    let args = context.scoped_args(&["ls-files", "--others", "--exclude-standard", "-z"]);
+    let bytes = context.required(&args, None)?;
     let paths: Vec<_> = bytes
         .split(|&byte| byte == 0)
         .filter(|path| !path.is_empty() && context.includes(path))
@@ -1360,13 +1384,29 @@ pub fn capture(
     spec: &ComparisonSpec,
     cancel: &AtomicBool,
 ) -> Result<FrozenComparison, RepositoryError> {
-    capture_subset(spec, cancel, None)
+    capture_subset(spec, cancel, None, Instant::now() + CAPTURE_BUDGET)
+}
+
+/// A user can cancel a foreground desktop scan. Fixed commits retain the short
+/// first attempt so large comparisons can switch to the disk-backed capture.
+pub fn capture_interactive(
+    spec: &ComparisonSpec,
+    cancel: &AtomicBool,
+) -> Result<FrozenComparison, RepositoryError> {
+    if spec.mode == CompareMode::Commits {
+        return capture(spec, cancel);
+    }
+    capture_subset(
+        spec,
+        cancel,
+        None,
+        Instant::now() + Duration::from_secs(120),
+    )
 }
 
 struct CaptureSubset<'a> {
     paths: &'a BTreeSet<Vec<u8>>,
     renames: &'a BTreeMap<Vec<u8>, Vec<u8>>,
-    deadline: Instant,
 }
 
 fn open_context<'a>(
@@ -1394,7 +1434,7 @@ fn open_context<'a>(
         root,
         cancel,
         deadline,
-        scope: spec.path_scope.as_deref().map(str::as_bytes),
+        scope: spec.path_scope.as_deref(),
     };
     let version = context.git(&["--version"], None)?;
     if !version.success {
@@ -1436,12 +1476,9 @@ fn capture_subset(
     spec: &ComparisonSpec,
     cancel: &AtomicBool,
     subset: Option<&CaptureSubset<'_>>,
+    deadline: Instant,
 ) -> Result<FrozenComparison, RepositoryError> {
-    let context = open_context(
-        spec,
-        cancel,
-        subset.map_or_else(|| Instant::now() + CAPTURE_BUDGET, |value| value.deadline),
-    )?;
+    let context = open_context(spec, cancel, deadline)?;
     let mut warnings = Vec::new();
     if let Some(scope) = &spec.path_scope {
         warnings.push(format!("Path scope: {scope}. Only this literal file/directory is captured; paths outside this scope are excluded. Cross-boundary renames appear as additions/deletions. 范围外内容未捕获、未审查。"));

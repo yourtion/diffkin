@@ -92,7 +92,7 @@ async function bridge(
     delayPage?: number;
     count?: number;
     failRefresh?: boolean;
-    budgetFailure?: boolean;
+    budgetFailure?: "paths" | "time";
     explanationDelay?: number;
     missingCli?: boolean;
     failQuizRetry?: boolean;
@@ -221,7 +221,10 @@ async function bridge(
               if (options.budgetFailure && !(args.spec as { pathScope?: string }).pathScope)
                 throw {
                   code: "budget-exceeded",
-                  message: "Comparison exceeds 2,000 changed paths",
+                  message:
+                    options.budgetFailure === "time"
+                      ? "Snapshot exceeded its capture time budget"
+                      : "Comparison exceeds 2,000 changed paths",
                 };
               if (options.delayCapture)
                 await new Promise((resolve) => setTimeout(resolve, options.delayCapture));
@@ -856,14 +859,21 @@ test("frozen text precedes analysis and cannot be marked reviewed prematurely", 
   expect(await content!.evaluate((node) => node.isConnected)).toBe(true);
 });
 
-test("budget error exposes a usable scope recovery field", async ({ page }) => {
-  await bridge(page, { budgetFailure: true });
-  await open(page, false);
-  await expect(page.getByRole("alert")).toContainText("路径范围");
-  await page.getByLabel("捕获路径范围").fill("src");
-  await page.getByRole("button", { name: "打开比较", exact: true }).click();
-  await expect(page.locator(".merge-host")).toContainText("balance");
-});
+for (const budgetFailure of ["paths", "time"] as const) {
+  test(`budget error (${budgetFailure}) exposes a usable scope recovery field`, async ({
+    page,
+  }) => {
+    await bridge(page, { budgetFailure });
+    await open(page, false);
+    await expect(page.getByRole("alert")).toContainText("路径范围");
+    await expect(page.getByRole("alert")).toContainText(
+      budgetFailure === "time" ? "捕获仓库快照超时" : "2,000 changed paths",
+    );
+    await page.getByLabel("捕获路径范围").fill("src");
+    await page.getByRole("button", { name: "打开比较", exact: true }).click();
+    await expect(page.locator(".merge-host")).toContainText("balance");
+  });
+}
 test("large frozen sources paginate independently and retain explicit truncation", async ({
   page,
 }) => {

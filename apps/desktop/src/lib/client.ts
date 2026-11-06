@@ -42,7 +42,15 @@ export const client: DiffkinClient = {
 };
 
 export function message(error: unknown): string {
-  if (error && typeof error === "object" && "message" in error) return String(error.message);
+  if (error && typeof error === "object" && "message" in error) {
+    if (
+      "code" in error &&
+      error.code === "budget-exceeded" &&
+      error.message === "Snapshot exceeded its capture time budget"
+    )
+      return "捕获仓库快照超时";
+    return String(error.message);
+  }
   return String(error);
 }
 

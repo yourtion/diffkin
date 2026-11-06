@@ -298,9 +298,8 @@ fn capture_with_limit(
         let subset = CaptureSubset {
             paths: selected,
             renames: &renames,
-            deadline: context.deadline,
         };
-        let batch = capture_subset(&fixed, cancel, Some(&subset))?;
+        let batch = capture_subset(&fixed, cancel, Some(&subset), context.deadline)?;
         for warning in batch.manifest.warnings {
             if !snapshot.manifest.warnings.contains(&warning) {
                 snapshot.manifest.warnings.push(warning);
