@@ -392,6 +392,10 @@ pub struct WorkspaceStore {
     root: PathBuf,
     summaries: Mutex<BTreeMap<String, (String, WorkspaceSummary)>>,
 }
+enum ConfigWrite {
+    Save,
+    IfChanged,
+}
 impl WorkspaceStore {
     pub fn new(root: PathBuf) -> Result<Self, RepositoryError> {
         match fs::symlink_metadata(&root) {
@@ -617,16 +621,27 @@ impl WorkspaceStore {
         &self,
         config: &WorkspaceConfig,
     ) -> Result<WorkspaceSession, RepositoryError> {
+        Ok(self.persist_config(config, ConfigWrite::Save)?.session())
+    }
+    fn persist_config(
+        &self,
+        config: &WorkspaceConfig,
+        mode: ConfigWrite,
+    ) -> Result<Archive, RepositoryError> {
         validate_config(config)?;
         let _lock = self.lock()?;
         let mut archive = if self.path(&config.id)?.try_exists().map_err(invalid)? {
-            self.read(&config.id)?
+            let archive = self.read(&config.id)?;
+            if matches!(mode, ConfigWrite::IfChanged) && &archive.config == config {
+                return Ok(archive);
+            }
+            archive
         } else {
             Archive::new(config.clone())
         };
         archive.config = config.clone();
         self.write(&archive)?;
-        Ok(archive.session())
+        Ok(archive)
     }
     pub fn capture(
         &self,
@@ -641,13 +656,51 @@ impl WorkspaceStore {
         config: &WorkspaceConfig,
         cancel: &AtomicBool,
     ) -> Result<(WorkspaceSession, FrozenWorkspace), RepositoryError> {
+        self.capture_from(config, None, cancel)
+    }
+    /// Refreshes an existing view when a snapshot ID is supplied. Setup may save a new config.
+    pub fn capture_from(
+        &self,
+        config: &WorkspaceConfig,
+        displayed: Option<&str>,
+        cancel: &AtomicBool,
+    ) -> Result<(WorkspaceSession, FrozenWorkspace), RepositoryError> {
         cancelled(cancel)?;
-        self.save_config(config)?;
+        let starting_snapshot = self.prepare_capture(config, displayed)?;
         let snapshot = capture_workspace(config, cancel)?;
+        self.commit_capture(config, starting_snapshot.as_deref(), snapshot, cancel)
+    }
+    fn prepare_capture(
+        &self,
+        config: &WorkspaceConfig,
+        displayed: Option<&str>,
+    ) -> Result<Option<String>, RepositoryError> {
+        if let Some(displayed) = displayed {
+            let archive = self.read(&config.id)?;
+            archive.active_for_write(displayed)?;
+            if &archive.config != config {
+                return Err(stale("Workspace configuration changed during capture"));
+            }
+            return Ok(archive.active_snapshot_id);
+        }
+        Ok(self
+            .persist_config(config, ConfigWrite::IfChanged)?
+            .active_snapshot_id)
+    }
+    fn commit_capture(
+        &self,
+        config: &WorkspaceConfig,
+        starting_snapshot: Option<&str>,
+        snapshot: FrozenWorkspace,
+        cancel: &AtomicBool,
+    ) -> Result<(WorkspaceSession, FrozenWorkspace), RepositoryError> {
         let _lock = self.lock()?;
         cancelled(cancel)?;
         let mut archive = self.read(&config.id)?;
-        if json(&archive.config)? != json(config)? {
+        if archive.active_snapshot_id.as_deref() != starting_snapshot {
+            return Err(stale("Workspace active snapshot has changed"));
+        }
+        if &archive.config != config {
             return Err(stale("Workspace configuration changed during capture"));
         }
         archive.active_snapshot_id = Some(snapshot.manifest.id.clone());
@@ -872,6 +925,88 @@ fn export_identity(value: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn refresh_writes_only_at_commit_and_rejects_an_obsolete_capture() {
+        let root = std::env::temp_dir().join(format!(
+            "diffkin-refresh-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let store = WorkspaceStore::new(root.clone()).unwrap();
+        let other = WorkspaceStore::new(root.clone()).unwrap();
+        let config = WorkspaceConfig {
+            id: "project".into(),
+            name: "Draft".into(),
+            repositories: vec![WorkspaceRepository {
+                id: "repo".into(),
+                label: "Repo".into(),
+                spec: ComparisonSpec {
+                    repository: root
+                        .join("missing-repository")
+                        .to_string_lossy()
+                        .into_owned(),
+                    mode: CompareMode::Worktree,
+                    base: None,
+                    head: None,
+                    verify_all: false,
+                    include_untracked: false,
+                    path_scope: None,
+                },
+            }],
+        };
+        let cancel = AtomicBool::new(false);
+        let first = store
+            .capture(&config, &cancel)
+            .unwrap()
+            .active_snapshot_id
+            .unwrap();
+        let path = store.path("project").unwrap();
+        let file = fs::OpenOptions::new().write(true).open(&path).unwrap();
+        file.set_modified(UNIX_EPOCH + Duration::from_secs(1_000_000_000))
+            .unwrap();
+        let stamp = file.metadata().unwrap().modified().unwrap();
+        drop(file);
+        assert_eq!(
+            store.prepare_capture(&config, None).unwrap().as_deref(),
+            Some(first.as_str())
+        );
+        let starting = store.prepare_capture(&config, Some(&first)).unwrap();
+        assert_eq!(fs::metadata(&path).unwrap().modified().unwrap(), stamp);
+        let pending = capture_workspace(&config, &cancel).unwrap();
+        // A second instance completes between the first instance's Git read and its commit.
+        let (winner, _) = other.capture_from(&config, Some(&first), &cancel).unwrap();
+        assert!(matches!(
+            store.commit_capture(&config, starting.as_deref(), pending, &cancel),
+            Err(RepositoryError::Stale { .. })
+        ));
+        assert!(matches!(
+            store.capture_from(&config, Some(&first), &cancel),
+            Err(RepositoryError::Stale { .. })
+        ));
+        let starting = store
+            .prepare_capture(&config, winner.active_snapshot_id.as_deref())
+            .unwrap();
+        let pending = capture_workspace(&config, &cancel).unwrap();
+        let mut renamed = config.clone();
+        renamed.name = "Other instance".into();
+        other.save_config(&renamed).unwrap();
+        assert!(matches!(
+            store.commit_capture(&config, starting.as_deref(), pending, &cancel),
+            Err(RepositoryError::Stale { .. })
+        ));
+        assert!(matches!(
+            store.capture_from(&config, winner.active_snapshot_id.as_deref(), &cancel),
+            Err(RepositoryError::Stale { .. })
+        ));
+        let saved = store.load("project").unwrap();
+        assert_eq!(saved.config, renamed);
+        assert_eq!(saved.active_snapshot_id, winner.active_snapshot_id);
+        assert_eq!(saved.snapshots.len(), 2);
+        fs::remove_dir_all(root).unwrap();
+    }
     #[test]
     fn content_identity_is_checked_even_after_envelope_checksum_is_recomputed() {
         let content = "const value = 1;\n";

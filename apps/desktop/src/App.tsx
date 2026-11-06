@@ -525,7 +525,11 @@ export function App({
     captureJob.current = job;
     setCapturing(true);
     try {
-      const session = await workspaceClient.capture(workspaceSession.config, job);
+      const session = await workspaceClient.capture(
+        workspaceSession.config,
+        job,
+        workspaceSession.activeSnapshotId,
+      );
       if (!captureGeneration.current.isCurrent(ticket)) return;
       captureJob.current = null;
       activateWorkspace(session, repositoryId ?? undefined, ticket);

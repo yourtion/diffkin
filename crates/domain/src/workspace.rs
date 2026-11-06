@@ -2,7 +2,7 @@ use crate::{CompareMode, ComparisonManifest, ComparisonSpec, FileStatus, Reposit
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
-#[derive(Debug, Clone, Deserialize, Serialize, TS)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct WorkspaceRepository {
     pub id: String,
@@ -10,7 +10,7 @@ pub struct WorkspaceRepository {
     pub spec: ComparisonSpec,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, TS)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct WorkspaceConfig {
     pub id: String,

@@ -86,6 +86,8 @@ async function bridge(page: Page, delayed = false, targetPaging = false) {
               return session;
             }
             if (command === "workspace_capture") {
+              if (args.snapshotId && args.snapshotId !== session?.activeSnapshotId)
+                throw { code: "stale", message: "Workspace active snapshot has changed" };
               revision++;
               const config = args.config as WorkspaceConfig;
               const id = `workspace-snapshot-${revision}`;
@@ -365,6 +367,11 @@ test("a second instance switching snapshots cannot redirect a manual relation", 
   expect(
     await page.evaluate(() => JSON.parse(localStorage.getItem("test.workspace")!).reviews),
   ).toEqual([]);
+  await page.getByRole("button", { name: "刷新工作区" }).click();
+  await expect(page.getByRole("alert")).toContainText("重新打开工作区");
+  expect(
+    await page.evaluate(() => JSON.parse(localStorage.getItem("test.workspace")!).snapshots.length),
+  ).toBe(2);
 });
 
 test("late workspace file results cannot replace a different repository", async ({ page }) => {
