@@ -154,7 +154,7 @@ pnpm check
 
 Tag 触发版本校验、三平台 CI，以及 macOS Apple Silicon / Intel、Windows x64、Linux x64 构建。全部产物齐备后生成 `SHA256SUMS` 和 **Release 草稿**。CLI 与桌面包附带许可证和第三方材料。已公开 Release 不允许重跑覆盖。
 
-详见 [CI 与发布说明](docs/releasing.md)。正式签名/公证和自动更新仍待配置；当前安装包供 Alpha 验证。内部包不会发布到 npm/crates.io。
+当前安装包供 Alpha 验证，自动更新仍待配置。内部包不会发布到 npm/crates.io。macOS 发布包默认对应用和 CLI 做 ad-hoc 签名。正式分发可启用 Apple Developer ID 签名与公证，Windows 可启用 Microsoft Artifact Signing。配置步骤见 [CI 与发布说明](docs/releasing.md#签名和自动更新)。
 
 ## 设计文档
 

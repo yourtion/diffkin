@@ -51,11 +51,12 @@ Release workflow 的顺序为：校验 tag → 复用完整 CI → 四目标构�
 
 文件名包含版本和 target，防止矩阵上传时重名。工作流中间产物保留 14 天，GitHub Release 中的产物独立保存。CLI 压缩包包含可执行文件、MIT `LICENSE` 和 `THIRD-PARTY-NOTICES.txt`；桌面安装包包含同样材料及依赖清单。
 
-本地可以检查相同的收集逻辑：
+在 Apple Silicon 开发机上可以复现默认的签名、打包和收集流程。
 
 ```sh
 cargo build -p diffkin-cli --release --locked --target aarch64-apple-darwin
-pnpm desktop build --target aarch64-apple-darwin --bundles dmg -- --locked
+pnpm desktop build --target aarch64-apple-darwin --no-bundle -- --locked
+CI=true TAURI_BUNDLER_DMG_IGNORE_CI=false TARGET=aarch64-apple-darwin bash scripts/bundle-macos.sh ad-hoc
 node scripts/release-assets.mjs collect aarch64-apple-darwin
 ```
 
@@ -79,22 +80,41 @@ Rust 清单覆盖锁定的依赖图，包含构建/测试和其他平台的依�
 
 ## 签名和自动更新
 
-默认允许产出未签名的测试安装包并保留草稿。macOS 正式签名/公证接入开关为仓库变量 `MACOS_SIGNING_ENABLED=true`，所需 secrets：
+### macOS
 
-| Secret                       | 用途                                |
-| ---------------------------- | ----------------------------------- |
-| `APPLE_CERTIFICATE`          | Base64 编码的 Developer ID 证书 p12 |
-| `APPLE_CERTIFICATE_PASSWORD` | p12 密码                            |
-| `APPLE_SIGNING_IDENTITY`     | 签名身份                            |
-| `APPLE_ID`                   | 公证所用 Apple 账号                 |
-| `APPLE_PASSWORD`             | App 专用密码                        |
-| `APPLE_TEAM_ID`              | 开发者团队 ID                       |
+两个 macOS 目标默认使用 ad-hoc 签名。Tauri 在生成 DMG 前签署整个 `Diffkin.app`，独立的 `diffkin` 在归档前签署。CI 会检查应用资源封印和两个签名。这和 Alacritty 的做法一样，无需 Apple 账户。用户从浏览器下载安装时，Gatekeeper 仍可能要求在「隐私与安全性」中手动允许打开。[Alacritty 打包脚本](https://github.com/alacritty/alacritty/blob/master/Makefile) · [Tauri ad-hoc 签名](https://v2.tauri.app/distribute/sign/macos/#ad-hoc-signing)
 
-开启开关后缺失配置直接失败，不退回未签名构建。secrets 只进入 macOS 签名步骤；配置前先确认 `dev.diffkin.desktop` 是正式使用的应用标识，首次公开发布后避免随意更换。
+正式分发时，在 GitHub 仓库的 Settings → Secrets and variables → Actions 配置以下 secrets，然后将仓库变量 `MACOS_SIGNING_ENABLED` 设为 `true`。
 
-Windows 代码签名未实现，需要确定证书或签名服务后接入。基础框架也没有启用 Tauri updater：自动更新需要独立签名密钥、公钥、更新源和版本回退策略，不能把上传安装包视为已有自动更新。
+| Secret                       | 用途                                                                  |
+| ---------------------------- | --------------------------------------------------------------------- |
+| `APPLE_CERTIFICATE`          | 包含私钥的 Developer ID Application 证书，导出为 p12 后以 Base64 编码 |
+| `APPLE_CERTIFICATE_PASSWORD` | p12 密码                                                              |
+| `APPLE_SIGNING_IDENTITY`     | 完整身份，例如 `Developer ID Application: Example (TEAMID)`           |
+| `APPLE_ID`                   | 公证所用 Apple 账号                                                   |
+| `APPLE_PASSWORD`             | App 专用密码                                                          |
+| `APPLE_TEAM_ID`              | 开发者团队 ID                                                         |
 
-官方流程参考：[Tauri GitHub 分发](https://v2.tauri.app/distribute/pipelines/github/)、[macOS 签名](https://v2.tauri.app/distribute/sign/macos/)。
+启用后，Tauri 签署并公证 `Diffkin.app`，将公证票据装订到应用再制作并签署 DMG。CI 给独立 CLI 签名并启用 hardened runtime 和安全时间戳，临时用 ZIP 提交公证，待 Apple 接受后才生成发布用的 tar.gz。裸 CLI 的票据由 Gatekeeper 联网查询。应用标识为 `dev.diffkin.desktop`。[Apple 公证流程](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow)
+
+可在下载 DMG 后对挂载卷中的 `Diffkin.app` 运行 `codesign --verify --deep --strict`，并用 `codesign -dv --verbose=4` 查看签名类型。Developer ID 模式还可以用 `xcrun stapler validate /Volumes/Diffkin/Diffkin.app` 验证票据。
+
+### Windows
+
+Windows 默认生成未签名的 Alpha 包。要启用 Authenticode，先在 Microsoft Artifact Signing 创建 Public Trust 证书配置文件，向用于 CI 的 Entra 应用授予该配置文件的 `Artifact Signing Certificate Profile Signer` 角色，再配置 GitHub Actions。[Microsoft 签名集成](https://learn.microsoft.com/en-us/azure/artifact-signing/how-to-signing-integrations)
+
+| 仓库配置                                                                                   | 值                                                        |
+| ------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| Variables · `AZURE_TENANT_ID`、`AZURE_CLIENT_ID`                                           | Entra 租户 ID 和应用（客户端）ID                          |
+| Secret · `AZURE_CLIENT_SECRET`                                                             | 应用的客户端密钥值                                        |
+| Variables · `AZURE_SIGNING_ENDPOINT`、`AZURE_SIGNING_ACCOUNT`、`AZURE_CERTIFICATE_PROFILE` | 签名账户所在区域的 HTTPS 端点、签名账户名、证书配置文件名 |
+| Variable · `WINDOWS_SIGNING_ENABLED`                                                       | 将以上配置填好后设为 `true`                               |
+
+SignTool 使用 SHA-256 签名和 RFC 3161 时间戳。Tauri 在 NSIS 打包过程中签署桌面 EXE 和安装程序，独立的 `diffkin.exe` 在归档前签署。CI 验证安装程序和 CLI 的签名及时间戳。两个平台的正式签名分别启用，缺少配置或验证失败都会阻止生成该次 Release 草稿。
+
+### 自动更新与 DMG 布局
+
+Tauri updater 需要独立的签名密钥、公钥、更新源和版本回退策略，目前尚未启用。
 
 DMG 在 CI 中跳过依赖 Finder 的图标布局脚本，避免无人值守环境的 AppleEvent 超时。本机遇到同样问题时，可用 `CI=true TAURI_BUNDLER_DMG_IGNORE_CI=false pnpm desktop bundle --target aarch64-apple-darwin --bundles dmg --ci` 重新打包已有二进制；这不绕过签名，只跳过安装窗口美化。[Tauri DMG 说明](https://v2.tauri.app/distribute/dmg/)
 
