@@ -100,6 +100,9 @@ export function App({
   const [savingReview, setSavingReview] = useState(false);
   const [manifest, setManifest] = useState<ComparisonManifest | null>(null);
   const [selectedFile, setSelectedFile] = useState<FileSummary | null>(null);
+  const repositoryViews = useRef(
+    new Map<string, { manifest: ComparisonManifest; file: FileSummary }>(),
+  );
   const [analysisReady, setAnalysisReady] = useState(false);
   const [data, setData] = useState<FileAnalysis | null>(null);
   const [fileCache] = useState(() => new FileAnalysisCache());
@@ -201,6 +204,7 @@ export function App({
     return manifest !== null && (path === appliedSpec?.repository || path === manifest.repository);
   }
   function leaveComparison() {
+    repositoryViews.current.clear();
     setAppliedSpec(null);
     setWorkspaceSession(null);
     setRepositoryId(null);
@@ -316,6 +320,7 @@ export function App({
         result = await api.catalog(result.id);
       if (!captureGeneration.current.isCurrent(generation)) return;
       setWorkspaceSession(null);
+      repositoryViews.current.clear();
       // The previous snapshot can still be browsed while capture is in flight.
       fileCache.clear();
       setRepositoryId(null);
@@ -458,8 +463,12 @@ export function App({
   ) {
     if (ticket !== undefined && !captureGeneration.current.isCurrent(ticket)) return;
     // A ticket denotes a restore or capture. Switching repository tabs stays within the snapshot.
-    if (ticket !== undefined || session.activeSnapshotId !== workspaceSession?.activeSnapshotId)
+    if (ticket !== undefined || session.activeSnapshotId !== workspaceSession?.activeSnapshotId) {
       fileCache.clear();
+      repositoryViews.current.clear();
+    } else if (repositoryId && manifest && selectedFile) {
+      repositoryViews.current.set(repositoryId, { manifest, file: selectedFile });
+    }
     beginComparisonOperation();
     const snapshot = session.snapshots.find((item) => item.id === session.activeSnapshotId);
     const selected =
@@ -470,7 +479,10 @@ export function App({
     setWorkspaceSession(session);
     setRepositoryId(selected?.repositoryId ?? null);
     rememberWorkspace(session.config.id, selected?.repositoryId ?? null);
-    setManifest(selected?.manifest ?? null);
+    const previous = selected && repositoryViews.current.get(selected.repositoryId);
+    const visibleManifest = previous?.manifest ?? selected?.manifest ?? null;
+    const nextFile = previous?.file ?? visibleManifest?.files[0];
+    setManifest(visibleManifest);
     resetComparisonView();
     setError(selected?.error ? message(selected.error) : null);
     const config = session.config.repositories.find((repo) => repo.id === selected?.repositoryId);
@@ -478,8 +490,7 @@ export function App({
     setDraft(null);
     setShowCompareSettings(false);
     if (config) settings.update((current) => ({ ...current, spec: config.spec }));
-    if (selected?.manifest?.files[0])
-      void selectFile(selected.manifest.files[0], selected.manifest);
+    if (nextFile && visibleManifest) void selectFile(nextFile, visibleManifest);
   }
   function enterWorkspace(session: WorkspaceSession, ticket?: number) {
     if (ticket !== undefined && !captureGeneration.current.isCurrent(ticket)) return;
@@ -551,16 +562,10 @@ export function App({
       setSavingReview(true);
       const generation = captureGeneration.current.ticket();
       try {
-        const basis = await workspaceClient.basis(
-          workspaceSession.config.id,
-          repositoryId,
-          selectedFile.id,
-        );
-        if (!sameBasis(basis, expected)) throw new Error("工作区依据已变化，请刷新后重新审查。");
         updateWorkspace(
           await workspaceClient.review(
             workspaceSession.config.id,
-            basis,
+            expected,
             wasReviewed ? "pending" : "reviewed",
           ),
         );

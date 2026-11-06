@@ -43,6 +43,17 @@ export const client: DiffkinClient = {
 
 export function message(error: unknown): string {
   if (error && typeof error === "object" && "message" in error) {
+    if ("code" in error && error.code === "stale") {
+      if (error.message === "Workspace active snapshot has changed")
+        return "工作区快照已切换，请重新打开工作区并确认要审查的版本。";
+      if (error.message === "Workspace snapshot is not retained")
+        return "此快照已移出历史记录，请重新打开工作区并选择可用版本。";
+      if (
+        error.message ===
+        "Evidence basis does not match the frozen repository, file, content or analysis rule"
+      )
+        return "审查依据已变化，请刷新后重新核对文件。";
+    }
     if (
       "code" in error &&
       error.code === "budget-exceeded" &&

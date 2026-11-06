@@ -64,6 +64,23 @@ pub enum ReviewState {
 
 #[derive(Debug, Clone, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WorkspaceFileRef {
+    pub repository_id: String,
+    pub file_id: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WorkspaceRelationDraft {
+    pub id: String,
+    pub workspace_snapshot_id: String,
+    pub from: WorkspaceFileRef,
+    pub to: WorkspaceFileRef,
+    pub note: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ManualRelation {
     pub id: String,
     pub from: EvidenceBasis,

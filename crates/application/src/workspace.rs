@@ -311,6 +311,12 @@ impl Archive {
                 .ok_or_else(|| stale("Workspace has no snapshot"))?,
         )
     }
+    fn active_for_write(&self, expected: &str) -> Result<&FrozenWorkspace, RepositoryError> {
+        if self.active_snapshot_id.as_deref() != Some(expected) {
+            return Err(stale("Workspace active snapshot has changed"));
+        }
+        self.snapshot(expected)
+    }
     fn validate(&self) -> Result<(), RepositoryError> {
         validate_config(&self.config)?;
         if self.schema_version != 1
@@ -715,7 +721,9 @@ impl WorkspaceStore {
     ) -> Result<WorkspaceSession, RepositoryError> {
         let _lock = self.lock()?;
         let mut archive = self.read(id)?;
-        archive.active()?.validate_basis(&basis, true)?;
+        archive
+            .active_for_write(&basis.workspace_snapshot_id)?
+            .validate_basis(&basis, true)?;
         if let Some(record) = archive.reviews.iter_mut().find(|r| r.basis == basis) {
             record.state = state;
         } else {
@@ -733,9 +741,32 @@ impl WorkspaceStore {
         relation: ManualRelation,
     ) -> Result<WorkspaceSession, RepositoryError> {
         let _lock = self.lock()?;
-        let mut archive = self.read(id)?;
+        let archive = self.read(id)?;
         archive.active()?.validate_basis(&relation.from, true)?;
         archive.active()?.validate_basis(&relation.to, true)?;
+        self.persist_relation(archive, relation)
+    }
+    pub fn link_files(
+        &self,
+        id: &str,
+        draft: WorkspaceRelationDraft,
+    ) -> Result<WorkspaceSession, RepositoryError> {
+        let _lock = self.lock()?;
+        let archive = self.read(id)?;
+        let frozen = archive.active_for_write(&draft.workspace_snapshot_id)?;
+        let relation = ManualRelation {
+            id: draft.id,
+            from: frozen.basis(&draft.from.repository_id, &draft.from.file_id)?,
+            to: frozen.basis(&draft.to.repository_id, &draft.to.file_id)?,
+            note: draft.note,
+        };
+        self.persist_relation(archive, relation)
+    }
+    fn persist_relation(
+        &self,
+        mut archive: Archive,
+        relation: ManualRelation,
+    ) -> Result<WorkspaceSession, RepositoryError> {
         if let Some(existing) = archive.relations.iter_mut().find(|r| r.id == relation.id) {
             *existing = relation;
         } else {
@@ -748,9 +779,18 @@ impl WorkspaceStore {
         Ok(archive.session())
     }
     pub fn export(&self, id: &str) -> Result<WorkspaceExport, RepositoryError> {
+        self.export_at(id, None)
+    }
+    pub fn export_at(
+        &self,
+        id: &str,
+        snapshot_id: Option<&str>,
+    ) -> Result<WorkspaceExport, RepositoryError> {
         let archive = self.read(id)?;
         let mut repositories = Vec::new();
-        if let Ok(snapshot) = archive.active() {
+        let snapshot_id = snapshot_id.or(archive.active_snapshot_id.as_deref());
+        if let Some(requested) = snapshot_id {
+            let snapshot = archive.snapshot(requested)?;
             for entry in &snapshot.manifest.repositories {
                 let manifest = snapshot
                     .repositories
@@ -786,7 +826,7 @@ impl WorkspaceStore {
         Ok(WorkspaceExport {
             schema_version: 1,
             workspace_id: id.into(),
-            snapshot_id: archive.active_snapshot_id,
+            snapshot_id: snapshot_id.map(str::to_owned),
             repositories,
             relations: archive
                 .relations

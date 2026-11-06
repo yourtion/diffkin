@@ -170,6 +170,7 @@ fn main() {
             workspace_commands::workspace_basis,
             workspace_commands::workspace_review,
             workspace_commands::workspace_relation,
+            workspace_commands::workspace_link_files,
             workspace_commands::workspace_export,
             validation_commands::validation_prepare,
             validation_commands::validation_run,

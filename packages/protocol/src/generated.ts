@@ -57,6 +57,8 @@ export type WorkspaceSnapshot = { id: string, workspaceId: string,
 capturedAtMs: string, repositories: Array<RepositorySnapshot>, };
 export type EvidenceBasis = { workspaceSnapshotId: string, repositoryId: string, repositorySnapshotId: string, fileId: string, beforeId: string | null, afterId: string | null, schemaVersion: number, ruleVersion: string, };
 export type ReviewState = "pending" | "reviewed" | "needs-attention";
+export type WorkspaceFileRef = { repositoryId: string, fileId: string, };
+export type WorkspaceRelationDraft = { id: string, workspaceSnapshotId: string, from: WorkspaceFileRef, to: WorkspaceFileRef, note: string, };
 export type ManualRelation = { id: string, from: EvidenceBasis, to: EvidenceBasis, note: string, };
 export type ReviewRecord = { basis: EvidenceBasis, state: ReviewState, };
 export type WorkspaceSession = { config: WorkspaceConfig, snapshots: Array<WorkspaceSnapshot>, activeSnapshotId: string | null, relations: Array<ManualRelation>, reviews: Array<ReviewRecord>, };

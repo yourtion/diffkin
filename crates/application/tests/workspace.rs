@@ -330,6 +330,91 @@ fn restore_after_removing_live_repositories_retains_review_and_relation_evidence
     }
 }
 #[test]
+fn review_actions_use_the_displayed_snapshot_after_another_instance_refreshes() {
+    let fixture = Fixture::new();
+    let config = fixture.config();
+    let viewing = fixture.store();
+    let other = fixture.store();
+    let (_, first) = viewing.capture_and_open(&config, &token()).unwrap();
+    let from = basis(&first, "frontend");
+    let to = basis(&first, "api");
+    let draft = WorkspaceRelationDraft {
+        id: "contract".into(),
+        workspace_snapshot_id: from.workspace_snapshot_id.clone(),
+        from: WorkspaceFileRef {
+            repository_id: from.repository_id.clone(),
+            file_id: from.file_id.clone(),
+        },
+        to: WorkspaceFileRef {
+            repository_id: to.repository_id.clone(),
+            file_id: to.file_id.clone(),
+        },
+        note: "test".into(),
+    };
+    fs::write(
+        fixture.0.join("library/src/index.ts"),
+        "const changed = true;\n",
+    )
+    .unwrap();
+    let (_, second) = other.capture_and_open(&config, &token()).unwrap();
+    let current = basis(&second, "frontend");
+    assert_ne!(from.workspace_snapshot_id, current.workspace_snapshot_id);
+    assert_eq!(from.file_id, current.file_id);
+    assert_eq!(to.file_id, basis(&second, "api").file_id);
+    assert!(matches!(
+        viewing.link_files("project", draft.clone()),
+        Err(RepositoryError::Stale { .. })
+    ));
+    assert!(matches!(
+        viewing.set_review("project", from.clone(), ReviewState::Reviewed),
+        Err(RepositoryError::Stale { .. })
+    ));
+    let saved = viewing.load("project").unwrap();
+    assert!(saved.relations.is_empty() && saved.reviews.is_empty());
+    let historical = viewing
+        .export_at("project", Some(&from.workspace_snapshot_id))
+        .unwrap();
+    assert_eq!(
+        historical.snapshot_id.as_ref(),
+        Some(&from.workspace_snapshot_id)
+    );
+    assert!(historical
+        .repositories
+        .iter()
+        .find(|repo| repo.repository_id == "library")
+        .unwrap()
+        .files
+        .is_empty());
+    let latest = other.export("project").unwrap();
+    assert_eq!(
+        latest.snapshot_id.as_ref(),
+        Some(&current.workspace_snapshot_id)
+    );
+    assert_eq!(
+        latest
+            .repositories
+            .iter()
+            .find(|repo| repo.repository_id == "library")
+            .unwrap()
+            .files
+            .len(),
+        1
+    );
+    assert!(viewing.export_at("project", Some("missing")).is_err());
+    let saved = viewing
+        .link_files(
+            "project",
+            WorkspaceRelationDraft {
+                workspace_snapshot_id: current.workspace_snapshot_id.clone(),
+                ..draft
+            },
+        )
+        .unwrap();
+    assert_eq!(saved.relations[0].from, current);
+    assert_eq!(saved.relations[0].to, basis(&second, "api"));
+}
+
+#[test]
 fn refresh_has_new_basis_and_historical_activation_is_persisted() {
     let fixture = Fixture::new();
     let config = fixture.config();

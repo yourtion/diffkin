@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import type {
   WorkspaceConfig,
   WorkspaceSession,
+  WorkspaceRelationDraft,
   WorkspaceSnapshot,
   EvidenceBasis,
   FileAnalysis,
@@ -144,10 +145,10 @@ async function bridge(page: Page, delayed = false, targetPaging = false) {
               save();
               return session;
             }
-            if (command === "workspace_basis")
-              return basis(args.repositoryId as string, args.fileId as string);
             if (command === "workspace_review") {
               const value = args.basis as EvidenceBasis;
+              if (value.workspaceSnapshotId !== active().id)
+                throw { code: "stale", message: "Workspace active snapshot has changed" };
               session!.reviews = session!.reviews.filter(
                 (record) => JSON.stringify(record.basis) !== JSON.stringify(value),
               );
@@ -155,8 +156,16 @@ async function bridge(page: Page, delayed = false, targetPaging = false) {
               save();
               return session;
             }
-            if (command === "workspace_relation") {
-              session!.relations.push(args.relation as WorkspaceSession["relations"][number]);
+            if (command === "workspace_link_files") {
+              const draft = args.draft as WorkspaceRelationDraft;
+              if (draft.workspaceSnapshotId !== active().id)
+                throw { code: "stale", message: "Workspace active snapshot has changed" };
+              session!.relations.push({
+                id: draft.id,
+                note: draft.note,
+                from: basis(draft.from.repositoryId, draft.from.fileId),
+                to: basis(draft.to.repositoryId, draft.to.fileId),
+              });
               save();
               return session;
             }
@@ -164,7 +173,7 @@ async function bridge(page: Page, delayed = false, targetPaging = false) {
               return {
                 schemaVersion: 1,
                 workspaceId: session!.config.id,
-                snapshotId: session!.activeSnapshotId,
+                snapshotId: args.snapshotId ?? session!.activeSnapshotId,
                 repositories: [],
                 relations: [],
                 reviews: session!.reviews,
@@ -184,7 +193,17 @@ async function bridge(page: Page, delayed = false, targetPaging = false) {
                 after = `const value${index} = ${version};\n`;
               const result: FileAnalysis = {
                 file: {
-                  summary: summary(index, version),
+                  summary:
+                    targetPaging && index === 1
+                      ? {
+                          ...summary(index, version),
+                          id: String(args.fileId),
+                          path:
+                            args.fileId === "target-201"
+                              ? "src/late.ts"
+                              : `src/extra${String(args.fileId).slice(7)}.ts`,
+                        }
+                      : summary(index, version),
                   before,
                   after,
                   beforeTruncated: false,
@@ -307,6 +326,45 @@ test("workspace refresh invalidates reviews and makes manual relations historica
   await page.getByRole("button", { name: "工作区设置" }).click();
   await page.getByRole("button", { name: "导出版本清单", exact: true }).click();
   await expect((await download).suggestedFilename()).toMatch(/^diffkin-workspace-.*\.json$/);
+});
+
+test("a second instance switching snapshots cannot redirect a manual relation", async ({
+  page,
+}) => {
+  await bridge(page);
+  await capture(page);
+  await page.getByRole("button", { name: "工作区设置" }).click();
+  await page.locator(".manual-relations summary").click();
+  await page.getByLabel("关联目标仓库").selectOption({ label: "SDK" });
+  await page.getByLabel("关联目标文件").selectOption({ label: "src/shared.ts" });
+  await page.evaluate(async () => {
+    const saved = JSON.parse(localStorage.getItem("test.workspace")!) as WorkspaceSession;
+    await (
+      window as unknown as {
+        __TAURI_INTERNALS__: { invoke(cmd: string, args: object): Promise<unknown> };
+      }
+    ).__TAURI_INTERNALS__.invoke("workspace_capture", {
+      config: saved.config,
+      jobId: "another-instance",
+    });
+  });
+  await page.getByRole("button", { name: "保存手工关联" }).click();
+  await expect(page.getByRole("alert")).toContainText("重新打开工作区");
+  expect(
+    await page.evaluate(() => JSON.parse(localStorage.getItem("test.workspace")!).relations),
+  ).toEqual([]);
+  const pendingDownload = page.waitForEvent("download");
+  await page.getByRole("button", { name: "导出版本清单" }).click();
+  const stream = await (await pendingDownload).createReadStream();
+  const chunks = [];
+  for await (const chunk of stream) chunks.push(chunk);
+  expect(JSON.parse(Buffer.concat(chunks).toString()).snapshotId).toBe("workspace-snapshot-1");
+  await page.getByRole("button", { name: "收起设置" }).click();
+  await page.getByRole("button", { name: "标记已审查" }).click();
+  await expect(page.getByRole("alert")).toContainText("重新打开工作区");
+  expect(
+    await page.evaluate(() => JSON.parse(localStorage.getItem("test.workspace")!).reviews),
+  ).toEqual([]);
 });
 
 test("late workspace file results cannot replace a different repository", async ({ page }) => {
@@ -445,6 +503,27 @@ test("a workspace timeout opens the affected repository scope and retries it", a
   await page.getByRole("button", { name: "比较工作区" }).click();
   await expect(page.locator(".merge-host")).toContainText("value1 = 2");
   await expect(page.getByRole("alert")).toHaveCount(0);
+});
+
+test("switching repositories resumes a file past the first page within the same snapshot", async ({
+  page,
+}) => {
+  await bridge(page, false, true);
+  await capture(page);
+  const tabs = page.getByRole("navigation", { name: "工作区仓库" });
+  await tabs.getByRole("button", { name: /SDK/ }).click();
+  await page.getByRole("button", { name: /加载更多/ }).click();
+  const filter = page.getByLabel("筛选文件");
+  await filter.fill("src/late.ts");
+  await page.getByRole("button", { name: "src/late.ts", exact: true }).click();
+  await expect(page.locator(".file-heading h2")).toHaveText("src/late.ts");
+  await tabs.getByRole("button", { name: /API/ }).click();
+  await expect(page.locator(".file-heading h2")).toHaveText("src/shared.ts");
+  await tabs.getByRole("button", { name: /SDK/ }).click();
+  await expect(page.locator(".file-heading h2")).toHaveText("src/late.ts");
+  await expect(page.locator(".file-item.selected")).toHaveAccessibleName("src/late.ts");
+  await page.getByRole("button", { name: "刷新工作区" }).click();
+  await expect(page.locator(".merge-host")).toContainText("value1 = 2");
 });
 
 test("manual relation target files can be paged past the first 200", async ({ page }) => {

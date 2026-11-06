@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
   EvidenceBasis,
-  ManualRelation,
+  WorkspaceRelationDraft,
   ReviewState,
   WorkspaceConfig,
   WorkspaceExport,
@@ -35,13 +35,12 @@ export const workspaceClient = {
     invoke<WorkspaceSession>("workspace_capture", { config, jobId }),
   restore: (id: string, snapshotId: string | null = null) =>
     invoke<WorkspaceSession>("workspace_restore", { id, snapshotId }),
-  basis: (id: string, repositoryId: string, fileId: string) =>
-    invoke<EvidenceBasis>("workspace_basis", { id, repositoryId, fileId }),
   review: (id: string, basis: EvidenceBasis, state: ReviewState) =>
     invoke<WorkspaceSession>("workspace_review", { id, basis, state }),
-  relation: (id: string, relation: ManualRelation) =>
-    invoke<WorkspaceSession>("workspace_relation", { id, relation }),
-  export: (id: string) => invoke<WorkspaceExport>("workspace_export", { id }),
+  linkFiles: (id: string, draft: WorkspaceRelationDraft) =>
+    invoke<WorkspaceSession>("workspace_link_files", { id, draft }),
+  export: (id: string, snapshotId: string | null) =>
+    invoke<WorkspaceExport>("workspace_export", { id, snapshotId }),
 };
 export function sameBasis(a: EvidenceBasis, b: EvidenceBasis) {
   return (
