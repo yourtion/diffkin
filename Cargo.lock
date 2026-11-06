@@ -612,6 +612,7 @@ version = "0.3.0-alpha.2"
 dependencies = [
  "diffkin-application",
  "diffkin-domain",
+ "diffkin-explanation",
  "diffkin-validation",
  "serde_json",
  "tauri",
@@ -625,6 +626,18 @@ version = "0.3.0-alpha.2"
 dependencies = [
  "serde",
  "ts-rs",
+]
+
+[[package]]
+name = "diffkin-explanation"
+version = "0.3.0-alpha.2"
+dependencies = [
+ "diffkin-application",
+ "diffkin-domain",
+ "nix",
+ "serde",
+ "serde_json",
+ "uuid",
 ]
 
 [[package]]

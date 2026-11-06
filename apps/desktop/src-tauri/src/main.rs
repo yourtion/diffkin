@@ -1,6 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 #[cfg(feature = "native-benchmark")]
 mod benchmark;
+mod explanation_commands;
 mod navigation_commands;
 mod runtime;
 mod settings_commands;
@@ -129,6 +130,7 @@ fn main() {
     let application = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .manage(Arc::new(Runtime::default()))
+        .manage(explanation_commands::Explanations::default())
         .manage(Arc::new(workspace_commands::WorkspaceRuntime::default()))
         .manage(Arc::new(validation_commands::ValidationRuntime::default()))
         .setup(|app| {
@@ -156,6 +158,10 @@ fn main() {
             list_change_catalog,
             preview_file,
             request_file,
+            explanation_commands::explanation_prepare,
+            explanation_commands::explanation_run,
+            explanation_commands::quiz_prepare,
+            explanation_commands::quiz_generate,
             cancel_job,
             workspace_commands::workspace_list,
             workspace_commands::workspace_save,

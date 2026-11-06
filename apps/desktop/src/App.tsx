@@ -16,6 +16,7 @@ import { ChangeNavigator } from "./components/ChangeNavigator";
 import { LargeFileViewer, needsSegments } from "./components/LargeFileViewer";
 import { DiffViewer } from "./components/DiffViewer";
 import { ChangeInspector } from "./components/ChangeInspector";
+import { ExplanationPanel } from "./components/ExplanationPanel";
 import { WorkspacePanel } from "./components/WorkspacePanel";
 import { ValidationPanel } from "./components/ValidationPanel";
 import { RepositoryPicker } from "./components/RepositoryPicker";
@@ -67,6 +68,7 @@ export function App({
     settings.update((current) => ({ ...current, view: { ...current.view, foldFormats } }));
   const [showFiles, setShowFiles] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [aiPanel, setAiPanel] = useState<"explain" | "quiz" | null>(null);
   const [showCompareSettings, setShowCompareSettings] = useState(false);
   const [navigationWidth, setNavigationWidth] = useState(260);
   const resizeNavigation = (value: number) =>
@@ -153,6 +155,7 @@ export function App({
     const job = jobId();
     fileJob.current = job;
     setSelectedFile(file);
+    setAiPanel(null);
     setData(null);
     setAnalysisReady(false);
     setEvent(null);
@@ -605,7 +608,10 @@ export function App({
           <button
             aria-expanded={showDetails}
             aria-controls="review-details"
-            onClick={() => setShowDetails(!showDetails)}
+            onClick={() => {
+              setAiPanel(null);
+              setShowDetails(!showDetails);
+            }}
           >
             变更详情
           </button>
@@ -884,14 +890,40 @@ export function App({
                       : ""}
                   </p>
                 </div>
-                <button
-                  disabled={!data || !analysisReady || savingReview}
-                  className={reviewed ? "reviewed" : ""}
-                  aria-pressed={reviewed}
-                  onClick={() => void markReviewed()}
-                >
-                  {reviewed ? "✓ 已审查此版本" : "标记已审查"}
-                </button>
+                <div className="file-actions">
+                  <button
+                    disabled={!analysisReady || !data?.analysis}
+                    aria-expanded={aiPanel === "explain"}
+                    onClick={() => {
+                      setShowDetails(false);
+                      setAiPanel(aiPanel === "explain" ? null : "explain");
+                    }}
+                  >
+                    AI 解释
+                  </button>
+                  <button
+                    disabled={
+                      !analysisReady ||
+                      !data?.analysis ||
+                      !(data.analysis.raw.added + data.analysis.raw.removed)
+                    }
+                    aria-expanded={aiPanel === "quiz"}
+                    onClick={() => {
+                      setShowDetails(false);
+                      setAiPanel(aiPanel === "quiz" ? null : "quiz");
+                    }}
+                  >
+                    变更测验
+                  </button>
+                  <button
+                    disabled={!data || !analysisReady || savingReview}
+                    className={reviewed ? "reviewed" : ""}
+                    aria-pressed={reviewed}
+                    onClick={() => void markReviewed()}
+                  >
+                    {reviewed ? "✓ 已审查此版本" : "标记已审查"}
+                  </button>
+                </div>
               </div>
               {selectedFile.notices.map((notice, index) => (
                 <p className="notice compact" key={index}>
@@ -1015,6 +1047,17 @@ export function App({
             </div>
           )}
         </section>
+        {aiPanel && !validationOpen && data?.analysis && manifest && selectedFile && (
+          <ExplanationPanel
+            key={`${aiPanel}:${manifest.id}:${selectedFile.id}:${aiPanel === "explain" ? (event?.id ?? "") : ""}`}
+            mode={aiPanel}
+            comparisonId={manifest.id}
+            fileId={selectedFile.id}
+            analysis={data.analysis}
+            event={event}
+            onClose={() => setAiPanel(null)}
+          />
+        )}
         {data?.analysis && (
           <div id="review-details" className="review-details" hidden={!showDetails}>
             <button className="close-details" onClick={() => setShowDetails(false)}>

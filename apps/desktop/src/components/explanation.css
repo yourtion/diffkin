@@ -1,0 +1,107 @@
+.file-heading .file-actions,
+.explanation-heading,
+.explanation-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.explanation-heading {
+  justify-content: space-between;
+}
+.review-details.explanation-panel {
+  width: 360px;
+  flex-basis: 360px;
+  padding: 14px;
+}
+.explanation-panel h2 {
+  font-size: 15px;
+}
+.explanation-panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 12px 0 5px;
+  font-weight: 600;
+}
+.explanation-panel textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+.explanation-panel p,
+.explanation-panel li {
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.explanation-panel details {
+  margin: 10px 0;
+}
+.explanation-panel summary {
+  cursor: pointer;
+}
+.explanation-panel pre {
+  max-height: 200px;
+  overflow: auto;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-size: 11px;
+}
+.explanation-panel .executable-path,
+.explanation-byline {
+  color: var(--muted);
+  font-size: 11px;
+}
+.explanation-actions {
+  margin: 10px 0;
+}
+.explanation-answer {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+.explanation-answer h3 {
+  margin: 14px 0 4px;
+  font-size: 13px;
+}
+.explanation-answer h3 small {
+  color: var(--accent);
+}
+.explanation-answer ul {
+  padding-left: 18px;
+}
+@media (max-width: 1000px) {
+  .review-details.explanation-panel {
+    width: min(360px, 95%);
+    top: 0;
+  }
+}
+
+.quiz-sheet fieldset {
+  min-width: 0;
+  margin: 12px 0;
+  padding: 0;
+  border: 0;
+}
+.quiz-sheet legend {
+  font-weight: 600;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.explanation-panel .quiz-choice {
+  flex-direction: row;
+  align-items: baseline;
+  padding: 8px;
+  margin: 6px 0;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.quiz-choice:has(:checked) {
+  border-color: var(--accent);
+  background: var(--tint);
+}
+.quiz-results article {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}

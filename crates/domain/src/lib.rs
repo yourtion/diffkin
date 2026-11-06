@@ -1,4 +1,8 @@
+pub mod explanation;
+pub mod quiz;
+pub use quiz::*;
 pub mod preferences;
+pub use explanation::*;
 pub use preferences::*;
 pub mod navigation;
 pub use navigation::*;

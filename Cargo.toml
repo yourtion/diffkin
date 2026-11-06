@@ -4,6 +4,7 @@ members = [
   "crates/analysis",
   "crates/application",
   "crates/validation",
+  "crates/explanation",
   "apps/cli",
   "apps/desktop/src-tauri",
 ]
@@ -12,6 +13,7 @@ default-members = [
   "crates/analysis",
   "crates/application",
   "crates/validation",
+  "crates/explanation",
   "apps/cli",
 ]
 resolver = "2"
@@ -28,6 +30,7 @@ diffkin-domain = { path = "crates/domain" }
 diffkin-analysis = { path = "crates/analysis" }
 diffkin-application = { path = "crates/application" }
 diffkin-validation = { path = "crates/validation" }
+diffkin-explanation = { path = "crates/explanation" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 similar = "2.7"

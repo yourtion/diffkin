@@ -92,6 +92,9 @@ async function bridge(
     count?: number;
     failRefresh?: boolean;
     budgetFailure?: boolean;
+    explanationDelay?: number;
+    missingCli?: boolean;
+    failQuizRetry?: boolean;
   } = {},
   payload: FileAnalysis = result,
 ) {
@@ -115,6 +118,102 @@ async function bridge(
         value: {
           invoke: async (command: string, args: Record<string, unknown>) => {
             calls.push(command);
+            if (command === "quiz_prepare") {
+              return {
+                id: `quiz:${args.rawStart ?? "file"}`,
+                questionCount: 3,
+                added: 1,
+                removed: 1,
+                evidence: [
+                  {
+                    id: 1,
+                    path: "src/withdraw.ts",
+                    diff: "- L2 | return balance > amount;\n+ L2 | return balance >= amount;",
+                  },
+                ],
+                tools: [
+                  { provider: "codex", executable: options.missingCli ? null : "/opt/bin/codex" },
+                ],
+              };
+            }
+            if (command === "quiz_generate") {
+              if (options.failQuizRetry && calls.filter((c) => c === command).length > 1)
+                throw new Error("模型服务暂时不可用");
+              if (options.explanationDelay)
+                await new Promise((r) => setTimeout(r, options.explanationDelay));
+              const req = args.request as { preparedId: string };
+              return {
+                preparedId: req.preparedId,
+                quiz: {
+                  questions: [
+                    {
+                      prompt: "余额等于金额时，新的条件返回什么？",
+                      choices: ["true", "false", "undefined", "抛错"],
+                      correctIndex: 0,
+                      explanation: "等号使相等的输入通过。",
+                      evidenceIds: [1],
+                    },
+                    {
+                      prompt: "哪一组输入最能区分新旧实现？",
+                      choices: ["5 和 5", "8 和 4", "2 和 7", "5 和 0"],
+                      correctIndex: 0,
+                      explanation: "只有两者相等时判断不同。",
+                      evidenceIds: [1],
+                    },
+                    {
+                      prompt: "余额小于金额时会怎样？",
+                      choices: ["现在通过", "仍然拒绝", "抛出错误", "修改金额"],
+                      correctIndex: 1,
+                      explanation: "小于时两个条件都为假。",
+                      evidenceIds: [1],
+                    },
+                  ],
+                },
+              };
+            }
+            if (command === "explanation_prepare") {
+              const excerpt = (text: string) => ({
+                startLine: 1,
+                endLine: 3,
+                focusStart: 2,
+                focusEnd: 2,
+                text,
+              });
+              return {
+                id: `prepared:${args.eventId ?? args.rawStart ?? "file"}`,
+                context: {
+                  comparisonId: args.comparisonId,
+                  fileId: args.fileId,
+                  eventId: args.eventId,
+                  beforeId: "old-first",
+                  afterId: "new-first",
+                  path: "src/withdraw.ts",
+                  title: "取款边界",
+                  before: excerpt(result.file.before!),
+                  after: excerpt(result.file.after!),
+                },
+                tools: [
+                  { provider: "codex", executable: options.missingCli ? null : "/opt/bin/codex" },
+                  { provider: "claude", executable: null },
+                ],
+              };
+            }
+            if (command === "explanation_run") {
+              if (options.explanationDelay)
+                await new Promise((r) => setTimeout(r, options.explanationDelay));
+              const req = args.request as { preparedId: string; provider: string };
+              return {
+                preparedId: req.preparedId,
+                provider: req.provider,
+                explanation: {
+                  meaning: "判断是否可取款",
+                  change: "余额等于金额时现在允许取款。",
+                  rationale: "可能是为了允许取出全部余额。",
+                  caveats: ["需要核实账户规则。"],
+                  references: [{ side: "after", startLine: 2, endLine: 2 }],
+                },
+              };
+            }
             if (command === "cancel_job") return;
             if (command === "open_comparison") {
               captures++;
@@ -802,4 +901,113 @@ test("changing repositories clears old filters while same-repository refresh pre
   await page.getByRole("button", { name: "应用比较设置", exact: true }).click();
   await expect(page.getByLabel("筛选文件")).toHaveValue("");
   await expect(page.getByRole("button", { name: "src/other.ts", exact: true })).toBeVisible();
+});
+
+test("explains a selected change on demand and shows its frozen evidence", async ({ page }) => {
+  await bridge(page);
+  await open(page);
+  await page.getByRole("button", { name: /canWithdraw: 条件修改/ }).click();
+  await page.getByRole("button", { name: "AI 解释", exact: true }).click();
+  const panel = page.getByRole("complementary", { name: "AI 变更解释" });
+  await expect(panel.getByLabel("解释范围")).toHaveValue("event");
+  await panel.getByText("查看将发送的源码").click();
+  await expect(panel.locator(".explanation-preview pre").last()).toContainText("balance >= amount");
+  const calls = () =>
+    page.evaluate(
+      () => (window as unknown as { __DIFFKIN_TEST_CALLS__: string[] }).__DIFFKIN_TEST_CALLS__,
+    );
+  expect(await calls()).not.toContain("explanation_run");
+  await panel.getByRole("button", { name: "生成解释", exact: true }).click();
+  const answer = panel.getByRole("region", { name: "生成的解释" });
+  await expect(answer).toContainText("余额等于金额时现在允许取款");
+  await expect(answer.getByRole("heading", { name: /为什么可能这样改/ })).toContainText("推测");
+  await answer.getByText("改后 L2–2").click();
+  await expect(answer.locator("pre")).toContainText("2    return balance >= amount;");
+  await expect(page.getByRole("button", { name: "标记已审查" })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+});
+
+test("changing explanation scope cancels its request and discards late answers", async ({
+  page,
+}) => {
+  await bridge(page, { explanationDelay: 350 });
+  await open(page, false);
+  await page.getByRole("button", { name: "AI 解释", exact: true }).click();
+  const panel = page.getByRole("complementary", { name: "AI 变更解释" });
+  await expect(panel.getByLabel("解释范围")).toHaveValue("raw:1");
+  await panel.getByRole("button", { name: "生成解释", exact: true }).click();
+  await panel.getByLabel("解释范围").selectOption("file");
+  await expect(panel.getByRole("button", { name: "生成解释", exact: true })).toBeEnabled();
+  await page.waitForTimeout(450);
+  await expect(panel.getByRole("region", { name: "生成的解释" })).toHaveCount(0);
+  expect(
+    await page.evaluate(
+      () => (window as unknown as { __DIFFKIN_TEST_CALLS__: string[] }).__DIFFKIN_TEST_CALLS__,
+    ),
+  ).toContain("cancel_job");
+});
+
+test("missing model tools leave ordinary review available", async ({ page }) => {
+  await bridge(page, { missingCli: true });
+  await open(page, false);
+  await page.getByRole("button", { name: "AI 解释", exact: true }).click();
+  await expect(page.getByRole("button", { name: "生成解释", exact: true })).toBeDisabled();
+  await expect(page.getByText(/未找到可用的 Codex/)).toBeVisible();
+  await page.getByRole("button", { name: "关闭解释" }).click();
+  await expect(page.getByLabel("修改后源码")).toContainText("balance >= amount");
+});
+
+test("quiz waits for answers, grades the final choices, and retries locally", async ({ page }) => {
+  await bridge(page, { failQuizRetry: true });
+  await open(page, false);
+  await page.getByRole("button", { name: "变更测验", exact: true }).click();
+  const panel = page.getByRole("complementary", { name: "变更测验" });
+  await expect(panel.getByLabel("测验范围")).toHaveValue("file");
+  await expect(panel).toContainText("共 3 道单选题");
+  const generationCount = () =>
+    page.evaluate(
+      () =>
+        (window as unknown as { __DIFFKIN_TEST_CALLS__: string[] }).__DIFFKIN_TEST_CALLS__.filter(
+          (c) => c === "quiz_generate",
+        ).length,
+    );
+  expect(await generationCount()).toBe(0);
+  await panel.getByRole("button", { name: "生成测验" }).click();
+  await expect(panel.getByText("等号使相等的输入通过。")).toHaveCount(0);
+  await expect(panel.getByRole("button", { name: "下一题" })).toBeDisabled();
+  await panel.getByRole("radio", { name: "A · true", exact: true }).check();
+  await panel.getByRole("button", { name: "下一题" }).click();
+  await panel.getByRole("button", { name: "上一题" }).click();
+  await expect(panel.getByRole("radio", { name: "A · true", exact: true })).toBeChecked();
+  await panel.getByRole("radio", { name: "B · false", exact: true }).check();
+  await panel.getByRole("button", { name: "下一题" }).click();
+  await panel.getByRole("radio").first().check();
+  await panel.getByRole("button", { name: "下一题" }).click();
+  await expect(panel.getByRole("button", { name: "交卷评分" })).toBeDisabled();
+  await panel.getByRole("radio").nth(1).check();
+  await panel.getByRole("button", { name: "交卷评分" }).click();
+  await expect(panel.getByRole("heading", { name: "答对 2 / 3 题" })).toBeVisible();
+  await expect(panel).toContainText("你的选择 B · false");
+  await panel.getByText("核对源码", { exact: false }).first().click();
+  await expect(panel.locator("pre").first()).toContainText("+ L2 | return balance >= amount");
+  await panel.getByRole("button", { name: "重新出题" }).click();
+  await expect(panel.getByText("模型服务暂时不可用")).toBeVisible();
+  await expect(panel.getByRole("heading", { name: "答对 2 / 3 题" })).toBeVisible();
+  await panel.getByRole("button", { name: "重答这套题" }).click();
+  await expect(panel.getByRole("button", { name: "下一题" })).toBeDisabled();
+  expect(await generationCount()).toBe(2);
+});
+
+test("a scope switch discards late quiz questions", async ({ page }) => {
+  await bridge(page, { explanationDelay: 300 });
+  await open(page, false);
+  await page.getByRole("button", { name: "变更测验", exact: true }).click();
+  const panel = page.getByRole("complementary", { name: "变更测验" });
+  await panel.getByRole("button", { name: "生成测验" }).click();
+  await panel.getByLabel("测验范围").selectOption("raw:1");
+  await expect(panel.getByRole("button", { name: "生成测验" })).toBeEnabled();
+  await page.waitForTimeout(400);
+  await expect(panel.getByRole("region", { name: "答题" })).toHaveCount(0);
 });

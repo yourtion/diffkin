@@ -125,6 +125,10 @@ v1.0 以可信审查能力为门槛；M6 若未成熟，可继续作为实验功
 
 ## 7 M5 风险引导与首个跨仓库关联
 
+**2026-11-06：首个阅读切片。** 桌面已接入按需变更解释：选择冻结差异块或结构关系，预览两侧源码后交给本机 Codex / Claude，分别展示含义、行为差异、推测动机及经范围校验的证据行。参见 [AI 解释使用说明](../README.md#用本机-ai-解释一处变更)。此切片没有交付风险扫描、提交动机溯源、自动跨仓关联或 M5 完整退出条件。
+
+在 macOS 上分别使用本机 Codex CLI 0.162.1 和 Claude Code 2.1.278 跑通合成的 `balance > amount` → `balance >= amount` 样例：两次都返回了解释和范围内的源码引用。普通测试使用受控子进程，无需模型账户。要复验真实服务，可在已登录 CLI 的机器运行 `DIFFKIN_TEST_AI=codex cargo test -p diffkin-explanation installed_cli_explains_synthetic_change -- --ignored --nocapture`，或将 `codex` 换成 `claude`。单个样例证明调用可用，不能衡量模型解释的准确率。
+
 **演示：** API 字段从 `name` 变为 `displayName`，SDK 与 Web 中还有旧引用。工具呈现相关证据、尚未确认的兼容前提，并引导运行对应检查。
 
 交付一个云端和一个本地模型 Adapter、上下文选择与预算、结构化 Finding、根因去重、审查决策、OpenAPI 到 TS 调用方的首个关联切片，以及这三个仓库的候选依赖装配。先做好这个具体案例，再扩展协议和语言。
