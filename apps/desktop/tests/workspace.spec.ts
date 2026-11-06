@@ -53,6 +53,12 @@ async function bridge(page: Page, delayed = false, targetPaging = false) {
           invoke: async (command: string, args: Record<string, unknown>) => {
             calls.push(command);
             if (command === "cancel_job") return;
+            if (command === "open_comparison") {
+              await new Promise<void>((resolve) => {
+                Object.assign(window, { finishRefresh: resolve });
+              });
+              throw new Error("old repository capture failed");
+            }
             if (command === "workspace_list")
               return session
                 ? [
@@ -292,6 +298,25 @@ test("late workspace file results cannot replace a different repository", async 
   await page.waitForTimeout(750);
   await expect(page.locator(".merge-host")).toContainText("value1 = 1");
   await expect(page.locator(".merge-host")).not.toContainText("value0");
+});
+
+test("workspace repository switch clears refresh status and ignores its late failure", async ({
+  page,
+}) => {
+  await bridge(page);
+  await capture(page);
+  await page.getByRole("button", { name: "刷新比较" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "上一次比较" })).toBeVisible();
+  await page
+    .getByRole("navigation", { name: "工作区仓库" })
+    .getByRole("button", { name: /SDK/ })
+    .click();
+  await expect(page.locator(".merge-host")).toContainText("value1 = 1");
+  await page.evaluate(() => (window as unknown as { finishRefresh(): void }).finishRefresh());
+  await expect(page.getByText(/上一次比较/)).toHaveCount(0);
+  await expect(
+    page.getByRole("alert").filter({ hasText: "old repository capture failed" }),
+  ).toHaveCount(0);
 });
 
 test("manual relation target files can be paged past the first 200", async ({ page }) => {

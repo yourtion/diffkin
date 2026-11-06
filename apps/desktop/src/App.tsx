@@ -21,6 +21,7 @@ import { WorkspacePanel } from "./components/WorkspacePanel";
 import { ValidationPanel } from "./components/ValidationPanel";
 import { RepositoryPicker } from "./components/RepositoryPicker";
 import { RevisionPicker } from "./components/RevisionPicker";
+import { CaptureNotices } from "./components/CaptureNotices";
 import { workspaceClient, sameBasis } from "./lib/workspace-client";
 
 const modeNames = {
@@ -100,15 +101,18 @@ export function App({
   const [filter, setFilter] = useState("");
   const [reviews, setReviews] = useState(readReviews);
   const [reviewBases, setReviewBases] = useState<Record<string, string>>({});
-  const [pending, setPending] = useState<"capture" | "file" | null>(null);
+  const [capturing, setCapturing] = useState(false);
+  const [loadingFile, setLoadingFile] = useState(false);
+  const pending = capturing ? "capture" : loadingFile ? "file" : null;
   const [paging, setPaging] = useState(false);
-  const [taskStatus, setTaskStatus] = useState<string | null>(null);
+  const [cancelled, setCancelled] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const captureGeneration = useRef(new Generation());
   const fileGeneration = useRef(new Generation());
   const pageGeneration = useRef(new Generation());
   const captureJob = useRef<string | null>(null);
   const fileJob = useRef<string | null>(null);
+  const capturedPath = useRef<string | null>(null);
   const pathInput = useRef<HTMLInputElement>(null);
   const pickerButton = useRef<HTMLButtonElement>(null);
   const files = manifest?.files;
@@ -127,29 +131,63 @@ export function App({
     },
     [api],
   );
-  function cancel() {
-    captureGeneration.current.next();
+  function beginComparisonOperation() {
     fileGeneration.current.next();
     pageGeneration.current.next();
     cancelOne(captureJob);
     cancelOne(fileJob);
-    setPending(null);
+    setCapturing(false);
+    setLoadingFile(false);
     setPaging(false);
-    setTaskStatus("已取消。可以继续阅读当前快照，或重新打开比较。");
+    setCancelled(false);
+    setError(null);
+    return captureGeneration.current.next();
+  }
+  function cancel() {
+    beginComparisonOperation();
+    setCancelled(true);
+  }
+  function changeRepository(repository: string) {
+    setSpec({ ...spec, repository });
+    if (repository.trim() === spec.repository.trim()) return;
+    beginComparisonOperation();
+    if ((manifest || workspaceSession) && !isCurrentRepository(repository.trim()))
+      leaveComparison();
+  }
+  function isCurrentRepository(path: string) {
+    return manifest !== null && (path === capturedPath.current || path === manifest.repository);
+  }
+  function leaveComparison() {
+    capturedPath.current = null;
+    setWorkspaceSession(null);
+    setRepositoryId(null);
+    setManifest(null);
+    resetComparisonView();
+  }
+  function resetComparisonView() {
+    setData(null);
+    setAnalysisReady(false);
+    setSelectedFile(null);
+    setHistory({ snapshot: "", files: [], index: -1 });
+    setReviewBases({});
+    setEvent(null);
+    setScope(false);
+    setAiPanel(null);
+    setFilter("");
+    setCatalogBusy(false);
+    setCatalogError(null);
   }
   async function selectFile(file: FileSummary, snapshot = manifest, fromHistory = false) {
     if (!snapshot) return;
-    if (history.snapshot !== snapshot.id)
-      setHistory({ snapshot: snapshot.id, files: [], index: -1 });
-    if (
-      !fromHistory &&
-      (history.snapshot !== snapshot.id || history.files[history.index]?.id !== file.id)
-    ) {
-      const preceding =
-        history.snapshot === snapshot.id ? history.files.slice(0, history.index + 1) : [];
-      const files = [...preceding, file].slice(-100);
-      setHistory({ snapshot: snapshot.id, files, index: files.length - 1 });
-    }
+    if (!fromHistory)
+      setHistory((current) => {
+        if (current.snapshot === snapshot.id && current.files[current.index]?.id === file.id)
+          return current;
+        const preceding =
+          current.snapshot === snapshot.id ? current.files.slice(0, current.index + 1) : [];
+        const files = [...preceding, file].slice(-100);
+        return { snapshot: snapshot.id, files, index: files.length - 1 };
+      });
     cancelOne(fileJob);
     const generation = fileGeneration.current.next();
     const job = jobId();
@@ -160,7 +198,8 @@ export function App({
     setAnalysisReady(false);
     setEvent(null);
     setScope(false);
-    setPending("file");
+    setLoadingFile(true);
+    setCancelled(false);
     setError(null);
     let settled = false;
     void api
@@ -193,25 +232,20 @@ export function App({
       settled = true;
       if (fileGeneration.current.isCurrent(generation)) {
         fileJob.current = null;
-        setPending(null);
+        setLoadingFile(false);
       }
     }
   }
   async function open() {
     if (!available || !spec.repository.trim()) return;
-    cancelOne(captureJob);
-    cancelOne(fileJob);
-    fileGeneration.current.next();
-    pageGeneration.current.next();
-    const generation = captureGeneration.current.next();
+    const generation = beginComparisonOperation();
     const job = jobId();
     captureJob.current = job;
-    const previousPath = selectedFile?.path;
-    setTaskStatus("正在捕获新快照，当前内容仍属于上一次比较。");
-    setError(null);
-    setPending("capture");
-    setPaging(false);
     const request = { ...spec, repository: spec.repository.trim() };
+    const sameRepository = isCurrentRepository(request.repository);
+    const previousPath = sameRepository ? selectedFile?.path : undefined;
+    if ((manifest || workspaceSession) && !sameRepository) leaveComparison();
+    setCapturing(true);
     try {
       let result = await api.open(request, job);
       if (!captureGeneration.current.isCurrent(generation)) return;
@@ -227,30 +261,39 @@ export function App({
       setRepositoryId(null);
       setReviewBases({});
       setEvent(null);
-      setTaskStatus(null);
-      if (manifest && manifest.repository !== result.repository) setFilter("");
+      capturedPath.current = request.repository;
+      if (manifest && manifest.repository !== result.repository) resetComparisonView();
       setManifest(result);
       settings.update((current) => ({
         ...current,
         recent: [...new Set([request.repository, ...current.recent])].slice(0, 8),
       }));
       setShowCompareSettings(false);
-      const next = result.files.find((file) => file.path === previousPath) ?? result.files[0];
+      const next =
+        (result.repository === manifest?.repository
+          ? result.files.find((file) => file.path === previousPath)
+          : undefined) ?? result.files[0];
       if (next) void selectFile(next, result);
       else {
-        setData(null);
-        setSelectedFile(null);
-        setPending(null);
+        cancelOne(fileJob);
+        fileGeneration.current.next();
+        setLoadingFile(false);
+        resetComparisonView();
       }
     } catch (cause) {
       if (captureGeneration.current.isCurrent(generation)) {
         setShowCompareSettings(true);
-        setError(message(cause) + "；可填写路径范围（如 packages/app）后重新捕获。");
-        setTaskStatus(null);
-        setPending(null);
+        const overBudget =
+          cause && typeof cause === "object" && "code" in cause && cause.code === "budget-exceeded";
+        setError(
+          message(cause) + (overBudget ? "；可填写路径范围（如 packages/app）后重新捕获。" : ""),
+        );
       }
     } finally {
-      if (captureGeneration.current.isCurrent(generation)) captureJob.current = null;
+      if (captureGeneration.current.isCurrent(generation)) {
+        captureJob.current = null;
+        setCapturing(false);
+      }
     }
   }
   async function more() {
@@ -341,26 +384,13 @@ export function App({
       void selectFile(file, manifest, true);
     }
   }
-  function beginWorkspaceOperation() {
-    cancelOne(captureJob);
-    cancelOne(fileJob);
-    fileGeneration.current.next();
-    pageGeneration.current.next();
-    setPending(null);
-    setPaging(false);
-    return captureGeneration.current.next();
-  }
   function activateWorkspace(
     session: WorkspaceSession,
     preferredRepository?: string,
     ticket?: number,
   ) {
     if (ticket !== undefined && !captureGeneration.current.isCurrent(ticket)) return;
-    cancelOne(captureJob);
-    cancelOne(fileJob);
-    captureGeneration.current.next();
-    fileGeneration.current.next();
-    pageGeneration.current.next();
+    beginComparisonOperation();
     const snapshot = session.snapshots.find((item) => item.id === session.activeSnapshotId);
     const selected =
       snapshot?.repositories.find((repo) => repo.repositoryId === preferredRepository) ??
@@ -369,16 +399,10 @@ export function App({
     setWorkspaceSession(session);
     setRepositoryId(selected?.repositoryId ?? null);
     setManifest(selected?.manifest ?? null);
-    setData(null);
-    setSelectedFile(null);
-    setEvent(null);
-    setReviewBases({});
-    setFilter("");
-    setScope(false);
-    setPaging(false);
-    setPending(null);
+    resetComparisonView();
     setError(selected?.error ? message(selected.error) : null);
     const config = session.config.repositories.find((repo) => repo.id === selected?.repositoryId);
+    capturedPath.current = config?.spec.repository.trim() ?? null;
     if (config) setSpec(config.spec);
     if (selected?.manifest?.files[0])
       void selectFile(selected.manifest.files[0], selected.manifest);
@@ -414,6 +438,7 @@ export function App({
         (record) => record.state === "reviewed" && sameBasis(record.basis, expected),
       );
       setSavingReview(true);
+      const generation = captureGeneration.current.ticket();
       try {
         const basis = await workspaceClient.basis(
           workspaceSession.config.id,
@@ -429,7 +454,7 @@ export function App({
           ),
         );
       } catch (cause) {
-        setError(message(cause));
+        if (captureGeneration.current.isCurrent(generation)) setError(message(cause));
       } finally {
         setSavingReview(false);
       }
@@ -633,7 +658,8 @@ export function App({
             aria-label="Git 仓库路径"
             placeholder="输入本地 Git 仓库路径…"
             value={spec.repository}
-            onChange={(e) => setSpec({ ...spec, repository: e.target.value })}
+            disabled={workspaceBusy}
+            onChange={(e) => changeRepository(e.target.value)}
             list="recent-repositories"
           />
         </label>
@@ -648,9 +674,10 @@ export function App({
           />
         </label>
         <RepositoryPicker
+          key={spec.repository}
           buttonRef={pickerButton}
           value={spec.repository}
-          onChoose={(repository) => setSpec({ ...spec, repository })}
+          onChoose={changeRepository}
           disabled={!available || pending === "capture" || workspaceBusy}
         />
         <datalist id="recent-repositories">
@@ -737,7 +764,7 @@ export function App({
           repositoryId={repositoryId}
           selectedFile={selectedFile}
           onActivate={activateWorkspace}
-          onBegin={beginWorkspaceOperation}
+          onBegin={beginComparisonOperation}
           onUpdate={updateWorkspace}
           onClose={() => setShowWorkspace(false)}
           onBusyChange={setWorkspaceBusy}
@@ -768,21 +795,17 @@ export function App({
       {!available && (
         <p className="notice">浏览器仅预览界面。请运行桌面应用以读取本地 Git 仓库。</p>
       )}
-      {taskStatus && (
-        <p className="notice compact" role="status">
-          {taskStatus}
-        </p>
-      )}
       {error && (
         <p className="error" role="alert">
           {error}
         </p>
       )}
-      {manifest?.warnings.map((warning, index) => (
-        <p className="notice compact" key={index}>
-          {warning}
-        </p>
-      ))}
+      {manifest && !validationOpen && (
+        <CaptureNotices
+          key={`${manifest.repository}:${manifest.id}`}
+          warnings={manifest.warnings}
+        />
+      )}
       <div
         className={`workspace ${!manifest ? "unopened" : ""}`}
         aria-busy={pending !== null}
@@ -1086,12 +1109,16 @@ export function App({
         </div>
       )}
       <footer>
-        <span>
-          {pending === "capture"
-            ? "冻结文件与比较基线…"
-            : pending === "file"
-              ? "计算文本与结构变化…"
-              : "就绪"}
+        <span role="status">
+          {cancelled
+            ? "已取消"
+            : pending === "capture"
+              ? manifest
+                ? "正在刷新，当前显示上一次比较"
+                : "正在捕获仓库快照…"
+              : pending === "file"
+                ? "计算文本与结构变化…"
+                : "就绪"}
         </span>
         <span>
           {manifest

@@ -284,6 +284,7 @@ export function WorkspacePanel({
               }
             />
             <RepositoryPicker
+              key={repo.spec.repository}
               value={repo.spec.repository}
               label={`选择仓库 ${index + 1} 目录`}
               disabled={!available || busy}

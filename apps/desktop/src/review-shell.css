@@ -45,6 +45,19 @@
 .review-context button {
   white-space: nowrap;
 }
+.capture-notes {
+  padding: 4px 14px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+}
+.capture-notes summary {
+  width: fit-content;
+  cursor: pointer;
+}
+.capture-notes p {
+  margin: 6px 0;
+}
 .review-shell .workspace {
   position: relative;
 }

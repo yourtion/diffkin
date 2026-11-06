@@ -86,6 +86,7 @@ async function bridge(
     delayFirst?: number;
     delayPreview?: number;
     delayCapture?: number;
+    warnings?: string[];
     refreshIdentity?: boolean;
     refreshRules?: boolean;
     delayPage?: number;
@@ -228,6 +229,7 @@ async function bridge(
               return {
                 ...manifest,
                 repository: (args.spec as { repository: string }).repository,
+                warnings: options.warnings ?? [],
                 id: options.refreshIdentity ? `frozen-${captures}` : manifest.id,
                 totalFiles: options.delayPage ? 3 : manifest.totalFiles,
                 files: options.count ? manifest.files.slice(0, 200) : manifest.files,
@@ -808,6 +810,40 @@ test("failed refresh preserves frozen content and current file", async ({ page }
   await expect(page.locator(".merge-host")).toContainText("other = 2");
 });
 
+test("routine capture notes stay out of the way while scope warnings remain visible", async ({
+  page,
+}) => {
+  const warnings = [
+    "Working-tree bytes are captured literally; clean/smudge filters and line-ending conversion are not executed. Capture is not a filesystem-wide atomic transaction.",
+    "Fast capture uses Git index/stat metadata for unchanged tracked files. Changed, flagged, racy or known conversion-affected files are hashed literally. Historical conversion rules may no longer be discoverable; enable full literal verification to check all existing tracked bytes.",
+    "Path scope: src. 范围外内容未捕获、未审查。",
+  ];
+  await bridge(page, { warnings });
+  await open(page, false);
+  await expect(page.getByText(warnings[2])).toBeVisible();
+  await expect(page.locator(".notice", { hasText: warnings[0] })).not.toBeVisible();
+  await expect(page.getByText(/快速捕获使用 Git/)).not.toBeVisible();
+  await page.getByText("快照捕获说明", { exact: true }).click();
+  await expect(page.getByText(/快速捕获使用 Git/)).toBeVisible();
+});
+
+test("switching repositories clears the old comparison even when the new capture fails", async ({
+  page,
+}) => {
+  await bridge(page, { warnings: ["previous repository warning"], failRefresh: true });
+  await open(page, false);
+  await expect(page.getByText("previous repository warning")).toBeVisible();
+  await page.getByRole("button", { name: "比较设置" }).click();
+  await page.getByLabel("Git 仓库路径").fill("/missing");
+  await expect(page.getByText("previous repository warning")).toHaveCount(0);
+  await page.getByRole("button", { name: "打开比较", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText("capture failed");
+  await expect(page.getByText("previous repository warning")).toHaveCount(0);
+  await expect(page.locator(".file-heading h2")).toHaveCount(0);
+  await page.getByLabel("Git 仓库路径").fill("/next");
+  await expect(page.getByRole("alert")).toHaveCount(0);
+});
+
 test("frozen text precedes analysis and cannot be marked reviewed prematurely", async ({
   page,
 }) => {
@@ -898,7 +934,7 @@ test("changing repositories clears old filters while same-repository refresh pre
   await expect(page.getByLabel("筛选文件")).toHaveValue("withdraw");
   await page.getByRole("button", { name: "比较设置", exact: true }).click();
   await page.getByLabel("Git 仓库路径").fill("/another-repo");
-  await page.getByRole("button", { name: "应用比较设置", exact: true }).click();
+  await page.getByRole("button", { name: "打开比较", exact: true }).click();
   await expect(page.getByLabel("筛选文件")).toHaveValue("");
   await expect(page.getByRole("button", { name: "src/other.ts", exact: true })).toBeVisible();
 });

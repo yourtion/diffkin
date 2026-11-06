@@ -2,7 +2,12 @@ import { expect, test, type Page } from "@playwright/test";
 
 async function bridge(
   page: Page,
-  options: { corrupt?: boolean; delayLoad?: boolean; slowSave?: boolean } = {},
+  options: {
+    corrupt?: boolean;
+    delayLoad?: boolean;
+    slowSave?: boolean;
+    pickerFailure?: boolean;
+  } = {},
 ) {
   await page.addInitScript((options) => {
     Object.defineProperty(window, "isTauri", { value: true });
@@ -24,11 +29,13 @@ async function bridge(
             localStorage.setItem("test.native.settings", JSON.stringify(saved));
             return;
           }
-          if (command === "pick_repository_directory")
+          if (command === "pick_repository_directory") {
+            if (options.pickerFailure) throw new Error("directory picker failed");
             return (
               (window as unknown as { pickerResults: (string | null)[] }).pickerResults.shift() ??
               null
             );
+          }
           if (command === "cancel_job") return;
           if (command === "list_repository_refs") {
             if (args.repository === "/slow")
@@ -116,6 +123,14 @@ test("directory selection and cancellation never open a repository automatically
   });
   await page.getByRole("button", { name: "选择仓库 1 目录", exact: true }).click();
   await expect(page.getByLabel("仓库 1 路径", { exact: true })).toHaveValue("/workspace/other");
+});
+
+test("changing the repository clears a directory picker error", async ({ page }) => {
+  await bridge(page, { pickerFailure: true });
+  await page.getByRole("button", { name: "选择仓库目录" }).click();
+  await expect(page.getByRole("alert")).toContainText("directory picker failed");
+  await page.getByLabel("Git 仓库路径").fill("/repo");
+  await expect(page.getByRole("alert")).toHaveCount(0);
 });
 
 test("branch choices are paged, while arbitrary commit IDs remain editable", async ({ page }) => {
