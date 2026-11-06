@@ -13,7 +13,7 @@ use tauri::{Manager, State};
 
 #[derive(Default)]
 pub struct WorkspaceRuntime {
-    gate: Mutex<()>,
+    store: Mutex<Option<WorkspaceStore>>,
 }
 type WorkspaceShared = Arc<WorkspaceRuntime>;
 fn location(app: &tauri::AppHandle) -> Result<PathBuf, RepositoryError> {
@@ -27,13 +27,17 @@ async fn access<T: Send + 'static>(
     app: tauri::AppHandle,
     scope: WorkspaceShared,
     cancel: Arc<AtomicBool>,
-    operation: impl FnOnce(WorkspaceStore) -> Result<T, RepositoryError> + Send + 'static,
+    operation: impl FnOnce(&WorkspaceStore) -> Result<T, RepositoryError> + Send + 'static,
 ) -> Result<T, RepositoryError> {
     let path = location(&app)?;
     tauri::async_runtime::spawn_blocking(move || {
-        let _guard = permit(&scope.gate, &cancel)?;
+        let mut store = permit(&scope.store, &cancel)?;
         check_cancel(&cancel)?;
-        operation(WorkspaceStore::new(path)?)
+        let store = match store.as_ref() {
+            Some(existing) if path.try_exists().map_err(internal)? => existing,
+            _ => store.insert(WorkspaceStore::new(path)?),
+        };
+        operation(store)
     })
     .await
     .map_err(internal)?
@@ -73,10 +77,10 @@ pub async fn workspace_capture(
     let worker = runtime.clone();
     let cancelled = cancel.clone();
     let result = access(app, scope.inner().clone(), cancel, move |store| {
-        let session = store.capture(&config, &cancelled)?;
+        let (session, frozen) = store.capture_and_open(&config, &cancelled)?;
         check_cancel(&cancelled)?;
-        worker.install_workspace(Arc::new(store.restore(&session.config.id, None)?));
-        store.load(&session.config.id)
+        worker.install_workspace(Arc::new(frozen));
+        Ok(session)
     })
     .await;
     runtime.finish(&job_id);

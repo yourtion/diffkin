@@ -10,7 +10,7 @@ use std::{
     path::{Path, PathBuf},
     sync::{
         atomic::{AtomicBool, AtomicU64, Ordering},
-        Arc,
+        Arc, Mutex,
     },
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
@@ -266,6 +266,15 @@ struct Archive {
     reviews: Vec<ReviewRecord>,
 }
 impl Archive {
+    fn summary(&self) -> WorkspaceSummary {
+        WorkspaceSummary {
+            id: self.config.id.clone(),
+            name: self.config.name.clone(),
+            repository_count: self.config.repositories.len() as u32,
+            snapshot_count: self.snapshots.len() as u32,
+            error: None,
+        }
+    }
     fn new(config: WorkspaceConfig) -> Self {
         Self {
             schema_version: 1,
@@ -367,14 +376,15 @@ impl Archive {
 }
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct Envelope {
+struct Envelope<T> {
     format_version: u32,
     checksum: String,
-    payload: Archive,
+    payload: T,
 }
 
 pub struct WorkspaceStore {
     root: PathBuf,
+    summaries: Mutex<BTreeMap<String, (String, WorkspaceSummary)>>,
 }
 impl WorkspaceStore {
     pub fn new(root: PathBuf) -> Result<Self, RepositoryError> {
@@ -395,6 +405,7 @@ impl WorkspaceStore {
         }
         Ok(Self {
             root: fs::canonicalize(root).map_err(invalid)?,
+            summaries: Mutex::default(),
         })
     }
     fn ensure_root(&self) -> Result<(), RepositoryError> {
@@ -440,7 +451,7 @@ impl WorkspaceStore {
             }
         }
     }
-    fn read(&self, id: &str) -> Result<Archive, RepositoryError> {
+    fn read_bytes(&self, id: &str) -> Result<Vec<u8>, RepositoryError> {
         let path = self.path(id)?;
         let metadata = fs::symlink_metadata(&path).map_err(invalid)?;
         if !metadata.is_file()
@@ -449,7 +460,7 @@ impl WorkspaceStore {
         {
             return Err(budget("Workspace file is not regular or exceeds 64 MiB"));
         }
-        let mut bytes = Vec::new();
+        let mut bytes = Vec::with_capacity(metadata.len() as usize);
         File::open(path)
             .map_err(invalid)?
             .take(MAX_ARCHIVE as u64 + 1)
@@ -458,7 +469,10 @@ impl WorkspaceStore {
         if bytes.len() > MAX_ARCHIVE {
             return Err(budget("Workspace file grew past 64 MiB"));
         }
-        let envelope: Envelope = serde_json::from_slice(&bytes).map_err(invalid)?;
+        Ok(bytes)
+    }
+    fn decode(id: &str, bytes: &[u8]) -> Result<Envelope<Archive>, RepositoryError> {
+        let envelope: Envelope<Archive> = serde_json::from_slice(bytes).map_err(invalid)?;
         if envelope.format_version != 1
             || envelope.payload.config.id != id
             || hash(&json(&envelope.payload)?) != envelope.checksum
@@ -466,22 +480,19 @@ impl WorkspaceStore {
             return Err(invalid("Workspace checksum, identity or format is invalid"));
         }
         envelope.payload.validate()?;
-        Ok(envelope.payload)
+        Ok(envelope)
+    }
+    fn read(&self, id: &str) -> Result<Archive, RepositoryError> {
+        Ok(Self::decode(id, &self.read_bytes(id)?)?.payload)
     }
     fn write(&self, archive: &Archive) -> Result<(), RepositoryError> {
         archive.validate()?;
-        let bytes = json(&Envelope {
+        let envelope = Envelope {
             format_version: 1,
             checksum: hash(&json(archive)?),
-            payload: Archive {
-                schema_version: archive.schema_version,
-                config: archive.config.clone(),
-                snapshots: archive.snapshots.clone(),
-                active_snapshot_id: archive.active_snapshot_id.clone(),
-                relations: archive.relations.clone(),
-                reviews: archive.reviews.clone(),
-            },
-        })?;
+            payload: archive,
+        };
+        let bytes = json(&envelope)?;
         if bytes.len() > MAX_ARCHIVE {
             return Err(budget("Workspace file exceeds 64 MiB"));
         }
@@ -523,10 +534,18 @@ impl WorkspaceStore {
                 .map_err(invalid)?;
             Ok(())
         })();
-        if result.is_err() {
+        if let Err(error) = result {
             let _ = fs::remove_file(temporary);
+            return Err(error);
         }
-        result
+        if let Ok(mut cache) = self.summaries.lock() {
+            cache.retain(|id, _| files.iter().any(|(present, _)| present == id));
+            cache.insert(
+                archive.config.id.clone(),
+                (envelope.checksum, archive.summary()),
+            );
+        }
+        Ok(())
     }
     fn managed_files(&self) -> Result<Vec<(String, u64)>, RepositoryError> {
         self.ensure_root()?;
@@ -553,25 +572,37 @@ impl WorkspaceStore {
         Ok(files)
     }
     pub fn list(&self) -> Result<Vec<WorkspaceSummary>, RepositoryError> {
-        self.managed_files()?
-            .into_iter()
-            .map(|(id, _)| match self.read(&id) {
-                Ok(archive) => Ok(WorkspaceSummary {
-                    id,
-                    name: archive.config.name,
-                    repository_count: archive.config.repositories.len() as u32,
-                    snapshot_count: archive.snapshots.len() as u32,
-                    error: None,
-                }),
-                Err(error) => Ok(WorkspaceSummary {
-                    name: id.clone(),
-                    id,
-                    repository_count: 0,
-                    snapshot_count: 0,
-                    error: Some(error.to_string()),
-                }),
-            })
-            .collect()
+        let files = self.managed_files()?;
+        let mut cache = self.summaries.lock().map_err(invalid)?;
+        cache.retain(|id, _| files.iter().any(|(present, _)| present == id));
+        let mut summaries = Vec::with_capacity(files.len());
+        for (id, _) in files {
+            let summary = self.read_bytes(&id).and_then(|bytes| {
+                if let Some((checksum, summary)) = cache.get(&id) {
+                    let raw: Envelope<&serde_json::value::RawValue> =
+                        serde_json::from_slice(&bytes).map_err(invalid)?;
+                    // Only an exact match of a previously validated payload can skip decoding it.
+                    if raw.format_version == 1
+                        && raw.checksum == *checksum
+                        && hash(raw.payload.get().as_bytes()) == *checksum
+                    {
+                        return Ok(summary.clone());
+                    }
+                }
+                let envelope = Self::decode(&id, &bytes)?;
+                let summary = envelope.payload.summary();
+                cache.insert(id.clone(), (envelope.checksum, summary.clone()));
+                Ok(summary)
+            });
+            summaries.push(summary.unwrap_or_else(|error| WorkspaceSummary {
+                name: id.clone(),
+                id,
+                repository_count: 0,
+                snapshot_count: 0,
+                error: Some(error.to_string()),
+            }));
+        }
+        Ok(summaries)
     }
     pub fn load(&self, id: &str) -> Result<WorkspaceSession, RepositoryError> {
         Ok(self.read(id)?.session())
@@ -596,6 +627,14 @@ impl WorkspaceStore {
         config: &WorkspaceConfig,
         cancel: &AtomicBool,
     ) -> Result<WorkspaceSession, RepositoryError> {
+        self.capture_and_open(config, cancel)
+            .map(|(session, _)| session)
+    }
+    pub fn capture_and_open(
+        &self,
+        config: &WorkspaceConfig,
+        cancel: &AtomicBool,
+    ) -> Result<(WorkspaceSession, FrozenWorkspace), RepositoryError> {
         cancelled(cancel)?;
         self.save_config(config)?;
         let snapshot = capture_workspace(config, cancel)?;
@@ -609,7 +648,13 @@ impl WorkspaceStore {
         archive.snapshots.push(snapshot);
         archive.trim()?;
         self.write(&archive)?;
-        Ok(archive.session())
+        let session = archive.session();
+        // trim always retains the active snapshot at the end.
+        let frozen = archive
+            .snapshots
+            .pop()
+            .ok_or_else(|| stale("Workspace has no snapshot"))?;
+        Ok((session, frozen))
     }
     pub fn restore(
         &self,

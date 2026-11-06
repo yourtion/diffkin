@@ -10,7 +10,7 @@ license.workspace = true
 diffkin-analysis.workspace = true
 diffkin-domain.workspace = true
 serde = { workspace = true, features = ["rc"] }
-serde_json.workspace = true
+serde_json = { workspace = true, features = ["raw_value"] }
 
 [lints]
 workspace = true
@@ -20,3 +20,8 @@ version = "0.10"
 
 [dependencies.sha2]
 version = "0.10"
+
+# sha2 0.10 gates its Apple Silicon hardware backend behind this feature.
+[target.'cfg(all(target_arch = "aarch64", target_os = "macos"))'.dependencies.sha2]
+version = "0.10"
+features = ["asm"]

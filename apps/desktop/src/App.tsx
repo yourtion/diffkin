@@ -10,6 +10,7 @@ import type {
   EvidenceBasis,
 } from "@diffkin/protocol";
 import { client, desktopAvailable, Generation, message, type DiffkinClient } from "./lib/client";
+import { FileAnalysisCache } from "./lib/file-analysis-cache";
 import { usePreferences } from "./lib/use-preferences";
 import { PreferencesPanel } from "./components/PreferencesPanel";
 import { ChangeNavigator } from "./components/ChangeNavigator";
@@ -101,6 +102,7 @@ export function App({
   const [selectedFile, setSelectedFile] = useState<FileSummary | null>(null);
   const [analysisReady, setAnalysisReady] = useState(false);
   const [data, setData] = useState<FileAnalysis | null>(null);
+  const [fileCache] = useState(() => new FileAnalysisCache());
   const [event, setEvent] = useState<ChangeEvent | null>(null);
   const [scope, setScope] = useState(false);
   const searchInput = useRef<HTMLInputElement>(null);
@@ -231,17 +233,29 @@ export function App({
       });
     cancelOne(fileJob);
     const generation = fileGeneration.current.next();
-    const job = jobId();
-    fileJob.current = job;
     setSelectedFile(file);
     setAiPanel(null);
+    setScope(false);
+    setCancelled(false);
+    setError(null);
+    const show = (result: FileAnalysis) => {
+      setData(result);
+      setAnalysisReady(true);
+      setEvent(result.analysis?.events.find((item) => item.facets.includes("move")) ?? null);
+      setReviewBases((current) => ({ ...current, [file.id]: analysisBasis(result) }));
+    };
+    const cached = fileCache.get(snapshot.id, file.id);
+    if (cached) {
+      show(cached);
+      setLoadingFile(false);
+      return;
+    }
+    const job = jobId();
+    fileJob.current = job;
     setData(null);
     setAnalysisReady(false);
     setEvent(null);
-    setScope(false);
     setLoadingFile(true);
-    setCancelled(false);
-    setError(null);
     let settled = false;
     void api
       .preview(snapshot.id, file.id)
@@ -263,10 +277,8 @@ export function App({
       if (result.file.summary.id !== file.id) throw new Error("收到不属于当前文件的结果");
       if (result.analysis && result.analysis.schemaVersion !== 1)
         throw new Error("不支持的比较协议版本");
-      setData(result);
-      setAnalysisReady(true);
-      setEvent(result.analysis?.events.find((item) => item.facets.includes("move")) ?? null);
-      setReviewBases((current) => ({ ...current, [file.id]: analysisBasis(result) }));
+      fileCache.remember(snapshot.id, result);
+      show(result);
     } catch (cause) {
       if (fileGeneration.current.isCurrent(generation)) setError(message(cause));
     } finally {
@@ -280,6 +292,7 @@ export function App({
   async function open(input: ComparisonSpec, refresh = false) {
     if (!available || capturing || workspaceBusy || !input.repository.trim()) return;
     const generation = beginComparisonOperation();
+    fileCache.clear();
     const job = jobId();
     captureJob.current = job;
     const request = { ...input, repository: input.repository.trim() };
@@ -303,6 +316,8 @@ export function App({
         result = await api.catalog(result.id);
       if (!captureGeneration.current.isCurrent(generation)) return;
       setWorkspaceSession(null);
+      // The previous snapshot can still be browsed while capture is in flight.
+      fileCache.clear();
       setRepositoryId(null);
       setReviewBases({});
       setEvent(null);
@@ -442,6 +457,9 @@ export function App({
     ticket?: number,
   ) {
     if (ticket !== undefined && !captureGeneration.current.isCurrent(ticket)) return;
+    // A ticket denotes a restore or capture. Switching repository tabs stays within the snapshot.
+    if (ticket !== undefined || session.activeSnapshotId !== workspaceSession?.activeSnapshotId)
+      fileCache.clear();
     beginComparisonOperation();
     const snapshot = session.snapshots.find((item) => item.id === session.activeSnapshotId);
     const selected =

@@ -102,7 +102,10 @@
         .slice(0, 3)
         .map((node) => node.getAttribute("aria-label"));
       if (files.length < 3) throw new Error("Benchmark requires three visible changed files");
-      for (const path of [files[1], files[2]]) {
+      // Refresh preserves the selected path. Measure cold visits on the other two files.
+      const currentPath = document.querySelector(".file-heading h2")?.title;
+      const [firstSwitch, secondSwitch] = files.filter((path) => path !== currentPath);
+      for (const path of [firstSwitch, secondSwitch]) {
         await control("reset");
         const selected = () => document.querySelector(".file-heading h2")?.title === path;
         const startFile = performance.now();
@@ -124,18 +127,19 @@
           path,
         });
       }
-      // Populate both entries before alternating; reset above deliberately evicts the first.
-      button(files[1]).click();
+      button(firstSwitch).click();
       await wait(
-        () => document.querySelector(".file-heading h2")?.title === files[1] && ready(),
+        () => document.querySelector(".file-heading h2")?.title === firstSwitch && ready(),
         "warm cache",
       );
       await painted();
       await measure(
         "cached-switch",
-        () => button(files[2]).click(),
+        () => button(secondSwitch).click(),
         () =>
-          document.querySelector(".file-heading h2")?.title === files[2] && ready() && readable(),
+          document.querySelector(".file-heading h2")?.title === secondSwitch &&
+          ready() &&
+          readable(),
         { iteration },
       );
       if (config.cancellation) {
