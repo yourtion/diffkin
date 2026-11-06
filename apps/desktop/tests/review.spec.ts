@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { FileAnalysisCache } from "../src/lib/file-analysis-cache";
 import type {
   ComparisonManifest,
   ComparisonSpec,
@@ -353,6 +354,41 @@ test("late responses cannot replace the newly selected file", async ({ page }) =
     () => (window as unknown as { __DIFFKIN_TEST_CALLS__: string[] }).__DIFFKIN_TEST_CALLS__,
   );
   expect(calls).toContain("cancel_job");
+});
+
+test("the WebView cache evicts least-recently used and oversized results", () => {
+  const cache = new FileAnalysisCache();
+  for (let i = 0; i < 16; i++) cache.remember(String(i), result);
+  expect(cache.get("0", first.id)).toBe(result);
+  cache.remember("16", result);
+  expect(cache.get("1", first.id)).toBeUndefined();
+  expect(cache.get("0", first.id)).toBe(result);
+  cache.remember("large", { ...result, notice: "x".repeat(256 * 1024) });
+  expect(cache.get("large", first.id)).toBeUndefined();
+});
+
+test("revisiting a frozen file reuses its analysis until the comparison is refreshed", async ({
+  page,
+}) => {
+  await bridge(page, { refreshRules: true });
+  await open(page);
+  await expect(page.locator(".analysis-info")).toContainText("test-v1");
+  const fileCalls = () =>
+    page.evaluate(() =>
+      (window as unknown as { __DIFFKIN_TEST_CALLS__: string[] }).__DIFFKIN_TEST_CALLS__.filter(
+        (call) => call === "preview_file" || call === "request_file",
+      ),
+    );
+  await page.getByRole("button", { name: "src/other.ts", exact: true }).click();
+  await expect(page.locator(".merge-host")).toContainText("other = 2");
+  await expect(page.getByRole("button", { name: "标记已审查" })).toBeEnabled();
+  const initialCalls = await fileCalls();
+  await page.getByRole("button", { name: "src/withdraw.ts", exact: true }).click();
+  await expect(page.locator(".analysis-info")).toContainText("test-v1");
+  expect(await fileCalls()).toEqual(initialCalls);
+  await page.getByRole("button", { name: "刷新比较" }).click();
+  await expect(page.locator(".analysis-info")).toContainText("test-v2");
+  expect((await fileCalls()).length).toBe(initialCalls.length + 2);
 });
 
 test("cancelled capture never publishes its late manifest", async ({ page }) => {

@@ -197,6 +197,68 @@ fn restored_revision_names_and_original_text_follow_the_captured_direction() {
 }
 
 #[test]
+fn capture_opens_the_persisted_snapshot_and_refresh_reads_new_worktree_bytes() {
+    let fixture = Fixture::new();
+    let mut config = fixture.config();
+    config.repositories.truncate(1);
+    let store = fixture.store();
+    let (first, frozen) = store.capture_and_open(&config, &token()).unwrap();
+    let first_basis = basis(&frozen, "frontend");
+    let updated = "export const updated = true;\n";
+    fs::write(fixture.0.join("frontend/src/index.ts"), updated).unwrap();
+    let (second, latest) = store.capture_and_open(&config, &token()).unwrap();
+    let latest_basis = basis(&latest, "frontend");
+    assert_ne!(first.active_snapshot_id, second.active_snapshot_id);
+    assert_ne!(first_basis.after_id, latest_basis.after_id);
+    assert_eq!(
+        second.active_snapshot_id.as_deref(),
+        Some(latest_basis.workspace_snapshot_id.as_str())
+    );
+    let restored = fixture.store().restore("project", None).unwrap();
+    assert_eq!(basis(&restored, "frontend"), latest_basis);
+    assert_eq!(
+        latest
+            .repository("frontend")
+            .unwrap()
+            .read_file(&latest_basis.file_id)
+            .unwrap()
+            .after
+            .as_deref(),
+        Some(updated)
+    );
+}
+
+#[test]
+fn listed_summaries_follow_other_writers_and_detect_same_size_tampering() {
+    let fixture = Fixture::new();
+    let mut config = fixture.config();
+    let reader = fixture.store();
+    let writer = fixture.store();
+    writer.save_config(&config).unwrap();
+    assert_eq!(reader.list().unwrap()[0].name, config.name);
+    config.name = "other-workspace-title!".into();
+    writer.save_config(&config).unwrap();
+    assert_eq!(reader.list().unwrap()[0].name, config.name);
+    let path = fixture.0.join("store/project.json");
+    let bytes = fs::read_to_string(&path).unwrap();
+    let forged = bytes.replace("other-workspace-title!", "other-workspace-title?");
+    assert_ne!(forged, bytes);
+    let modified = fs::metadata(&path).unwrap().modified().unwrap();
+    fs::write(&path, &forged).unwrap();
+    fs::OpenOptions::new()
+        .write(true)
+        .open(&path)
+        .unwrap()
+        .set_modified(modified)
+        .unwrap();
+    assert!(reader.list().unwrap()[0].error.is_some());
+    fs::write(&path, bytes).unwrap();
+    assert_eq!(reader.list().unwrap()[0].name, config.name);
+    fs::remove_file(path).unwrap();
+    assert!(reader.list().unwrap().is_empty());
+}
+
+#[test]
 fn saved_workspace_can_be_opened_before_its_first_capture() {
     let fixture = Fixture::new();
     let store = fixture.store();

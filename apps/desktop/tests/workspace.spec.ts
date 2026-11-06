@@ -266,6 +266,13 @@ test("workspace keeps same-path files and reviews separate, retains unchanged co
     .getByRole("button", { name: /API/ })
     .click();
   await expect(page.getByRole("button", { name: "✓ 已审查此版本", exact: true })).toBeVisible();
+  await expect(page.locator(".merge-host")).toContainText("value0 = 1");
+  const requests = await page.evaluate(() =>
+    (window as unknown as { __WORKSPACE_CALLS__: string[] }).__WORKSPACE_CALLS__.filter(
+      (call) => call === "request_file",
+    ),
+  );
+  expect(requests).toHaveLength(2);
   await page.screenshot({ path: "test-results/workspace-review.png", fullPage: true });
   await page.reload();
   await page.getByRole("button", { name: /API \+ SDK \+ Web/ }).click();

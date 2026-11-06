@@ -236,10 +236,10 @@ impl Runtime {
         result
     }
 }
-pub fn permit<'a>(
-    gate: &'a Mutex<()>,
+pub fn permit<'a, T>(
+    gate: &'a Mutex<T>,
     token: &AtomicBool,
-) -> Result<MutexGuard<'a, ()>, RepositoryError> {
+) -> Result<MutexGuard<'a, T>, RepositoryError> {
     loop {
         check_cancel(token)?;
         match gate.try_lock() {
