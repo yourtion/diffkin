@@ -1016,7 +1016,9 @@ test("missing model tools leave ordinary review available", async ({ page }) => 
   await expect(page.getByRole("button", { name: "生成解释", exact: true })).toBeDisabled();
   await expect(page.getByText(/未找到可用的 Codex/)).toBeVisible();
   await page.getByRole("button", { name: "关闭解释" }).click();
-  await expect(page.getByLabel("修改后源码")).toContainText("balance >= amount");
+  await expect(page.getByRole("textbox", { name: "修改后源码", exact: true })).toContainText(
+    "balance >= amount",
+  );
 });
 
 test("quiz waits for answers, grades the final choices, and retries locally", async ({ page }) => {

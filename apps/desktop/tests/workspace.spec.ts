@@ -95,6 +95,10 @@ async function bridge(page: Page, delayed = false, targetPaging = false) {
                 repositories: config.repositories.map((repo, index) => ({
                   repositoryId: repo.id,
                   label: repo.label,
+                  revisions:
+                    repo.spec.mode === "commits"
+                      ? [repo.spec.base || "HEAD~1", repo.spec.head || "HEAD"]
+                      : undefined,
                   error: null,
                   manifest: {
                     id: `repo-${index}-v${revision}`,
@@ -354,6 +358,53 @@ test("refresh keeps the active workspace and the selected repository", async ({ 
       () => (window as unknown as { __WORKSPACE_CALLS__: string[] }).__WORKSPACE_CALLS__,
     ),
   ).not.toContain("workspace_capture");
+});
+
+test("commit comparison direction follows the selected workspace repository", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 800 });
+  await bridge(page);
+  await page.getByRole("button", { name: "新建工作区" }).click();
+  await page.getByLabel("仓库 1 路径", { exact: true }).fill("/projects/api");
+  await page.getByLabel("仓库 1 模式").selectOption("commits");
+  await page.getByLabel("仓库 1 基准（修改前）", { exact: true }).fill("main");
+  await page.getByLabel("仓库 1 目标（修改后）", { exact: true }).fill("feature/login");
+  await expect(page.locator(".revision-preview")).toHaveText("查看 feature/login 相对 main 的改动");
+  await page.screenshot({ path: "test-results/workspace-revision-direction.png" });
+  await page.setViewportSize({ width: 760, height: 540 });
+  const baseBox = await page.getByLabel("仓库 1 基准（修改前）", { exact: true }).boundingBox();
+  const headBox = await page.getByLabel("仓库 1 目标（修改后）", { exact: true }).boundingBox();
+  expect(Math.abs(baseBox!.y - headBox!.y)).toBeLessThan(2);
+  expect(headBox!.x + headBox!.width).toBeLessThanOrEqual(760);
+  await page.getByRole("button", { name: "仓库 1 交换比较方向" }).press("Enter");
+  await expect(page.getByLabel("仓库 1 基准（修改前）", { exact: true })).toHaveValue(
+    "feature/login",
+  );
+  await expect(page.locator(".revision-preview")).toHaveText("查看 main 相对 feature/login 的改动");
+  await page.getByRole("button", { name: "仓库 1 交换比较方向" }).click();
+  await page.setViewportSize({ width: 1200, height: 800 });
+  await page.getByRole("button", { name: "比较工作区" }).click();
+  const headings = page.locator(".source-headings");
+  await expect(headings.locator("strong")).toHaveText(["main", "feature/login"]);
+  await page.screenshot({ path: "test-results/workspace-revision-result.png" });
+  await page.getByRole("button", { name: "统一", exact: true }).click();
+  await expect(headings).toContainText("− 修改前");
+  await expect(headings).toContainText("+ 修改后");
+  await page.getByRole("button", { name: "工作区设置" }).click();
+  await page.getByRole("button", { name: "仓库 1 交换比较方向" }).click();
+  await page.getByRole("button", { name: "保存配置" }).click();
+  await expect(page.getByText(/配置已保存/)).toBeVisible();
+  await page.reload();
+  await page.getByRole("list", { name: "已保存工作区" }).getByRole("button").click();
+  await expect(headings.locator("strong")).toHaveText(["main", "feature/login"]);
+  // A pre-migration snapshot has only frozen IDs, even if its current configuration has refs.
+  await page.evaluate(() => {
+    const session = JSON.parse(localStorage.getItem("test.workspace")!) as WorkspaceSession;
+    delete session.snapshots[0].repositories[0].revisions;
+    localStorage.setItem("test.workspace", JSON.stringify(session));
+  });
+  await page.reload();
+  await page.getByRole("list", { name: "已保存工作区" }).getByRole("button").click();
+  await expect(headings.locator("strong")).toHaveText(["commit:base-0", "commit:head-0-1"]);
 });
 
 test("a saved configuration opens from home before its first comparison", async ({ page }) => {

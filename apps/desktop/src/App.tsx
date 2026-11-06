@@ -20,7 +20,8 @@ import { ExplanationPanel } from "./components/ExplanationPanel";
 import { WorkspaceHome } from "./components/WorkspaceHome";
 import { WorkspacePanel } from "./components/WorkspacePanel";
 import { ValidationPanel } from "./components/ValidationPanel";
-import { ComparisonSetup, comparisonSources, modeNames } from "./components/ComparisonSetup";
+import { ComparisonSetup } from "./components/ComparisonSetup";
+import { comparisonSources, diffSources, modeNames } from "./lib/comparison-direction";
 import { CaptureNotices } from "./components/CaptureNotices";
 import {
   workspaceClient,
@@ -642,6 +643,16 @@ export function App({
     !validationOpen &&
     !setupVisible &&
     (workspacePage === "review" || workspacePage === "settings");
+  const sources = manifest
+    ? diffSources(
+        manifest,
+        workspaceSession
+          ? activeRepository?.revisions
+          : appliedSpec
+            ? comparisonSources(appliedSpec)
+            : undefined,
+      )
+    : null;
   const reviewed = selectedFile ? isReviewed(selectedFile) : false;
   return (
     <main
@@ -773,13 +784,7 @@ export function App({
           </strong>
           <span>{modeNames[manifest.mode]}</span>
           <code title={`${manifest.baseLabel} → ${manifest.headLabel}`}>
-            {appliedSpec && !workspaceSession
-              ? comparisonSources(appliedSpec).join(" → ")
-              : manifest.mode === "commits"
-                ? [manifest.baseLabel, manifest.headLabel]
-                    .map((label) => label.replace(/^([0-9a-f]{10})[0-9a-f]{30,54}$/i, "$1"))
-                    .join(" → ")
-                : comparisonSources({ mode: manifest.mode }).join(" → ")}
+            {sources?.map((side) => side.name).join(" → ")}
             {!workspaceSession && appliedSpec?.pathScope && ` · ${appliedSpec.pathScope}`}
           </code>
           {!workspaceSession && (
@@ -1098,10 +1103,15 @@ export function App({
                   <h2>内容未载入，请核对对象身份与元数据</h2>
                   <p>二进制、子模块或不可读取的内容不会被视为没有变化。</p>
                 </div>
-              ) : data && needsSegments(data.file) ? (
-                <LargeFileViewer key={`${manifest?.id}:${selectedFile.id}`} file={data.file} />
-              ) : data ? (
+              ) : data && sources && needsSegments(data.file) ? (
+                <LargeFileViewer
+                  key={`${manifest?.id}:${selectedFile.id}`}
+                  file={data.file}
+                  sources={sources}
+                />
+              ) : data && sources ? (
                 <DiffViewer
+                  sources={sources}
                   viewKey={`${manifest?.repository}:${selectedFile.path}`}
                   before={data.file.before ?? ""}
                   after={data.file.after ?? ""}

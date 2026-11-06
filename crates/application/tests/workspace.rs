@@ -3,7 +3,7 @@ use diffkin_domain::*;
 use sha2::{Digest, Sha256};
 use std::{
     fs,
-    path::PathBuf,
+    path::{Path, PathBuf},
     process::Command,
     sync::atomic::{AtomicBool, AtomicU64, Ordering},
 };
@@ -26,34 +26,35 @@ impl Fixture {
     fn store(&self) -> WorkspaceStore {
         WorkspaceStore::new(self.0.join("store")).unwrap()
     }
+    fn git(path: &Path, args: &[&str]) {
+        let result = Command::new("git")
+            .current_dir(path)
+            .env("GIT_CONFIG_NOSYSTEM", "1")
+            .env(
+                "GIT_CONFIG_GLOBAL",
+                if cfg!(windows) { "NUL" } else { "/dev/null" },
+            )
+            .args([
+                "-c",
+                "core.hooksPath=",
+                "-c",
+                "user.name=Workspace Test",
+                "-c",
+                "user.email=test@example.invalid",
+            ])
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(
+            result.status.success(),
+            "{}",
+            String::from_utf8_lossy(&result.stderr)
+        );
+    }
     fn repository(&self, id: &str, changed: bool) -> WorkspaceRepository {
         let path = self.0.join(id);
         fs::create_dir_all(path.join("src")).unwrap();
-        let git = |args: &[&str]| {
-            let result = Command::new("git")
-                .current_dir(&path)
-                .env("GIT_CONFIG_NOSYSTEM", "1")
-                .env(
-                    "GIT_CONFIG_GLOBAL",
-                    if cfg!(windows) { "NUL" } else { "/dev/null" },
-                )
-                .args([
-                    "-c",
-                    "core.hooksPath=",
-                    "-c",
-                    "user.name=Workspace Test",
-                    "-c",
-                    "user.email=test@example.invalid",
-                ])
-                .args(args)
-                .output()
-                .unwrap();
-            assert!(
-                result.status.success(),
-                "{}",
-                String::from_utf8_lossy(&result.stderr)
-            );
-        };
+        let git = |args: &[&str]| Self::git(&path, args);
         git(&["init", "-q", "--initial-branch=main"]);
         fs::write(
             path.join("src/index.ts"),
@@ -152,6 +153,49 @@ fn three_repositories_same_filename_and_unchanged_context_are_isolated() {
         .read_file(&frontend.file_id)
         .is_err());
 }
+#[test]
+fn restored_revision_names_and_original_text_follow_the_captured_direction() {
+    let fixture = Fixture::new();
+    let mut config = fixture.config();
+    config.repositories.truncate(1);
+    let path = fixture.0.join("frontend");
+    Fixture::git(&path, &["checkout", "-qb", "feature/login"]);
+    Fixture::git(&path, &["commit", "-qam", "Change login"]);
+    let spec = &mut config.repositories[0].spec;
+    spec.mode = CompareMode::Commits;
+    spec.base = Some("main".into());
+    spec.head = Some("feature/login".into());
+    let store = fixture.store();
+    let forward_id = store
+        .capture(&config, &token())
+        .unwrap()
+        .active_snapshot_id
+        .unwrap();
+    let spec = &mut config.repositories[0].spec;
+    std::mem::swap(&mut spec.base, &mut spec.head);
+    store.capture(&config, &token()).unwrap();
+    let reverse = store.restore("project", None).unwrap();
+    let forward = store.restore("project", Some(&forward_id)).unwrap();
+    let sides = |snapshot: &diffkin_application::FrozenWorkspace| {
+        let entry = snapshot.manifest().repositories.remove(0);
+        let manifest = entry.manifest.unwrap();
+        assert_eq!(manifest.total_files, 1);
+        let file = snapshot
+            .repository("frontend")
+            .unwrap()
+            .read_file(&manifest.files[0].id)
+            .unwrap();
+        (entry.revisions.unwrap(), file)
+    };
+    let (old_refs, old) = sides(&forward);
+    let (new_refs, new) = sides(&reverse);
+    assert_eq!(old_refs, ["main", "feature/login"]);
+    assert_eq!(new_refs, ["feature/login", "main"]);
+    assert_ne!(old.before, old.after);
+    assert_eq!(old.before, new.after);
+    assert_eq!(old.after, new.before);
+}
+
 #[test]
 fn saved_workspace_can_be_opened_before_its_first_capture() {
     let fixture = Fixture::new();

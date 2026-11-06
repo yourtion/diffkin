@@ -188,8 +188,9 @@ fn capture_with_limit(
         return Err(RepositoryError::Unsupported { message: "Disk snapshots currently require two fixed commits; use a literal path scope for working-tree comparisons".into() });
     }
     let context = open_context(spec, cancel, Instant::now() + LARGE_CAPTURE_BUDGET)?;
-    let base = context.resolve(spec.base.as_deref().unwrap_or("HEAD~1"))?;
-    let head = context.resolve(spec.head.as_deref().unwrap_or("HEAD"))?;
+    let [base_ref, head_ref] = spec.commit_revisions();
+    let base = context.resolve(base_ref)?;
+    let head = context.resolve(head_ref)?;
     let (before, after, _) = raw_diff(&context, Some(&base), Some(&head))?;
     let paths: Vec<_> = before
         .keys()

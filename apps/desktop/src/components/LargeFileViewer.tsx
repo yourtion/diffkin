@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import type { DiffSource } from "../lib/comparison-direction";
 import type { FrozenFile } from "@diffkin/protocol";
 
 export function needsSegments(file: FrozenFile) {
@@ -9,10 +10,12 @@ export function needsSegments(file: FrozenFile) {
 function SourceSegments({
   source,
   label,
+  revision,
   truncated,
 }: {
   source: string | null;
   label: string;
+  revision: DiffSource;
   truncated: boolean;
 }) {
   const [page, setPage] = useState(0);
@@ -34,7 +37,9 @@ function SourceSegments({
   return (
     <section className="source-segments" aria-label={`${label}分段原文`}>
       <div className="segment-controls">
-        <strong>{label}</strong>
+        <strong title={revision.title}>
+          {label} · {revision.name}
+        </strong>
         <button
           disabled={page === 0}
           onClick={() => setPage(page - 1)}
@@ -76,7 +81,13 @@ function SourceSegments({
     </section>
   );
 }
-export function LargeFileViewer({ file }: { file: FrozenFile }) {
+export function LargeFileViewer({
+  file,
+  sources,
+}: {
+  file: FrozenFile;
+  sources: [DiffSource, DiffSource];
+}) {
   return (
     <div className="large-file-viewer">
       <p className="notice">
@@ -84,8 +95,18 @@ export function LargeFileViewer({ file }: { file: FrozenFile }) {
         字符。段号不代表对应关系；此视图不进行跨段差异或结构判定。
       </p>
       <div className="segment-columns">
-        <SourceSegments source={file.before} label="修改前" truncated={file.beforeTruncated} />
-        <SourceSegments source={file.after} label="修改后" truncated={file.afterTruncated} />
+        <SourceSegments
+          source={file.before}
+          label="修改前"
+          revision={sources[0]}
+          truncated={file.beforeTruncated}
+        />
+        <SourceSegments
+          source={file.after}
+          label="修改后"
+          revision={sources[1]}
+          truncated={file.afterTruncated}
+        />
       </div>
     </div>
   );

@@ -448,32 +448,85 @@
 .setup-actions > span {
   color: var(--muted);
 }
-.setup-revisions {
+.revision-pair {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: end;
+  gap: 8px 10px;
   margin-top: 16px;
 }
-.setup-revisions > div {
+.repository-config .revision-pair {
+  flex: 0 0 100%;
+  margin: 4px 0;
+}
+.repository-config .workspace-path {
+  white-space: nowrap;
+}
+.revision-side,
+.revision-side .revision-picker {
   min-width: 0;
 }
-.setup-revisions .revision-picker {
+.revision-side > label,
+.repository-config .revision-side > label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.revision-side .revision-picker {
   display: flex;
 }
-.setup-revisions .revision-picker > input {
+.revision-side .revision-picker > input {
   flex: 1;
   width: 0;
 }
-.setup-revisions .revision-menu {
+.revision-side .revision-menu {
   top: 100%;
   width: min(350px, 80vw);
 }
-.setup-revisions > div:first-child .revision-menu {
+.revision-side:first-child .revision-menu {
   left: 0;
   right: auto;
 }
-.setup-revisions .revision-options {
+.revision-side .revision-options {
   max-height: min(180px, 24vh);
+}
+.swap-revisions {
+  white-space: nowrap;
+}
+.revision-preview {
+  grid-column: 1 / -1;
+  overflow-wrap: anywhere;
+  color: var(--muted);
+}
+.revision-preview strong,
+.diff-source strong {
+  color: var(--code);
+}
+.diff-source {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+.diff-source span,
+.diff-source small {
+  white-space: nowrap;
+}
+.diff-source strong {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.source-headings.unified {
+  gap: 14px;
+}
+.source-headings.unified > span {
+  flex: 0 1 auto;
+  width: auto;
+  max-width: 50%;
+  gap: 6px;
+  border: 0;
 }
 .setup-options {
   margin-top: 20px;

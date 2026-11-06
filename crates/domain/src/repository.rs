@@ -29,6 +29,21 @@ pub struct ComparisonSpec {
     pub path_scope: Option<String>,
 }
 
+impl ComparisonSpec {
+    pub fn commit_revisions(&self) -> [&str; 2] {
+        [
+            self.base
+                .as_deref()
+                .filter(|s| !s.is_empty())
+                .unwrap_or("HEAD~1"),
+            self.head
+                .as_deref()
+                .filter(|s| !s.is_empty())
+                .unwrap_or("HEAD"),
+        ]
+    }
+}
+
 fn is_false(value: &bool) -> bool {
     !*value
 }

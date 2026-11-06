@@ -77,8 +77,8 @@
     await input("Git 仓库路径", config.spec.repository);
     await input("比较模式", config.spec.mode);
     if (config.spec.mode === "commits") {
-      await input("来源分支或提交", config.spec.base);
-      await input("目标分支或提交", config.spec.head);
+      await input("基准（修改前）", config.spec.base);
+      await input("目标（修改后）", config.spec.head);
     }
     for (let iteration = 0; iteration < config.iterations; iteration++) {
       await control("reset");

@@ -159,8 +159,8 @@ test("changing a comparison uses a draft and refresh only uses the applied selec
   await edit.click();
   await expect(path).toHaveValue("/projects/diffkin");
   await mode.selectOption("commits");
-  await page.getByRole("textbox", { name: "来源分支或提交" }).fill("main");
-  await page.getByRole("textbox", { name: "目标分支或提交" }).fill("feature");
+  await page.getByRole("textbox", { name: "基准（修改前）" }).fill("main");
+  await page.getByRole("textbox", { name: "目标（修改后）" }).fill("feature");
   await start.click();
   await expect(page.locator(".review-context")).toContainText("main → feature");
   await refresh.click();
@@ -187,19 +187,32 @@ test("branch choices are paged, while arbitrary commit IDs remain editable", asy
   await bridge(page);
   await page.getByLabel("Git 仓库路径").fill("/repo");
   await page.getByLabel("比较模式").selectOption("commits");
-  await page.getByRole("button", { name: "选择来源分支或提交", exact: true }).click();
+  const base = page.getByRole("textbox", { name: "基准（修改前）", exact: true });
+  const head = page.getByRole("textbox", { name: "目标（修改后）", exact: true });
+  await base.fill("");
+  await head.fill("");
+  await page.getByRole("button", { name: "交换比较方向", exact: true }).click();
+  await expect(base).toHaveValue("HEAD");
+  await expect(head).toHaveValue("HEAD~1");
+  await page.getByRole("button", { name: "交换比较方向", exact: true }).click();
+  await base.fill("refs/heads/origin/topic");
+  await head.fill("refs/remotes/origin/topic");
+  await expect(page.locator(".revision-preview")).toHaveText(
+    "查看 refs/remotes/origin/topic 相对 refs/heads/origin/topic 的改动",
+  );
+  await page.getByRole("button", { name: "选择基准（修改前）", exact: true }).click();
   await expect(page.getByRole("button", { name: /本地 main/ })).toBeVisible();
-  await page.getByRole("textbox", { name: "搜索来源分支或提交" }).press("Enter");
+  await page.getByRole("textbox", { name: "搜索基准（修改前）" }).press("Enter");
   expect(await calls(page, "open_comparison")).toEqual([]);
   await page.screenshot({ path: "test-results/repository-selection.png" });
   await page.getByRole("button", { name: /本地 main/ }).click();
-  await expect(page.getByRole("textbox", { name: "来源分支或提交", exact: true })).toHaveValue(
+  await expect(page.getByRole("textbox", { name: "基准（修改前）", exact: true })).toHaveValue(
     "refs/heads/main",
   );
-  await page.getByRole("button", { name: "选择目标分支或提交", exact: true }).click();
+  await page.getByRole("button", { name: "选择目标（修改后）", exact: true }).click();
   await page.getByRole("button", { name: "更多引用" }).click();
   await page.getByRole("button", { name: /标签 v1/ }).click();
-  const target = page.getByRole("textbox", { name: "目标分支或提交", exact: true });
+  const target = page.getByRole("textbox", { name: "目标（修改后）", exact: true });
   await expect(target).toHaveValue("refs/tags/v1");
   await target.fill("deadbeef1234567890");
   await page.getByRole("button", { name: "开始比较" }).click();
@@ -213,17 +226,17 @@ test("late branch lists cannot replace the current repository choices", async ({
   await bridge(page);
   await page.getByLabel("Git 仓库路径").fill("/slow");
   await page.getByLabel("比较模式").selectOption("commits");
-  await page.getByRole("button", { name: "选择来源分支或提交", exact: true }).click();
+  await page.getByRole("button", { name: "选择基准（修改前）", exact: true }).click();
   await expect.poll(async () => (await calls(page, "list_repository_refs")).length).toBe(1);
   await page.getByLabel("Git 仓库路径").fill("/new");
   if (
     !(
       (await page
-        .getByRole("button", { name: "选择来源分支或提交", exact: true })
+        .getByRole("button", { name: "选择基准（修改前）", exact: true })
         .getAttribute("aria-expanded")) === "true"
     )
   )
-    await page.getByRole("button", { name: "选择来源分支或提交", exact: true }).click();
+    await page.getByRole("button", { name: "选择基准（修改前）", exact: true }).click();
   await expect(page.getByRole("button", { name: /本地 main/ })).toBeVisible();
   await page.waitForTimeout(800);
   await expect(page.getByRole("button", { name: /obsolete/ })).toHaveCount(0);
@@ -237,7 +250,7 @@ test("native settings persist paths, refs and view preferences across reload wit
   await page.getByLabel("Git 仓库路径").fill("/persisted");
   await page.getByLabel("比较模式").selectOption("commits");
   await page
-    .getByRole("textbox", { name: "来源分支或提交", exact: true })
+    .getByRole("textbox", { name: "基准（修改前）", exact: true })
     .fill("refs/heads/release");
   await page.getByRole("button", { name: "设置", exact: true }).click();
   await page.getByLabel("默认差异视图").selectOption("unified");
@@ -254,7 +267,7 @@ test("native settings persist paths, refs and view preferences across reload wit
   await page.reload();
   await page.getByRole("button", { name: "单仓库比较", exact: true }).click();
   await expect(page.getByLabel("Git 仓库路径")).toHaveValue("/persisted");
-  await expect(page.getByRole("textbox", { name: "来源分支或提交", exact: true })).toHaveValue(
+  await expect(page.getByRole("textbox", { name: "基准（修改前）", exact: true })).toHaveValue(
     "refs/heads/release",
   );
   await page.getByRole("button", { name: "设置", exact: true }).click();

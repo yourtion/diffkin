@@ -1498,8 +1498,9 @@ fn capture_subset(
     let mut untracked_before = Vec::new();
     let mut intent_paths = BTreeSet::new();
     if spec.mode == CompareMode::Commits {
-        let base = context.resolve(spec.base.as_deref().unwrap_or("HEAD~1"))?;
-        let head = context.resolve(spec.head.as_deref().unwrap_or("HEAD"))?;
+        let [base_ref, head_ref] = spec.commit_revisions();
+        let base = context.resolve(base_ref)?;
+        let head = context.resolve(head_ref)?;
         (before, after, _) = raw_diff(&context, Some(&base), Some(&head))?;
         before_label = base;
         after_label = head;

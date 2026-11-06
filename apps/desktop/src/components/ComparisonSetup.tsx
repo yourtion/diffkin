@@ -1,28 +1,8 @@
 import { useEffect, useRef, type RefObject } from "react";
 import type { ComparisonSpec } from "@diffkin/protocol";
 import { RepositoryPicker } from "./RepositoryPicker";
-import { RevisionPicker } from "./RevisionPicker";
-
-export const modeNames = {
-  worktree: "全部本地改动",
-  staged: "已暂存",
-  unstaged: "未暂存",
-  commits: "分支 / 提交",
-};
-
-const localSources = {
-  worktree: ["HEAD", "工作区"],
-  staged: ["HEAD", "暂存区"],
-  unstaged: ["暂存区", "工作区"],
-};
-
-export function comparisonSources(
-  spec: Pick<ComparisonSpec, "mode"> & Partial<Pick<ComparisonSpec, "base" | "head">>,
-) {
-  return spec.mode === "commits"
-    ? [spec.base || "HEAD~1", spec.head || "HEAD"]
-    : localSources[spec.mode];
-}
+import { RevisionPair } from "./RevisionPair";
+import { modeNames, comparisonSources } from "../lib/comparison-direction";
 
 type Props = {
   spec: ComparisonSpec;
@@ -138,30 +118,7 @@ export function ComparisonSetup({
             {spec.mode !== "commits" && <span>{comparisonSources(spec).join(" → ")}</span>}
           </div>
           {spec.mode === "commits" && (
-            <div className="setup-revisions">
-              <div>
-                <span className="setup-label">基准版本</span>
-                <RevisionPicker
-                  repository={spec.repository}
-                  label="来源分支或提交"
-                  value={spec.base ?? ""}
-                  placeholder="HEAD~1"
-                  disabled={!available || busy}
-                  onChange={(base) => onChange({ ...spec, base })}
-                />
-              </div>
-              <div>
-                <span className="setup-label">目标版本</span>
-                <RevisionPicker
-                  repository={spec.repository}
-                  label="目标分支或提交"
-                  value={spec.head ?? ""}
-                  placeholder="HEAD"
-                  disabled={!available || busy}
-                  onChange={(head) => onChange({ ...spec, head })}
-                />
-              </div>
-            </div>
+            <RevisionPair spec={spec} disabled={!available || busy} onChange={onChange} />
           )}
           <details className="setup-options" ref={options}>
             <summary>范围与选项{spec.pathScope ? ` · ${spec.pathScope}` : ""}</summary>

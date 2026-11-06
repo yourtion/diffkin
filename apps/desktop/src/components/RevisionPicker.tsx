@@ -6,6 +6,7 @@ import "./navigation.css";
 
 const kinds = { branch: "本地", remote: "远程", tag: "标签" };
 export function RevisionPicker({
+  id,
   repository,
   value,
   onChange,
@@ -13,6 +14,7 @@ export function RevisionPicker({
   placeholder,
   disabled,
 }: {
+  id: string;
   repository: string;
   value: string;
   onChange: (value: string) => void;
@@ -105,6 +107,7 @@ export function RevisionPicker({
   return (
     <div className="revision-picker" ref={host}>
       <input
+        id={id}
         aria-label={label}
         value={value}
         disabled={disabled}
@@ -149,6 +152,7 @@ export function RevisionPicker({
               <button
                 type="button"
                 key={ref.name}
+                aria-pressed={ref.name === value}
                 onClick={() => {
                   onChange(ref.name);
                   setExpanded(false);
@@ -157,7 +161,8 @@ export function RevisionPicker({
               >
                 <span>
                   <small>{kinds[ref.kind]}</small> {ref.label}
-                  {result.currentBranch === ref.name ? " · 当前" : ""}
+                  {ref.name === value ? " · 已选" : ""}
+                  {result.currentBranch === ref.name ? " · 已检出" : ""}
                 </span>
                 <code>{ref.target.slice(0, 10)}</code>
               </button>

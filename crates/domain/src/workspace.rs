@@ -25,6 +25,10 @@ pub struct RepositorySnapshot {
     pub label: String,
     pub manifest: Option<ComparisonManifest>,
     pub error: Option<RepositoryError>,
+    /// Requested base and target names at capture time. Older snapshots retain only resolved IDs.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub revisions: Option<[String; 2]>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, TS)]

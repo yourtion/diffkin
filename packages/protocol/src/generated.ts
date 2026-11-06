@@ -45,7 +45,11 @@ export type AnalysisResult = { schemaVersion: number, language: string, ruleVers
 export type FileAnalysis = { file: FrozenFile, analysis: AnalysisResult | null, notice: string | null, };
 export type WorkspaceRepository = { id: string, label: string, spec: ComparisonSpec, };
 export type WorkspaceConfig = { id: string, name: string, repositories: Array<WorkspaceRepository>, };
-export type RepositorySnapshot = { repositoryId: string, label: string, manifest: ComparisonManifest | null, error: RepositoryError | null, };
+export type RepositorySnapshot = { repositoryId: string, label: string, manifest: ComparisonManifest | null, error: RepositoryError | null,
+/**
+ * Requested base and target names at capture time. Older snapshots retain only resolved IDs.
+ */
+revisions?: [string, string], };
 export type WorkspaceSnapshot = { id: string, workspaceId: string,
 /**
  * Decimal Unix milliseconds. A string avoids integer precision loss in IPC.

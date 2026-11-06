@@ -10,14 +10,9 @@ import { client, message } from "../lib/client";
 import { workspaceClient } from "../lib/workspace-client";
 import "./workspace.css";
 import { RepositoryPicker } from "./RepositoryPicker";
-import { RevisionPicker } from "./RevisionPicker";
+import { RevisionPair } from "./RevisionPair";
+import { modeNames } from "../lib/comparison-direction";
 
-const modes = {
-  worktree: "全部本地改动",
-  staged: "已暂存",
-  unstaged: "未暂存",
-  commits: "分支 / 提交",
-};
 const identifier = () => crypto.randomUUID();
 function repository(spec: ComparisonSpec): WorkspaceRepository {
   return {
@@ -263,34 +258,21 @@ export function WorkspacePanel({
                   })
                 }
               >
-                {Object.entries(modes).map(([value, label]) => (
+                {Object.entries(modeNames).map(([value, label]) => (
                   <option key={value} value={value}>
                     {label}
                   </option>
                 ))}
               </select>
             </label>
-            {repo.spec.mode === "commits" ? (
-              <>
-                <RevisionPicker
-                  repository={repo.spec.repository}
-                  label={`仓库 ${index + 1} 基线`}
-                  value={repo.spec.base ?? ""}
-                  placeholder="HEAD~1"
-                  disabled={!available || busy}
-                  onChange={(base) => updateRepo(repo.id, { spec: { ...repo.spec, base } })}
-                />
-                <span>→</span>
-                <RevisionPicker
-                  repository={repo.spec.repository}
-                  label={`仓库 ${index + 1} 候选`}
-                  value={repo.spec.head ?? ""}
-                  placeholder="HEAD"
-                  disabled={!available || busy}
-                  onChange={(head) => updateRepo(repo.id, { spec: { ...repo.spec, head } })}
-                />
-              </>
-            ) : null}
+            {repo.spec.mode === "commits" && (
+              <RevisionPair
+                spec={repo.spec}
+                repositoryLabel={`仓库 ${index + 1}`}
+                disabled={!available || busy}
+                onChange={(spec) => updateRepo(repo.id, { spec })}
+              />
+            )}
             {(repo.spec.mode === "unstaged" || repo.spec.mode === "worktree") && (
               <label className="check">
                 <input

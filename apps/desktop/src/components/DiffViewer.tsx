@@ -8,6 +8,7 @@ import { defaultKeymap } from "@codemirror/commands";
 import { openSearchPanel, search, searchKeymap } from "@codemirror/search";
 import { MergeView, goToNextChunk, goToPreviousChunk, unifiedMergeView } from "@codemirror/merge";
 import type { AnalysisResult, ChangeEvent, SourceRange } from "@diffkin/protocol";
+import type { DiffSource } from "../lib/comparison-direction";
 import { createFormatProofChecker } from "../lib/presentation";
 import {
   formatFolding,
@@ -34,6 +35,7 @@ import { editorCoordinates } from "../lib/editor-coordinates";
 import { restoreEditor, saveEditor } from "../lib/editor-memory";
 
 type Props = {
+  sources: [DiffSource, DiffSource];
   viewKey: string;
   before: string;
   after: string;
@@ -50,6 +52,7 @@ type Props = {
 };
 
 export function DiffViewer({
+  sources,
   viewKey,
   before,
   after,
@@ -345,15 +348,30 @@ export function DiffViewer({
           <small>虚线端点在视口外 · 仅突出当前关系</small>
         </div>
       )}
-      <div className="source-headings">
-        <span>
-          修改前{focused && event?.before ? ` · L${event.before.startLine}` : ""}
-          <button onClick={() => void copy(old)}>复制</button>
-        </span>
-        <span>
-          修改后{focused && event?.after ? ` · L${event.after.startLine}` : ""}
-          <button onClick={() => void copy(next)}>复制</button>
-        </span>
+      <div className={`source-headings ${layout}`}>
+        {sources.map((source, index) => {
+          const beforeSide = index === 0;
+          const span = beforeSide ? event?.before : event?.after;
+          const label = beforeSide ? "修改前" : "修改后";
+          return (
+            <span key={label}>
+              <span className="diff-source" title={source.title}>
+                <span>
+                  {layout === "unified" ? (beforeSide ? "− " : "+ ") : ""}
+                  {label}
+                </span>
+                <strong>{source.name}</strong>
+                {focused && span && <small>L{span.startLine}</small>}
+              </span>
+              <button
+                aria-label={`复制${label}源码`}
+                onClick={() => void copy(beforeSide ? old : next)}
+              >
+                复制
+              </button>
+            </span>
+          );
+        })}
       </div>
       <div
         className={`merge-stage ${move && !focused && layout === "split" ? "has-move" : ""}`}

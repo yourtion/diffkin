@@ -227,6 +227,8 @@ pub fn capture_workspace(
         entries.push(RepositorySnapshot {
             repository_id: repository.id.clone(),
             label: repository.label.clone(),
+            revisions: (repository.spec.mode == CompareMode::Commits)
+                .then(|| repository.spec.commit_revisions().map(str::to_owned)),
             manifest,
             error,
         });
