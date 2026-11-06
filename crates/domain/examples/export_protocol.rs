@@ -29,6 +29,8 @@ fn main() -> std::io::Result<()> {
         WorkspaceSnapshot::decl(&config),
         EvidenceBasis::decl(&config),
         ReviewState::decl(&config),
+        WorkspaceFileRef::decl(&config),
+        WorkspaceRelationDraft::decl(&config),
         ManualRelation::decl(&config),
         ReviewRecord::decl(&config),
         WorkspaceSession::decl(&config),

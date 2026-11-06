@@ -133,7 +133,9 @@ export function WorkspacePanel({
   async function exportManifest() {
     if (!session) return;
     await action(async () => {
-      const result = await workspaceClient.export(session.config.id);
+      const result = await workspaceClient.export(session.config.id, session.activeSnapshotId);
+      if (result.snapshotId !== session.activeSnapshotId)
+        throw new Error("工作区快照已切换，请重新打开工作区并确认要导出的版本。");
       const url = URL.createObjectURL(
         new Blob([JSON.stringify(result, null, 2)], { type: "application/json" }),
       );
@@ -163,16 +165,15 @@ export function WorkspacePanel({
     });
   }
   async function relate() {
-    if (!session || !repositoryId || !selectedFile || !targetRepo || !targetFile) return;
+    const snapshotId = session?.activeSnapshotId;
+    if (!session || !snapshotId || !repositoryId || !selectedFile || !targetRepo || !targetFile)
+      return;
     await action(async () => {
-      const [from, to] = await Promise.all([
-        workspaceClient.basis(session.config.id, repositoryId, selectedFile.id),
-        workspaceClient.basis(session.config.id, targetRepo, targetFile),
-      ]);
-      const result = await workspaceClient.relation(session.config.id, {
+      const result = await workspaceClient.linkFiles(session.config.id, {
         id: identifier(),
-        from,
-        to,
+        workspaceSnapshotId: snapshotId,
+        from: { repositoryId, fileId: selectedFile.id },
+        to: { repositoryId: targetRepo, fileId: targetFile },
         note,
       });
       onUpdate(result);

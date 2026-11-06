@@ -155,13 +155,26 @@ pub async fn workspace_relation(
     .await
 }
 #[tauri::command]
+pub async fn workspace_link_files(
+    id: String,
+    draft: WorkspaceRelationDraft,
+    app: tauri::AppHandle,
+    scope: State<'_, WorkspaceShared>,
+) -> Result<WorkspaceSession, RepositoryError> {
+    access(app, scope.inner().clone(), token(), move |store| {
+        store.link_files(&id, draft)
+    })
+    .await
+}
+#[tauri::command]
 pub async fn workspace_export(
     id: String,
+    snapshot_id: Option<String>,
     app: tauri::AppHandle,
     scope: State<'_, WorkspaceShared>,
 ) -> Result<WorkspaceExport, RepositoryError> {
     access(app, scope.inner().clone(), token(), move |store| {
-        store.export(&id)
+        store.export_at(&id, snapshot_id.as_deref())
     })
     .await
 }

@@ -208,13 +208,14 @@ Tauri 使用类型化 command 请求/响应；Rust DTO 生成 TypeScript。CPU�
 | ------------------------------------------------------------- | --------------------------------------------------------------- |
 | `open_comparison` / `list_changes` / `request_file`           | 单仓捕获、每页最多 200 条、按需返回冻结文件与分析；保留原有语义 |
 | `workspace_capture` / `workspace_restore`                     | 多仓捕获或恢复持久快照，并安装到 Runtime；不清除单仓快照        |
-| `workspace_basis` / `workspace_review` / `workspace_relation` | 后端生成真实依据，再核对当前快照和规则后保存审查或手工关系      |
-| `workspace_list` / `workspace_save` / `workspace_export`      | 配置和摘要管理；导出省略源码、本机路径及备注                    |
+| `workspace_basis` / `workspace_review` / `workspace_relation` | 查询完整依据，在存档锁内核对当前快照和规则后写入                |
+| `workspace_link_files`                                        | 在同一次加锁中核对界面快照，从两侧冻结文件生成并保存手工关联    |
+| `workspace_list` / `workspace_save` / `workspace_export`      | 管理配置和摘要，按选定的快照导出脱敏版本清单                    |
 | `validation_prepare` / `validation_run`                       | 准备具体计划；确认后按计划 ID 运行候选或基线                    |
 | 验证日志、计划、结果、历史查询                                | 有界增量分页与持久结果；丢失实时消息不等于丢失最终结果          |
 | `cancel_job` / 验证取消                                       | token 传递到工作线程；真实子进程取消另由验证进程组实现          |
 
-Runtime 最多保留 16 个活动作业、128 条提前取消记录和 8 个文件分析结果。捕获和分析 gate 避免同类重工作无限并发；workspace mutation 由独立 gate 与磁盘文件锁串行；验证有自己的计划锁。当前单仓快照与最近两个工作区快照共存；磁盘上的历史证据不受此内存缓存淘汰影响。
+Runtime 最多保留 16 个活动作业和 128 条提前取消记录。原生文件分析缓存最多保留 64 项，计费上限为 32 MiB。捕获和分析 gate 避免同类重工作无限并发；workspace mutation 由独立 gate 与磁盘文件锁串行；验证有自己的计划锁。当前单仓快照与最近两个工作区快照共存；磁盘上的历史证据不受此内存缓存淘汰影响。
 
 退出时设置 shutdown 门闩，拒绝新的作业，取消已有 token，并等待工作线程结束；取消 future 或丢弃迟到响应不被当作资源释放。解析/匹配循环检查取消和预算，语法树留在 Rust。验证日志当前通过有界分页轮询传递，序号连续、截断显式，并保留最终结果尾部。
 
