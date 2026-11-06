@@ -2,7 +2,7 @@
 
 看清代码的每一次变化。
 
-轻量、本地的代码审查客户端。当前为 **0.3.0-alpha.2 / 大仓库与导航改进候选**：只读 Git 与多语言结构 diff、多仓库冻结审查，以及需要明确确认的单仓固定提交验证。采用 **MIT** 许可证。
+Diffkin 是轻量、本地的代码审查客户端。**0.3.0-alpha.3** 支持只读 Git 与多语言结构 diff、多仓库冻结审查，以及需要明确确认的单仓固定提交验证。采用 **MIT** 许可证。
 
 [公开仓库](https://github.com/yourtion/diffkin) · [Actions](https://github.com/yourtion/diffkin/actions) · [本轮验收记录](docs/acceptance/large-repositories.md) · [M3/M4 验收记录](docs/acceptance/m3-m4.md)
 

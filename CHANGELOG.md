@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.3.0-alpha.3
+
+- macOS 的 Apple Silicon 和 Intel 发布包默认给应用和 CLI 做 ad-hoc 签名。CI 从 DMG 和 CLI 压缩包中验签，并在 Windows 上静默安装 NSIS 包。
+- 大型提交比较支持将最多 20,000 个变化路径冻结到临时磁盘。可按目录缩小比较范围，切换文件或刷新时保留阅读位置。
+- macOS 和 Linux 可通过已登录的本机 Codex CLI 或 Claude Code 解释选中的代码变化，或生成变更测验。调用前可预览将发送的源码片段。
+
 ## 0.1.0-alpha.1
 
 - 实现冻结 Git 比较：commits、staged、unstaged、worktree，分页、异常文件状态及无副作用读取。
