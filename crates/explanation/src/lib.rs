@@ -265,15 +265,14 @@ struct Scratch(PathBuf);
 impl Scratch {
     fn new() -> Result<Self, RepositoryError> {
         let path = std::env::temp_dir().join(format!("diffkin-explain-{}", uuid::Uuid::new_v4()));
-        let mut builder = fs::DirBuilder::new();
         #[cfg(unix)]
-        {
+        let created = {
             use std::os::unix::fs::DirBuilderExt;
-            builder.mode(0o700);
-        }
-        builder
-            .create(&path)
-            .map_err(|_| invalid("无法创建解释临时目录"))?;
+            fs::DirBuilder::new().mode(0o700).create(&path)
+        };
+        #[cfg(not(unix))]
+        let created = fs::create_dir(&path);
+        created.map_err(|_| invalid("无法创建解释临时目录"))?;
         Ok(Self(path))
     }
 }

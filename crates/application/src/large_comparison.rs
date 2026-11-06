@@ -90,13 +90,7 @@ impl DiskDirectory {
             NEXT_DIRECTORY.fetch_add(1, Ordering::Relaxed)
         );
         let path = root.join(name);
-        let mut builder = fs::DirBuilder::new();
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::DirBuilderExt;
-            builder.mode(0o700);
-        }
-        builder.create(&path).map_err(io_error)?;
+        builder.recursive(false).create(&path).map_err(io_error)?;
         let mut directory = Self {
             path,
             lock: None,
