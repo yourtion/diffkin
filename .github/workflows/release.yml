@@ -118,6 +118,39 @@ jobs:
         run: ./scripts/bundle-windows.ps1
       - name: Collect installers and CLI
         run: node scripts/release-assets.mjs collect "$TARGET"
+      - name: Run CLI from the release archive
+        run: |
+          stage=$(mktemp -d)
+          tar -xzf artifacts/diffkin-cli-*-"$TARGET".tar.gz -C "$stage"
+          cli="$stage/diffkin"
+          if [[ "$RUNNER_OS" == Windows ]]; then cli="$cli.exe"; fi
+          if [[ "$RUNNER_OS" == macOS ]]; then
+            codesign --verify --strict --verbose=2 "$cli"
+            arch_name=${TARGET%%-*}
+            lipo "$cli" -verify_arch "${arch_name/aarch64/arm64}"
+            if [[ "$TARGET" == x86_64-* ]] && ! arch -x86_64 /usr/bin/true; then
+              echo "Intel CLI verified; this runner cannot execute x86_64 binaries"
+              exit 0
+            fi
+          fi
+          "$cli" --version
+          "$cli" LICENSE "$stage/LICENSE" > /dev/null
+      - name: Install Windows package and inspect Authenticode
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $installer = Get-Item artifacts/Diffkin-*.exe
+          $destination = Join-Path $env:RUNNER_TEMP 'diffkin-installed'
+          $install = Start-Process -FilePath $installer.FullName -ArgumentList "/S /D=$destination" -Wait -PassThru
+          if ($install.ExitCode -ne 0) { throw "NSIS exited with $($install.ExitCode)" }
+          $desktop = Get-Item "$destination/diffkin-desktop.exe"
+          foreach ($file in $installer, $desktop) {
+            $signature = Get-AuthenticodeSignature -LiteralPath $file.FullName
+            Write-Host "$($file.Name) Authenticode = $($signature.Status)"
+            if ($env:WINDOWS_SIGNING_ENABLED -eq 'true' -and $signature.Status -ne 'Valid') {
+              throw "Invalid Authenticode signature on $($file.Name)"
+            }
+          }
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: release-${{ matrix.target }}

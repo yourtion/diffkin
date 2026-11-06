@@ -51,6 +51,8 @@ Release workflow 的顺序为：校验 tag → 复用完整 CI → 四目标构�
 
 文件名包含版本和 target，防止矩阵上传时重名。工作流中间产物保留 14 天，GitHub Release 中的产物独立保存。CLI 压缩包包含可执行文件、MIT `LICENSE` 和 `THIRD-PARTY-NOTICES.txt`；桌面安装包包含同样材料及依赖清单。
 
+上传前，CI 解压 CLI，在能执行对应架构的 runner 上运行 `--version` 并比较归档内外的许可证。macOS 还验证解压后 CLI 的签名和架构。Windows runner 会静默安装 NSIS 包，检查安装器和安装后的桌面 EXE 的 Authenticode 状态。
+
 在 Apple Silicon 开发机上可以复现默认的签名、打包和收集流程。
 
 ```sh
