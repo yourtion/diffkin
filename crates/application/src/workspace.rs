@@ -338,10 +338,7 @@ impl Archive {
         if self.active_snapshot_id.is_some() {
             self.active()?;
         }
-        for record in &self.reviews {
-            self.snapshot(&record.basis.workspace_snapshot_id)?
-                .validate_basis(&record.basis, false)?;
-        }
+        self.validate_reviews()?;
         let mut relation_ids = BTreeSet::new();
         for relation in &self.relations {
             if !safe_id(&relation.id)
@@ -356,6 +353,16 @@ impl Archive {
                 .validate_basis(&relation.from, false)?;
             self.snapshot(&relation.to.workspace_snapshot_id)?
                 .validate_basis(&relation.to, false)?;
+        }
+        Ok(())
+    }
+    fn validate_reviews(&self) -> Result<(), RepositoryError> {
+        if self.reviews.len() > MAX_REVIEWS {
+            return Err(budget("Review record limit reached"));
+        }
+        for record in &self.reviews {
+            self.snapshot(&record.basis.workspace_snapshot_id)?
+                .validate_basis(&record.basis, false)?;
         }
         Ok(())
     }
@@ -386,6 +393,15 @@ struct Envelope<T> {
     format_version: u32,
     checksum: String,
     payload: T,
+}
+
+/// A v2 primary file replaces only review state. Its immutable v1 base contains all frozen evidence.
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ReviewOverlay {
+    workspace_id: String,
+    base_checksum: String,
+    reviews: Vec<ReviewRecord>,
 }
 
 pub struct WorkspaceStore {
@@ -462,8 +478,10 @@ impl WorkspaceStore {
         }
     }
     fn read_bytes(&self, id: &str) -> Result<Vec<u8>, RepositoryError> {
-        let path = self.path(id)?;
-        let metadata = fs::symlink_metadata(&path).map_err(invalid)?;
+        Self::read_regular(&self.path(id)?)
+    }
+    fn read_regular(path: &Path) -> Result<Vec<u8>, RepositoryError> {
+        let metadata = fs::symlink_metadata(path).map_err(invalid)?;
         if !metadata.is_file()
             || metadata.file_type().is_symlink()
             || metadata.len() > MAX_ARCHIVE as u64
@@ -492,8 +510,58 @@ impl WorkspaceStore {
         envelope.payload.validate()?;
         Ok(envelope)
     }
+    fn evidence(&self, id: &str, bytes: &[u8]) -> Result<Option<Vec<u8>>, RepositoryError> {
+        #[derive(Deserialize)]
+        struct Version {
+            format_version: u32,
+        }
+        let version: Version = serde_json::from_slice(bytes).map_err(invalid)?;
+        match version.format_version {
+            1 => Ok(None),
+            2 => {
+                let evidence = Self::read_regular(&self.path(id)?.with_extension("evidence"))?;
+                if bytes.len() + evidence.len() > MAX_ARCHIVE {
+                    return Err(budget("Workspace evidence exceeds 64 MiB"));
+                }
+                Ok(Some(evidence))
+            }
+            _ => Err(invalid("Unknown workspace archive format")),
+        }
+    }
+    fn unpack(
+        id: &str,
+        bytes: &[u8],
+        evidence: Option<&[u8]>,
+    ) -> Result<(Archive, String), RepositoryError> {
+        let Some(evidence) = evidence else {
+            let base = Self::decode(id, bytes)?;
+            return Ok((base.payload, base.checksum));
+        };
+        let envelope: Envelope<&serde_json::value::RawValue> =
+            serde_json::from_slice(bytes).map_err(invalid)?;
+        if envelope.format_version != 2
+            || hash(envelope.payload.get().as_bytes()) != envelope.checksum
+        {
+            return Err(invalid("Invalid workspace review envelope"));
+        }
+        let overlay: ReviewOverlay =
+            serde_json::from_str(envelope.payload.get()).map_err(invalid)?;
+        if overlay.workspace_id != id {
+            return Err(invalid("Review state belongs to another workspace"));
+        }
+        let base = Self::decode(id, evidence)?;
+        if base.checksum != overlay.base_checksum {
+            return Err(invalid("Review state does not match its frozen evidence"));
+        }
+        let mut archive = base.payload;
+        archive.reviews = overlay.reviews;
+        archive.validate_reviews()?;
+        Ok((archive, base.checksum))
+    }
     fn read(&self, id: &str) -> Result<Archive, RepositoryError> {
-        Ok(Self::decode(id, &self.read_bytes(id)?)?.payload)
+        let bytes = self.read_bytes(id)?;
+        let evidence = self.evidence(id, &bytes)?;
+        Ok(Self::unpack(id, &bytes, evidence.as_deref())?.0)
     }
     fn write(&self, archive: &Archive) -> Result<(), RepositoryError> {
         archive.validate()?;
@@ -519,6 +587,20 @@ impl WorkspaceStore {
         if other_bytes + bytes.len() as u64 > MAX_STORE {
             return Err(budget("Workspace store exceeds 256 MiB"));
         }
+        self.publish(&destination, &bytes)?;
+        let evidence = destination.with_extension("evidence");
+        match fs::remove_file(evidence) {
+            Ok(()) => (),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => (),
+            Err(error) => return Err(invalid(error)),
+        }
+        if let Ok(mut cache) = self.summaries.lock() {
+            cache.retain(|id, _| files.iter().any(|(present, _)| present == id));
+            cache.insert(archive.config.id.clone(), (hash(&bytes), archive.summary()));
+        }
+        Ok(())
+    }
+    fn publish(&self, destination: &Path, bytes: &[u8]) -> Result<(), RepositoryError> {
         // One fixed staging file bounds crash leftovers. The store lock excludes other writers.
         let temporary = self.root.join(".pending");
         match fs::symlink_metadata(&temporary) {
@@ -535,9 +617,9 @@ impl WorkspaceStore {
                 .write(true)
                 .open(&temporary)
                 .map_err(invalid)?;
-            file.write_all(&bytes).map_err(invalid)?;
+            file.write_all(bytes).map_err(invalid)?;
             file.sync_all().map_err(invalid)?;
-            fs::rename(&temporary, &destination).map_err(invalid)?;
+            fs::rename(&temporary, destination).map_err(invalid)?;
             #[cfg(unix)]
             File::open(&self.root)
                 .and_then(|file| file.sync_all())
@@ -547,13 +629,6 @@ impl WorkspaceStore {
         if let Err(error) = result {
             let _ = fs::remove_file(temporary);
             return Err(error);
-        }
-        if let Ok(mut cache) = self.summaries.lock() {
-            cache.retain(|id, _| files.iter().any(|(present, _)| present == id));
-            cache.insert(
-                archive.config.id.clone(),
-                (envelope.checksum, archive.summary()),
-            );
         }
         Ok(())
     }
@@ -573,7 +648,14 @@ impl WorkspaceStore {
             if !metadata.is_file() || metadata.file_type().is_symlink() {
                 return Err(invalid("Managed workspace files must be regular files"));
             }
-            files.push((id.into(), metadata.len()));
+            let evidence_size = match fs::symlink_metadata(entry.path().with_extension("evidence"))
+            {
+                Ok(meta) if meta.is_file() && !meta.file_type().is_symlink() => meta.len(),
+                Ok(_) => return Err(invalid("Workspace evidence must be a regular file")),
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => 0,
+                Err(error) => return Err(invalid(error)),
+            };
+            files.push((id.into(), metadata.len().saturating_add(evidence_size)));
             if files.len() > MAX_WORKSPACES {
                 return Err(budget("Workspace store contains too many files"));
             }
@@ -582,26 +664,24 @@ impl WorkspaceStore {
         Ok(files)
     }
     pub fn list(&self) -> Result<Vec<WorkspaceSummary>, RepositoryError> {
+        let _lock = self.lock()?;
         let files = self.managed_files()?;
         let mut cache = self.summaries.lock().map_err(invalid)?;
         cache.retain(|id, _| files.iter().any(|(present, _)| present == id));
         let mut summaries = Vec::with_capacity(files.len());
         for (id, _) in files {
             let summary = self.read_bytes(&id).and_then(|bytes| {
-                if let Some((checksum, summary)) = cache.get(&id) {
-                    let raw: Envelope<&serde_json::value::RawValue> =
-                        serde_json::from_slice(&bytes).map_err(invalid)?;
-                    // Only an exact match of a previously validated payload can skip decoding it.
-                    if raw.format_version == 1
-                        && raw.checksum == *checksum
-                        && hash(raw.payload.get().as_bytes()) == *checksum
-                    {
-                        return Ok(summary.clone());
-                    }
+                let evidence = self.evidence(&id, &bytes)?;
+                let mut digest = hash(&bytes);
+                if let Some(base) = &evidence {
+                    digest.push_str(&hash(base));
                 }
-                let envelope = Self::decode(&id, &bytes)?;
-                let summary = envelope.payload.summary();
-                cache.insert(id.clone(), (envelope.checksum, summary.clone()));
+                if let Some((_, summary)) = cache.get(&id).filter(|(key, _)| key == &digest) {
+                    return Ok(summary.clone());
+                }
+                let (archive, _) = Self::unpack(&id, &bytes, evidence.as_deref())?;
+                let summary = archive.summary();
+                cache.insert(id.clone(), (digest, summary.clone()));
                 Ok(summary)
             });
             summaries.push(summary.unwrap_or_else(|error| WorkspaceSummary {
@@ -615,6 +695,7 @@ impl WorkspaceStore {
         Ok(summaries)
     }
     pub fn load(&self, id: &str) -> Result<WorkspaceSession, RepositoryError> {
+        let _lock = self.lock()?;
         Ok(self.read(id)?.session())
     }
     pub fn save_config(
@@ -676,6 +757,7 @@ impl WorkspaceStore {
         displayed: Option<&str>,
     ) -> Result<Option<String>, RepositoryError> {
         if let Some(displayed) = displayed {
+            let _lock = self.lock()?;
             let archive = self.read(&config.id)?;
             archive.active_for_write(displayed)?;
             if &archive.config != config {
@@ -773,11 +855,16 @@ impl WorkspaceStore {
         state: ReviewState,
     ) -> Result<WorkspaceSession, RepositoryError> {
         let _lock = self.lock()?;
-        let mut archive = self.read(id)?;
+        let bytes = self.read_bytes(id)?;
+        let base = self.evidence(id, &bytes)?;
+        let (mut archive, base_checksum) = Self::unpack(id, &bytes, base.as_deref())?;
         archive
             .active_for_write(&basis.workspace_snapshot_id)?
             .validate_basis(&basis, true)?;
         if let Some(record) = archive.reviews.iter_mut().find(|r| r.basis == basis) {
+            if record.state == state {
+                return Ok(archive.session());
+            }
             record.state = state;
         } else {
             if archive.reviews.len() >= MAX_REVIEWS {
@@ -785,8 +872,41 @@ impl WorkspaceStore {
             }
             archive.reviews.push(ReviewRecord { basis, state });
         }
-        self.write(&archive)?;
-        Ok(archive.session())
+        let session = archive.session();
+        let overlay = ReviewOverlay {
+            workspace_id: id.into(),
+            base_checksum,
+            reviews: archive.reviews,
+        };
+        let header = json(&Envelope {
+            format_version: 2,
+            checksum: hash(&json(&overlay)?),
+            payload: &overlay,
+        })?;
+        let primary = self.path(id)?;
+        let evidence = primary.with_extension("evidence");
+        let evidence_len = base.as_ref().unwrap_or(&bytes).len() as u64;
+        let size = evidence_len + header.len() as u64;
+        let others: u64 = self
+            .managed_files()?
+            .iter()
+            .filter(|(name, _)| name != id)
+            .map(|(_, size)| size)
+            .sum();
+        if size > MAX_ARCHIVE as u64 || size + others > MAX_STORE {
+            // Embedded historical reviews may occupy space in both parts. A full rewrite
+            // compacts them and enforces the original archive and store budgets.
+            archive.reviews = overlay.reviews;
+            self.write(&archive)?;
+            return Ok(session);
+        }
+        if base.is_none() {
+            // Pin the existing, fully verified archive before atomically publishing the small primary.
+            // A crash between the two renames leaves a valid v1 primary.
+            self.publish(&evidence, &bytes)?;
+        }
+        self.publish(&primary, &header)?;
+        Ok(session)
     }
     pub fn add_relation(
         &self,
@@ -839,6 +959,7 @@ impl WorkspaceStore {
         id: &str,
         snapshot_id: Option<&str>,
     ) -> Result<WorkspaceExport, RepositoryError> {
+        let _lock = self.lock()?;
         let archive = self.read(id)?;
         let mut repositories = Vec::new();
         let snapshot_id = snapshot_id.or(archive.active_snapshot_id.as_deref());

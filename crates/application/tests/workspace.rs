@@ -725,3 +725,40 @@ fn redirected_store_root_lock_and_staging_never_write_the_target() {
     assert!(store.save_config(&config).is_err());
     assert_eq!(fs::read(&sentinel).unwrap(), b"do not modify");
 }
+
+#[test]
+fn review_edits_reuse_immutable_evidence_and_fold_back_into_full_writes() {
+    let fixture = Fixture::new();
+    let config = fixture.config();
+    let store = fixture.store();
+    let (_, snapshot) = store.capture_and_open(&config, &token()).unwrap();
+    let primary = fixture.0.join("store/project.json");
+    let evidence = primary.with_extension("evidence");
+    let original = fs::read(&primary).unwrap();
+    let front = basis(&snapshot, "frontend");
+    let api = basis(&snapshot, "api");
+    store
+        .set_review("project", front.clone(), ReviewState::Reviewed)
+        .unwrap();
+    assert_eq!(fs::read(&evidence).unwrap(), original);
+    let first = fs::metadata(&evidence).unwrap().modified().unwrap();
+    fixture
+        .store()
+        .set_review("project", api, ReviewState::NeedsAttention)
+        .unwrap();
+    assert_eq!(fs::metadata(&evidence).unwrap().modified().unwrap(), first);
+    assert!(fs::metadata(&primary).unwrap().len() < original.len() as u64);
+    assert!(store.list().unwrap()[0].error.is_none());
+    fs::write(&evidence, b"broken").unwrap();
+    assert!(store.list().unwrap()[0].error.is_some());
+    assert!(store.load("project").is_err());
+    fs::write(&evidence, &original).unwrap();
+    assert_eq!(store.load("project").unwrap().reviews.len(), 2);
+    store.save_config(&config).unwrap();
+    assert!(!evidence.exists());
+    let restored = fixture
+        .store()
+        .set_review("project", front, ReviewState::Pending)
+        .unwrap();
+    assert_eq!(restored.reviews.len(), 2);
+}
