@@ -5,7 +5,6 @@ import type {
   WorkspaceConfig,
   WorkspaceRepository,
   WorkspaceSession,
-  WorkspaceSummary,
 } from "@diffkin/protocol";
 import { client, message } from "../lib/client";
 import { workspaceClient } from "../lib/workspace-client";
@@ -44,7 +43,7 @@ export function WorkspacePanel({
   session: WorkspaceSession | null;
   repositoryId: string | null;
   selectedFile: FileSummary | null;
-  onActivate: (session: WorkspaceSession, repoId?: string, ticket?: number) => void;
+  onActivate: (session: WorkspaceSession, ticket: number) => void;
   onBegin: () => number;
   onUpdate: (session: WorkspaceSession) => void;
   onClose: () => void;
@@ -58,8 +57,6 @@ export function WorkspacePanel({
         repositories: [repository(currentSpec)],
       },
   );
-  const [saved, setSaved] = useState<WorkspaceSummary[]>([]);
-  const [savedId, setSavedId] = useState("");
   const [busy, setBusy] = useState(false);
   const [capturing, setCapturing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -86,22 +83,7 @@ export function WorkspacePanel({
     if (job.current) void client.cancel(job.current).catch(() => {});
     job.current = null;
   }, []);
-  useEffect(() => {
-    let active = true;
-    if (available)
-      void workspaceClient
-        .list()
-        .then((items) => {
-          if (active) setSaved(items);
-        })
-        .catch((cause) => {
-          if (active) setError(message(cause));
-        });
-    return () => {
-      active = false;
-      stopCapture();
-    };
-  }, [available, stopCapture]);
+  useEffect(() => stopCapture, [stopCapture]);
   async function action(task: () => Promise<void>) {
     const current = ++operation.current;
     setBusy(true);
@@ -123,6 +105,13 @@ export function WorkspacePanel({
       ),
     }));
   }
+  function changePath(repo: WorkspaceRepository, path: string) {
+    const name = (value: string) => value.split(/[\\/]/).filter(Boolean).at(-1) || "仓库";
+    updateRepo(repo.id, {
+      label: repo.label === name(repo.spec.repository) ? name(path) : repo.label,
+      spec: { ...repo.spec, repository: path },
+    });
+  }
   async function capture() {
     const ticket = onBegin();
     const current = ++generation.current;
@@ -132,12 +121,7 @@ export function WorkspacePanel({
     await action(async () => {
       const result = await workspaceClient.capture(config, token);
       if (generation.current !== current) return;
-      onActivate(result, undefined, ticket);
-      setTargetRepo("");
-      setTargetFile("");
-      setTargetPages({});
-      setSaved(await workspaceClient.list());
-      setNotice("工作区快照已固定；各仓库独立绑定基线与候选。未修改仓库保留为上下文。");
+      onActivate(result, ticket);
     });
     if (job.current === token) {
       job.current = null;
@@ -148,12 +132,7 @@ export function WorkspacePanel({
     const ticket = onBegin();
     await action(async () => {
       const result = await workspaceClient.restore(id, snapshotId);
-      setConfig(result.config);
-      onActivate(result, undefined, ticket);
-      setTargetRepo("");
-      setTargetFile("");
-      setTargetPages({});
-      setNotice("已恢复本机保存的冻结证据，没有重新读取活动源码。");
+      onActivate(result, ticket);
     });
   }
   async function exportManifest() {
@@ -213,11 +192,18 @@ export function WorkspacePanel({
     return `${repo?.label ?? repoId} / ${repo?.manifest?.files.find((item) => item.id === fileId)?.path ?? fileId.slice(0, 12)}`;
   };
   return (
-    <section className="workspace-manager" aria-label="多仓库工作区">
+    <section
+      className={
+        session?.activeSnapshotId ? "workspace-manager" : "workspace-manager workspace-editor"
+      }
+      aria-label="多仓库工作区"
+    >
       <div className="workspace-manager-heading">
-        <h2>多仓库工作区</h2>
+        <h2>
+          {session?.activeSnapshotId ? "工作区设置" : session ? session.config.name : "新建工作区"}
+        </h2>
         <button onClick={onClose} disabled={busy}>
-          收起设置
+          {session?.activeSnapshotId ? "收起设置" : "返回工作区"}
         </button>
       </div>
       {error && (
@@ -236,75 +222,54 @@ export function WorkspacePanel({
             disabled={busy}
           />
         </label>
-        <button
-          disabled={busy}
-          onClick={() => {
-            setConfig({
-              id: identifier(),
-              name: "新工作区",
-              repositories: [repository(currentSpec)],
-            });
-            setNotice("编辑新工作区；捕获后才替换当前审阅。");
-          }}
-        >
-          新建工作区
-        </button>
-        <select
-          aria-label="已保存工作区"
-          value={savedId}
-          onChange={(e) => setSavedId(e.target.value)}
-        >
-          <option value="">选择已保存工作区</option>
-          {saved.map((item) => (
-            <option value={item.id} key={item.id}>
-              {item.name} · {item.repositoryCount} 仓库{item.error ? " · 存档异常" : ""}
-            </option>
-          ))}
-        </select>
-        <button disabled={busy || !savedId || !available} onClick={() => void restore(savedId)}>
-          恢复工作区
-        </button>
       </div>
       <div className="repository-configs">
         {config.repositories.map((repo, index) => (
           <fieldset className="repository-config" key={repo.id} disabled={busy}>
             <legend>仓库 {index + 1}</legend>
-            <input
-              aria-label={`仓库 ${index + 1} 名称`}
-              value={repo.label}
-              onChange={(e) => updateRepo(repo.id, { label: e.target.value })}
-            />
-            <input
-              className="workspace-path"
-              aria-label={`仓库 ${index + 1} 路径`}
-              placeholder="本地 Git 仓库路径"
-              value={repo.spec.repository}
-              onChange={(e) =>
-                updateRepo(repo.id, { spec: { ...repo.spec, repository: e.target.value } })
-              }
-            />
+            <label>
+              显示名称
+              <input
+                aria-label={`仓库 ${index + 1} 名称`}
+                value={repo.label}
+                onChange={(e) => updateRepo(repo.id, { label: e.target.value })}
+              />
+            </label>
+            <label className="workspace-path">
+              本地仓库
+              <input
+                className="workspace-path"
+                aria-label={`仓库 ${index + 1} 路径`}
+                placeholder="本地 Git 仓库路径"
+                value={repo.spec.repository}
+                onChange={(e) => changePath(repo, e.target.value)}
+              />
+            </label>
             <RepositoryPicker
               key={repo.spec.repository}
               value={repo.spec.repository}
               label={`选择仓库 ${index + 1} 目录`}
               disabled={!available || busy}
-              onChoose={(path) => updateRepo(repo.id, { spec: { ...repo.spec, repository: path } })}
+              onChoose={(path) => changePath(repo, path)}
             />
-            <select
-              aria-label={`仓库 ${index + 1} 模式`}
-              value={repo.spec.mode}
-              onChange={(e) =>
-                updateRepo(repo.id, {
-                  spec: { ...repo.spec, mode: e.target.value as ComparisonSpec["mode"] },
-                })
-              }
-            >
-              {Object.entries(modes).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
+            <label>
+              比较内容
+              <select
+                aria-label={`仓库 ${index + 1} 模式`}
+                value={repo.spec.mode}
+                onChange={(e) =>
+                  updateRepo(repo.id, {
+                    spec: { ...repo.spec, mode: e.target.value as ComparisonSpec["mode"] },
+                  })
+                }
+              >
+                {Object.entries(modes).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
             {repo.spec.mode === "commits" ? (
               <>
                 <RevisionPicker
@@ -325,7 +290,8 @@ export function WorkspacePanel({
                   onChange={(head) => updateRepo(repo.id, { spec: { ...repo.spec, head } })}
                 />
               </>
-            ) : (
+            ) : null}
+            {(repo.spec.mode === "unstaged" || repo.spec.mode === "worktree") && (
               <label className="check">
                 <input
                   type="checkbox"
@@ -351,6 +317,20 @@ export function WorkspacePanel({
                 完整原文核验
               </label>
             )}
+            <label className="workspace-scope">
+              路径范围
+              <input
+                id={`scope-${repo.id}`}
+                aria-label={`仓库 ${index + 1} 路径范围`}
+                placeholder="整个仓库"
+                value={repo.spec.pathScope ?? ""}
+                onChange={(e) =>
+                  updateRepo(repo.id, {
+                    spec: { ...repo.spec, pathScope: e.target.value || undefined },
+                  })
+                }
+              />
+            </label>
             <button
               disabled={config.repositories.length <= 1}
               onClick={() =>
@@ -381,12 +361,17 @@ export function WorkspacePanel({
           关联另一个仓库
         </button>
         <button
-          disabled={busy || !available}
+          disabled={
+            busy ||
+            !available ||
+            !config.name.trim() ||
+            config.repositories.some((repo) => !repo.spec.repository.trim())
+          }
           onClick={() =>
             void action(async () => {
               const result = await workspaceClient.save(config);
               onUpdate(result);
-              setSaved(await workspaceClient.list());
+              if (!session) onClose();
               setNotice("配置已保存；捕获工作区后读取这些仓库的改动。");
             })
           }
@@ -396,11 +381,14 @@ export function WorkspacePanel({
         <button
           className="primary"
           disabled={
-            busy || !available || config.repositories.some((repo) => !repo.spec.repository.trim())
+            busy ||
+            !available ||
+            !config.name.trim() ||
+            config.repositories.some((repo) => !repo.spec.repository.trim())
           }
           onClick={() => void capture()}
         >
-          {busy ? "处理中…" : "捕获工作区"}
+          {busy ? "处理中…" : "比较工作区"}
         </button>
         {busy && capturing && (
           <button

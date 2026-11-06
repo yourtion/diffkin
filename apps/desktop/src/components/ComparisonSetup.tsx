@@ -16,7 +16,9 @@ const localSources = {
   unstaged: ["暂存区", "工作区"],
 };
 
-export function comparisonSources(spec: ComparisonSpec) {
+export function comparisonSources(
+  spec: Pick<ComparisonSpec, "mode"> & Partial<Pick<ComparisonSpec, "base" | "head">>,
+) {
   return spec.mode === "commits"
     ? [spec.base || "HEAD~1", spec.head || "HEAD"]
     : localSources[spec.mode];

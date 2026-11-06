@@ -47,6 +47,7 @@ if (input) {
         { manifest: capture.manifest, file },
       );
       await page.goto("/");
+      await page.getByRole("button", { name: "单仓库比较", exact: true }).click();
       await page.getByLabel("Git 仓库路径").fill("/kernel-fixture");
       await page.getByRole("button", { name: "开始比较", exact: true }).click();
       await page.getByRole("button", { name: "变更详情", exact: true }).click();

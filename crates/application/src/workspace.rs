@@ -614,19 +614,32 @@ impl WorkspaceStore {
         id: &str,
         snapshot_id: Option<&str>,
     ) -> Result<FrozenWorkspace, RepositoryError> {
+        Ok(self.archive_at(id, snapshot_id)?.active()?.clone())
+    }
+    pub fn open_session(
+        &self,
+        id: &str,
+        snapshot_id: Option<&str>,
+    ) -> Result<(WorkspaceSession, Option<FrozenWorkspace>), RepositoryError> {
+        let archive = self.archive_at(id, snapshot_id)?;
+        let session = archive.session();
+        let frozen = archive
+            .snapshots
+            .into_iter()
+            .find(|snapshot| Some(&snapshot.manifest.id) == session.active_snapshot_id.as_ref());
+        Ok((session, frozen))
+    }
+    fn archive_at(&self, id: &str, snapshot_id: Option<&str>) -> Result<Archive, RepositoryError> {
         let _lock = self.lock()?;
         let mut archive = self.read(id)?;
-        let snapshot = if let Some(snapshot_id) = snapshot_id {
-            archive.snapshot(snapshot_id)?
-        } else {
-            archive.active()?
+        if let Some(requested) = snapshot_id {
+            if archive.active_snapshot_id.as_deref() != Some(requested) {
+                archive.snapshot(requested)?;
+                archive.active_snapshot_id = Some(requested.to_owned());
+                self.write(&archive)?;
+            }
         }
-        .clone();
-        if archive.active_snapshot_id.as_ref() != Some(&snapshot.manifest.id) {
-            archive.active_snapshot_id = Some(snapshot.manifest.id.clone());
-            self.write(&archive)?;
-        }
-        Ok(snapshot)
+        Ok(archive)
     }
     pub fn relocate(
         &self,

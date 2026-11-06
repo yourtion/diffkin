@@ -57,13 +57,12 @@ if (input) {
       });
     }, capture);
     await page.goto("/");
-    await page.getByRole("button", { name: "工作区", exact: true }).click();
-    await page.getByLabel("已保存工作区").selectOption(session.config.id);
-    await page.getByRole("button", { name: "恢复工作区", exact: true }).click();
+    await page.getByRole("button").filter({ hasText: session.config.name }).click();
     await expect(page.getByRole("button", { name: "✓ 已审查此版本", exact: true })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "工作区仓库" })).toContainText(
       "未修改 · 上下文",
     );
+    await page.getByRole("button", { name: "工作区设置" }).click();
     await page.locator(".manual-relations summary").click();
     await expect(page.locator(".manual-relations")).toContainText("当前快照关系");
     await expect(page.locator(".manual-relations")).toContainText("src/shared.ts");

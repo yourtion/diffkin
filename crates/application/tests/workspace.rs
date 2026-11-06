@@ -153,6 +153,24 @@ fn three_repositories_same_filename_and_unchanged_context_are_isolated() {
         .is_err());
 }
 #[test]
+fn saved_workspace_can_be_opened_before_its_first_capture() {
+    let fixture = Fixture::new();
+    let store = fixture.store();
+    let config = fixture.config();
+    store.save_config(&config).unwrap();
+    let (session, frozen) = store.open_session("project", None).unwrap();
+    assert!(session.active_snapshot_id.is_none());
+    assert!(frozen.is_none());
+    assert!(store.open_session("project", Some("missing")).is_err());
+    store.capture(&config, &token()).unwrap();
+    let (session, frozen) = store.open_session("project", None).unwrap();
+    assert_eq!(
+        session.active_snapshot_id.unwrap(),
+        frozen.unwrap().manifest().id
+    );
+}
+
+#[test]
 fn restore_after_removing_live_repositories_retains_review_and_relation_evidence() {
     let fixture = Fixture::new();
     let config = fixture.config();

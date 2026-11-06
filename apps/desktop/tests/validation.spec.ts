@@ -157,6 +157,7 @@ async function openValidation(
     { plan, completed, options },
   );
   await page.goto("/");
+  await page.getByRole("button", { name: "单仓库比较", exact: true }).click();
   await page.getByLabel("Git 仓库路径").fill("/repo");
   await page.getByRole("button", { name: "验证", exact: true }).click();
   await expect(page.getByRole("region", { name: "固定版本验证", exact: true })).toBeVisible();

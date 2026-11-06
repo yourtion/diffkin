@@ -17,11 +17,17 @@ import { LargeFileViewer, needsSegments } from "./components/LargeFileViewer";
 import { DiffViewer } from "./components/DiffViewer";
 import { ChangeInspector } from "./components/ChangeInspector";
 import { ExplanationPanel } from "./components/ExplanationPanel";
+import { WorkspaceHome } from "./components/WorkspaceHome";
 import { WorkspacePanel } from "./components/WorkspacePanel";
 import { ValidationPanel } from "./components/ValidationPanel";
 import { ComparisonSetup, comparisonSources, modeNames } from "./components/ComparisonSetup";
 import { CaptureNotices } from "./components/CaptureNotices";
-import { workspaceClient, sameBasis } from "./lib/workspace-client";
+import {
+  workspaceClient,
+  sameBasis,
+  lastViewedWorkspace,
+  rememberWorkspace,
+} from "./lib/workspace-client";
 
 let nextJob = 0;
 function jobId() {
@@ -82,7 +88,10 @@ export function App({
   const [showPreferences, setShowPreferences] = useState(false);
   const [workspaceSession, setWorkspaceSession] = useState<WorkspaceSession | null>(null);
   const [repositoryId, setRepositoryId] = useState<string | null>(null);
-  const [showWorkspace, setShowWorkspace] = useState(false);
+  const [workspacePage, setWorkspacePage] = useState<"home" | "create" | "settings" | "review">(
+    "home",
+  );
+  const showWorkspace = workspacePage === "create" || workspacePage === "settings";
   const [workspaceBusy, setWorkspaceBusy] = useState(false);
   const [validationOpen, setValidationOpen] = useState(false);
   const [validationMounted, setValidationMounted] = useState(false);
@@ -121,6 +130,7 @@ export function App({
   const [recoverScope, setRecoverScope] = useState(false);
   const editButton = useRef<HTMLButtonElement>(null);
   const filesButton = useRef<HTMLButtonElement>(null);
+  const workspaceTabs = useRef<HTMLElement>(null);
   const pathInput = useRef<HTMLInputElement>(null);
   const pickerButton = useRef<HTMLButtonElement>(null);
   const files = manifest?.files;
@@ -167,7 +177,7 @@ export function App({
     if (workspaceBusy || capturing) return;
     if (appliedSpec && !showCompareSettings) setDraft(appliedSpec);
     setShowCompareSettings(true);
-    setShowWorkspace(false);
+    setWorkspacePage("review");
     setShowPreferences(false);
     setValidationOpen(false);
     setError(null);
@@ -435,10 +445,12 @@ export function App({
     const snapshot = session.snapshots.find((item) => item.id === session.activeSnapshotId);
     const selected =
       snapshot?.repositories.find((repo) => repo.repositoryId === preferredRepository) ??
+      snapshot?.repositories.find((repo) => repo.manifest?.totalFiles) ??
       snapshot?.repositories.find((repo) => repo.manifest) ??
       snapshot?.repositories[0];
     setWorkspaceSession(session);
     setRepositoryId(selected?.repositoryId ?? null);
+    rememberWorkspace(session.config.id, selected?.repositoryId ?? null);
     setManifest(selected?.manifest ?? null);
     resetComparisonView();
     setError(selected?.error ? message(selected.error) : null);
@@ -449,6 +461,20 @@ export function App({
     if (config) settings.update((current) => ({ ...current, spec: config.spec }));
     if (selected?.manifest?.files[0])
       void selectFile(selected.manifest.files[0], selected.manifest);
+  }
+  function enterWorkspace(session: WorkspaceSession, ticket?: number) {
+    if (ticket !== undefined && !captureGeneration.current.isCurrent(ticket)) return;
+    const last = lastViewedWorkspace();
+    const preferred = session.config.id === last?.id ? last.repositoryId : null;
+    activateWorkspace(session, preferred ?? undefined, ticket);
+    setWorkspacePage(session.activeSnapshotId ? "review" : "settings");
+    setShowPreferences(false);
+    if (session.activeSnapshotId)
+      requestAnimationFrame(() =>
+        workspaceTabs.current
+          ?.querySelector<HTMLButtonElement>('button[aria-pressed="true"]')
+          ?.focus(),
+      );
   }
   function updateWorkspace(session: WorkspaceSession) {
     setWorkspaceSession((current) =>
@@ -544,7 +570,7 @@ export function App({
         editComparison(true);
         return;
       }
-      if (validationOpen || showWorkspace || showCompareSettings || !manifest) {
+      if (validationOpen || workspacePage !== "review" || showCompareSettings || !manifest) {
         if (
           e.key === "Escape" &&
           showCompareSettings &&
@@ -604,9 +630,18 @@ export function App({
   const activeWorkspace = workspaceSession?.snapshots.find(
     (item) => item.id === workspaceSession.activeSnapshotId,
   );
+  const activeRepository = activeWorkspace?.repositories.find(
+    (repo) => repo.repositoryId === repositoryId,
+  );
   const setupVisible =
-    !validationOpen && !showWorkspace && (showCompareSettings || (!manifest && !workspaceSession));
-  const reviewing = !!manifest && !validationOpen && !setupVisible;
+    !validationOpen &&
+    workspacePage === "review" &&
+    (showCompareSettings || (!manifest && !workspaceSession));
+  const reviewing =
+    !!manifest &&
+    !validationOpen &&
+    !setupVisible &&
+    (workspacePage === "review" || workspacePage === "settings");
   const reviewed = selectedFile ? isReviewed(selectedFile) : false;
   return (
     <main
@@ -623,34 +658,42 @@ export function App({
         </div>
         <div className="header-actions">
           <button
-            aria-pressed={!validationOpen && !showWorkspace}
+            aria-pressed={
+              !validationOpen &&
+              (workspacePage !== "review" || (!!workspaceSession && !setupVisible))
+            }
+            disabled={workspaceBusy || capturing}
             onClick={() => {
               setValidationOpen(false);
-              setShowWorkspace(false);
-              if (workspaceSession && !manifest) editComparison();
+              setShowPreferences(false);
+              setWorkspacePage("home");
             }}
           >
-            比较
+            工作区
+          </button>
+          <button
+            aria-pressed={
+              !validationOpen && workspacePage === "review" && (!workspaceSession || setupVisible)
+            }
+            disabled={workspaceBusy || capturing}
+            onClick={() => {
+              if (!workspaceSession && manifest && !showCompareSettings) {
+                setWorkspacePage("review");
+                setValidationOpen(false);
+              } else editComparison();
+            }}
+          >
+            单仓库比较
           </button>
           <button
             aria-pressed={validationOpen}
-            disabled={!available || workspaceBusy}
+            disabled={!available || workspaceBusy || capturing}
             onClick={() => {
               setValidationMounted(true);
               setValidationOpen(true);
             }}
           >
             验证
-          </button>
-          <button
-            aria-pressed={showWorkspace && !validationOpen}
-            disabled={!available || workspaceBusy}
-            onClick={() => {
-              setValidationOpen(false);
-              setShowWorkspace(validationOpen ? true : !showWorkspace);
-            }}
-          >
-            工作区
           </button>
           <button
             aria-pressed={showPreferences}
@@ -674,6 +717,47 @@ export function App({
           available={available}
         />
       )}
+      {workspacePage === "home" && !validationOpen && (
+        <WorkspaceHome
+          available={available}
+          onCreate={() => setWorkspacePage("create")}
+          onBegin={beginComparisonOperation}
+          onOpen={enterWorkspace}
+        />
+      )}
+      {activeWorkspace &&
+        !validationOpen &&
+        !setupVisible &&
+        (workspacePage === "review" || workspacePage === "settings") && (
+          <nav ref={workspaceTabs} className="workspace-tabs" aria-label="工作区仓库">
+            <strong>{workspaceSession?.config.name}</strong>
+            {activeWorkspace.repositories.map((repo) => (
+              <button
+                key={repo.repositoryId}
+                className={repo.error ? "repository-error" : ""}
+                aria-pressed={repositoryId === repo.repositoryId}
+                onClick={() => activateWorkspace(workspaceSession!, repo.repositoryId)}
+              >
+                {repo.label}
+                <small>
+                  {repo.error
+                    ? "不可用"
+                    : repo.manifest?.totalFiles
+                      ? `${repo.manifest.totalFiles} 个变化`
+                      : "未修改 · 上下文"}
+                </small>
+              </button>
+            ))}
+            <button
+              className="workspace-settings"
+              disabled={workspaceBusy || capturing}
+              aria-expanded={showWorkspace}
+              onClick={() => setWorkspacePage(showWorkspace ? "review" : "settings")}
+            >
+              工作区设置
+            </button>
+          </nav>
+        )}
       {reviewing && (
         <div className="review-context" aria-label="当前比较">
           <button
@@ -689,20 +773,26 @@ export function App({
           </strong>
           <span>{modeNames[manifest.mode]}</span>
           <code title={`${manifest.baseLabel} → ${manifest.headLabel}`}>
-            {appliedSpec
+            {appliedSpec && !workspaceSession
               ? comparisonSources(appliedSpec).join(" → ")
-              : `${manifest.baseLabel} → ${manifest.headLabel}`}
-            {appliedSpec?.pathScope && ` · ${appliedSpec.pathScope}`}
+              : manifest.mode === "commits"
+                ? [manifest.baseLabel, manifest.headLabel]
+                    .map((label) => label.replace(/^([0-9a-f]{10})[0-9a-f]{30,54}$/i, "$1"))
+                    .join(" → ")
+                : comparisonSources({ mode: manifest.mode }).join(" → ")}
+            {!workspaceSession && appliedSpec?.pathScope && ` · ${appliedSpec.pathScope}`}
           </code>
-          <button
-            ref={editButton}
-            disabled={capturing || workspaceBusy}
-            aria-expanded={showCompareSettings}
-            aria-controls="comparison-settings"
-            onClick={() => editComparison()}
-          >
-            {workspaceSession ? "单独比较此仓库" : "更改比较"}
-          </button>
+          {!workspaceSession && (
+            <button
+              ref={editButton}
+              disabled={capturing || workspaceBusy}
+              aria-expanded={showCompareSettings}
+              aria-controls="comparison-settings"
+              onClick={() => editComparison()}
+            >
+              更改比较
+            </button>
+          )}
           <button
             disabled={pending === "capture" || workspaceBusy}
             onClick={() => void refreshComparison()}
@@ -759,46 +849,42 @@ export function App({
         <WorkspacePanel
           available={available}
           currentSpec={spec}
-          session={workspaceSession}
+          session={workspacePage === "create" ? null : workspaceSession}
           repositoryId={repositoryId}
           selectedFile={selectedFile}
-          onActivate={activateWorkspace}
+          onActivate={enterWorkspace}
           onBegin={beginComparisonOperation}
           onUpdate={updateWorkspace}
-          onClose={() => setShowWorkspace(false)}
+          onClose={() =>
+            setWorkspacePage(workspacePage === "create" || !activeWorkspace ? "home" : "review")
+          }
           onBusyChange={setWorkspaceBusy}
         />
-      )}
-      {activeWorkspace && !validationOpen && !setupVisible && (
-        <nav className="workspace-tabs" aria-label="工作区仓库">
-          <strong>{workspaceSession?.config.name}</strong>
-          {activeWorkspace.repositories.map((repo) => (
-            <button
-              key={repo.repositoryId}
-              className={repo.error ? "repository-error" : ""}
-              aria-pressed={repositoryId === repo.repositoryId}
-              onClick={() => activateWorkspace(workspaceSession!, repo.repositoryId)}
-            >
-              {repo.label}
-              <small>
-                {repo.error
-                  ? "不可用"
-                  : repo.manifest?.totalFiles
-                    ? `${repo.manifest.totalFiles} 个变化`
-                    : "未修改 · 上下文"}
-              </small>
-            </button>
-          ))}
-        </nav>
       )}
       {!available && (
         <p className="notice">浏览器仅预览界面。请运行桌面应用以读取本地 Git 仓库。</p>
       )}
-      {error && !setupVisible && !validationOpen && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
+      {error &&
+        !setupVisible &&
+        !validationOpen &&
+        workspacePage !== "home" &&
+        workspacePage !== "create" && (
+          <p className="error" role="alert">
+            {error}
+            {activeRepository?.error?.code === "budget-exceeded" && workspacePage === "review" && (
+              <button
+                onClick={() => {
+                  setWorkspacePage("settings");
+                  requestAnimationFrame(() =>
+                    document.getElementById(`scope-${repositoryId}`)?.focus(),
+                  );
+                }}
+              >
+                调整此仓库的路径范围
+              </button>
+            )}
+          </p>
+        )}
       {reviewing && (
         <CaptureNotices
           key={`${manifest.repository}:${manifest.id}`}

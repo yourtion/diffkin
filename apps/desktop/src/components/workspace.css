@@ -103,3 +103,74 @@
   background: var(--tint);
   color: var(--accent);
 }
+
+.workspace-home {
+  max-width: 600px;
+}
+.workspace-home-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.workspace-home .workspace-home-heading h2 {
+  margin: 0;
+}
+.workspace-home ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.workspace-home li button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  text-align: left;
+  gap: 4px 16px;
+  padding: 12px 14px;
+  align-items: center;
+}
+.workspace-home li strong {
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+.workspace-home li span,
+.workspace-home > p {
+  color: var(--muted);
+}
+.workspace-home li b {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  color: var(--accent);
+}
+.workspace-tabs .workspace-settings {
+  margin-left: auto;
+}
+.workspace-manager.workspace-editor {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  padding: 34px max(24px, calc((100% - 900px) / 2));
+}
+.workspace-editor .workspace-manager-heading h2 {
+  font-size: 20px;
+}
+.workspace-editor .repository-config {
+  background: var(--surface);
+  padding: 12px;
+}
+.repository-config label:not(.check) {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+}
+.workspace-editor .workspace-actions {
+  margin: 16px 0;
+}
+.repository-config .check input {
+  width: auto;
+}

@@ -69,6 +69,8 @@
       timeOrigin: performance.timeOrigin,
     };
     window.__diffkinBenchmarkIpc = report.ipc;
+    await wait(() => button("单仓库比较"), "workspace home");
+    button("单仓库比较").click();
     await wait(() => button("开始比较"), "initial form");
     // Let the native preference load settle before editing the isolated profile.
     await new Promise((resolve) => setTimeout(resolve, config.idleMs ?? 1000));

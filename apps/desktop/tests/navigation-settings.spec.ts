@@ -95,6 +95,7 @@ async function bridge(
     });
   }, options);
   await page.goto("/");
+  await page.getByRole("button", { name: "单仓库比较", exact: true }).click();
 }
 const calls = (page: Page, command: string) =>
   page.evaluate(
@@ -119,6 +120,7 @@ test("directory selection and cancellation never open a repository automatically
   await expect(path).toHaveValue("/selected/repository");
   expect(await calls(page, "open_comparison")).toEqual([]);
   await page.getByRole("button", { name: "工作区", exact: true }).click();
+  await page.getByRole("button", { name: "新建工作区", exact: true }).click();
   await page.evaluate(() => {
     (window as unknown as { pickerResults: string[] }).pickerResults = ["/workspace/other"];
   });
@@ -250,6 +252,7 @@ test("native settings persist paths, refs and view preferences across reload wit
     .toBe("/persisted");
   await page.evaluate(() => localStorage.removeItem("diffkin.preferences.v1"));
   await page.reload();
+  await page.getByRole("button", { name: "单仓库比较", exact: true }).click();
   await expect(page.getByLabel("Git 仓库路径")).toHaveValue("/persisted");
   await expect(page.getByRole("textbox", { name: "来源分支或提交", exact: true })).toHaveValue(
     "refs/heads/release",
@@ -385,6 +388,7 @@ test("complete raw verification is an explicit, persistent comparison choice", a
     )
     .toBe(true);
   await page.reload();
+  await page.getByRole("button", { name: "单仓库比较", exact: true }).click();
   await expect(page.getByRole("checkbox", { name: "完整原文核验", exact: true })).toBeChecked();
   expect(await calls(page, "open_comparison")).toEqual([]);
 });

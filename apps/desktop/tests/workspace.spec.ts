@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import type {
   WorkspaceConfig,
   WorkspaceSession,
+  WorkspaceSnapshot,
   EvidenceBasis,
   FileAnalysis,
   FileSummary,
@@ -52,6 +53,7 @@ async function bridge(page: Page, delayed = false, targetPaging = false) {
         value: {
           invoke: async (command: string, args: Record<string, unknown>) => {
             calls.push(command);
+            if (command === "preferences_load" || command === "preferences_save") return null;
             if (command === "cancel_job") return;
             if (command === "workspace_capture" && revision > 0 && "delayRefresh" in window) {
               await new Promise<void>((resolve) => {
@@ -86,7 +88,7 @@ async function bridge(page: Page, delayed = false, targetPaging = false) {
               revision++;
               const config = args.config as WorkspaceConfig;
               const id = `workspace-snapshot-${revision}`;
-              const snapshot = {
+              const snapshot: WorkspaceSnapshot = {
                 id,
                 workspaceId: config.id,
                 capturedAtMs: String(Date.now()),
@@ -115,6 +117,14 @@ async function bridge(page: Page, delayed = false, targetPaging = false) {
                   },
                 })),
               };
+              if ("timeoutSdk" in window && !config.repositories[1]?.spec.pathScope) {
+                const sdk = snapshot.repositories[1];
+                sdk.manifest = null;
+                sdk.error = {
+                  code: "budget-exceeded",
+                  message: "Snapshot exceeded its capture time budget",
+                };
+              }
               session = {
                 config,
                 snapshots: [...(session?.snapshots ?? []), snapshot],
@@ -210,7 +220,7 @@ async function bridge(page: Page, delayed = false, targetPaging = false) {
   await page.goto("/");
 }
 async function capture(page: Page) {
-  await page.getByRole("button", { name: "工作区", exact: true }).click();
+  await page.getByRole("button", { name: "新建工作区", exact: true }).click();
   await page.getByLabel("工作区名称", { exact: true }).fill("API + SDK + Web");
   await page.getByLabel("仓库 1 名称", { exact: true }).fill("API");
   await page.getByLabel("仓库 1 路径", { exact: true }).fill("/fixtures/api");
@@ -220,7 +230,7 @@ async function capture(page: Page) {
   await page.getByRole("button", { name: "关联另一个仓库", exact: true }).click();
   await page.getByLabel("仓库 3 名称", { exact: true }).fill("Web");
   await page.getByLabel("仓库 3 路径", { exact: true }).fill("/fixtures/web");
-  await page.getByRole("button", { name: "捕获工作区", exact: true }).click();
+  await page.getByRole("button", { name: "比较工作区", exact: true }).click();
   await expect(page.getByRole("navigation", { name: "工作区仓库" })).toBeVisible();
 }
 
@@ -229,7 +239,6 @@ test("workspace keeps same-path files and reviews separate, retains unchanged co
 }) => {
   await bridge(page);
   await capture(page);
-  await page.getByRole("button", { name: "收起设置", exact: true }).click();
   await expect(page.locator(".merge-host")).toContainText("value0 = 1");
   await page.getByRole("button", { name: "标记已审查", exact: true }).click();
   await expect(page.getByRole("button", { name: "✓ 已审查此版本", exact: true })).toBeVisible();
@@ -255,9 +264,7 @@ test("workspace keeps same-path files and reviews separate, retains unchanged co
   await expect(page.getByRole("button", { name: "✓ 已审查此版本", exact: true })).toBeVisible();
   await page.screenshot({ path: "test-results/workspace-review.png", fullPage: true });
   await page.reload();
-  await page.getByRole("button", { name: "工作区", exact: true }).click();
-  await page.getByLabel("已保存工作区").selectOption({ label: "API + SDK + Web · 3 仓库" });
-  await page.getByRole("button", { name: "恢复工作区", exact: true }).click();
+  await page.getByRole("button", { name: /API \+ SDK \+ Web/ }).click();
   await expect(page.getByRole("button", { name: "✓ 已审查此版本", exact: true })).toBeVisible();
   await expect(page.locator(".merge-host")).toContainText("value0 = 1");
 });
@@ -269,20 +276,24 @@ test("workspace refresh invalidates reviews and makes manual relations historica
   await capture(page);
   await page.getByRole("button", { name: "标记已审查", exact: true }).click();
   await expect(page.getByRole("button", { name: "✓ 已审查此版本", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "工作区设置", exact: true }).click();
   await page.locator(".manual-relations summary").click();
   await page.getByLabel("关联目标仓库").selectOption({ label: "SDK" });
   await page.getByLabel("关联目标文件").selectOption({ label: "src/shared.ts" });
   await page.getByLabel("关联备注").fill("调用契约");
   await page.getByRole("button", { name: "保存手工关联", exact: true }).click();
   await expect(page.locator(".manual-relations")).toContainText("当前快照关系");
-  await page.getByRole("button", { name: "捕获工作区", exact: true }).click();
+  await page.getByRole("button", { name: "比较工作区", exact: true }).click();
   await expect(page.locator(".merge-host")).toContainText("value0 = 2");
   await expect(page.getByRole("button", { name: "标记已审查", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "工作区设置" }).click();
+  await page.locator(".manual-relations summary").click();
   await expect(page.locator(".manual-relations")).toContainText("历史关系，待重新确认");
   await page.getByLabel("工作区历史快照").selectOption("workspace-snapshot-1");
   await expect(page.locator(".merge-host")).toContainText("value0 = 1");
   await expect(page.getByRole("button", { name: "✓ 已审查此版本", exact: true })).toBeVisible();
   const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "工作区设置" }).click();
   await page.getByRole("button", { name: "导出版本清单", exact: true }).click();
   await expect((await download).suggestedFilename()).toMatch(/^diffkin-workspace-.*\.json$/);
 });
@@ -332,11 +343,56 @@ test("refresh keeps the active workspace and the selected repository", async ({ 
   await page.getByRole("button", { name: "刷新工作区" }).click();
   await expect(page.locator(".merge-host")).toContainText("value1 = 2");
   await expect(sdk).toHaveAttribute("aria-pressed", "true");
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "我的工作区" })).toBeVisible();
+  await page.screenshot({ path: "test-results/workspace-home.png" });
+  await page.getByRole("button", { name: /上次打开 · 3 个仓库/ }).click();
+  await expect(sdk).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".merge-host")).toContainText("value1 = 2");
+  expect(
+    await page.evaluate(
+      () => (window as unknown as { __WORKSPACE_CALLS__: string[] }).__WORKSPACE_CALLS__,
+    ),
+  ).not.toContain("workspace_capture");
+});
+
+test("a saved configuration opens from home before its first comparison", async ({ page }) => {
+  await bridge(page);
+  await expect(page.getByRole("heading", { name: "我的工作区" })).toBeVisible();
+  await page.getByRole("button", { name: "新建工作区" }).click();
+  await page.getByLabel("工作区名称").fill("Backend");
+  await page.getByLabel("仓库 1 路径", { exact: true }).fill("/projects/api");
+  await expect(page.getByLabel("仓库 1 名称")).toHaveValue("api");
+  await page.getByLabel("仓库 1 路径范围").fill("services/auth");
+  await page.getByRole("button", { name: "保存配置" }).click();
+  await page.getByRole("button", { name: /Backend.*尚未比较/ }).click();
+  await expect(page.getByLabel("仓库 1 路径范围")).toHaveValue("services/auth");
+  await page.getByRole("button", { name: "比较工作区" }).click();
+  await expect(page.getByRole("navigation", { name: "工作区仓库" })).toContainText("api");
+  await expect(page.getByRole("region", { name: "多仓库工作区" })).toBeHidden();
+});
+
+test("a workspace timeout opens the affected repository scope and retries it", async ({ page }) => {
+  await bridge(page);
+  await page.evaluate(() => {
+    Object.assign(window, { timeoutSdk: true });
+  });
+  await capture(page);
+  await page.getByRole("button", { name: /SDK.*不可用/ }).click();
+  await expect(page.getByRole("alert")).toContainText("捕获仓库快照超时");
+  await page.getByRole("button", { name: "调整此仓库的路径范围" }).click();
+  const scope = page.getByLabel("仓库 2 路径范围");
+  await expect(scope).toBeFocused();
+  await scope.fill("packages/sdk");
+  await page.getByRole("button", { name: "比较工作区" }).click();
+  await expect(page.locator(".merge-host")).toContainText("value1 = 2");
+  await expect(page.getByRole("alert")).toHaveCount(0);
 });
 
 test("manual relation target files can be paged past the first 200", async ({ page }) => {
   await bridge(page, false, true);
   await capture(page);
+  await page.getByRole("button", { name: "工作区设置", exact: true }).click();
   await page.locator(".manual-relations summary").click();
   await page.getByLabel("关联目标仓库").selectOption({ label: "SDK" });
   await page.getByRole("button", { name: "加载更多目标文件（200/201）", exact: true }).click();

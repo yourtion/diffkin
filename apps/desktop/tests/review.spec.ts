@@ -303,6 +303,7 @@ async function bridge(
     { manifest, result: payload, options },
   );
   await page.goto("/");
+  await page.getByRole("button", { name: "单仓库比较", exact: true }).click();
 }
 async function open(page: Page, panels = true) {
   await page.getByLabel("Git 仓库路径").fill("/repo");
@@ -334,6 +335,7 @@ test("repository review supports raw diff, evidence, search, layout and bound re
   );
   await page.screenshot({ path: "test-results/review.png", fullPage: true });
   await page.reload();
+  await page.getByRole("button", { name: "单仓库比较", exact: true }).click();
   await open(page);
   await expect(page.getByRole("button", { name: "✓ 已审查此版本" })).toBeVisible();
 });
@@ -378,6 +380,7 @@ test("file filtering and keyboard navigation remain usable", async ({ page }) =>
 
 test("browser preview never claims to read a native repository", async ({ page }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: "单仓库比较", exact: true }).click();
   await expect(
     page.getByText("浏览器仅预览界面。请运行桌面应用以读取本地 Git 仓库。"),
   ).toBeVisible();

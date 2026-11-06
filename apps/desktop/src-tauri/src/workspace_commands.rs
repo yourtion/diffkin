@@ -92,8 +92,11 @@ pub async fn workspace_restore(
 ) -> Result<WorkspaceSession, RepositoryError> {
     let runtime = state.inner().clone();
     access(app, scope.inner().clone(), token(), move |store| {
-        runtime.install_workspace(Arc::new(store.restore(&id, snapshot_id.as_deref())?));
-        store.load(&id)
+        let (session, frozen) = store.open_session(&id, snapshot_id.as_deref())?;
+        if let Some(frozen) = frozen {
+            runtime.install_workspace(Arc::new(frozen));
+        }
+        Ok(session)
     })
     .await
 }
